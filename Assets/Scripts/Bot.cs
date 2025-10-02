@@ -142,9 +142,9 @@ public class Bot : Character
 
             mCurrentNodeId = 1;
 
-            /*ChangeAction(BotAction.MoveTo);
+            ChangeAction(BotAction.MoveTo);
 
-            mFramesOfJumping = GetJumpFramesForNode(0);*/
+            mFramesOfJumping = GetJumpFramesForNode(0);
         }
         else
         {
