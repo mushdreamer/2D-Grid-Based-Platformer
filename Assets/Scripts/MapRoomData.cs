@@ -40,6 +40,7 @@ public struct ObjectTile
 }
 
 [System.Serializable]
+[CreateAssetMenu(fileName = "NewMapRoom", menuName = "Levels/Map Room Data", order = 1)]
 public class MapRoomData : ScriptableObject
 {
 	public int height;

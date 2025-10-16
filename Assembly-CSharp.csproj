@@ -68,7 +68,6 @@
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\Scripts\Character.cs" />
     <Compile Include="Assets\Scripts\MovingObject.cs" />
-    <Compile Include="Assets\Scripts\LevelGenerator\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Map.cs" />
     <Compile Include="Assets\Scripts\HUDFPS.cs" />
     <Compile Include="Assets\Scripts\Bot.cs" />

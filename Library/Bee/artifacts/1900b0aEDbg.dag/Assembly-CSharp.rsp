@@ -340,7 +340,6 @@
 "Assets/Scripts/GameCamera.cs"
 "Assets/Scripts/HUDFPS.cs"
 "Assets/Scripts/KeyInput.cs"
-"Assets/Scripts/LevelGenerator/LevelGenerator.cs"
 "Assets/Scripts/Map.cs"
 "Assets/Scripts/MapRoomData.cs"
 "Assets/Scripts/MovingObject.cs"

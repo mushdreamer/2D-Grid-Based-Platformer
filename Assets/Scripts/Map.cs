@@ -88,8 +88,6 @@ public partial class Map : MonoBehaviour
     public RectTransform sliderHigh;
     public RectTransform sliderLow;
 
-    public bool loadPresetLevelOnStart = true;//判断是否需要用到各种新功能
-
     public TileType GetTile(int x, int y) 
 	{
         if (x < 0 || x >= mWidth
@@ -313,24 +311,20 @@ public partial class Map : MonoBehaviour
 
         Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
-        // 只有当开关为true时，才执行这段加载代码
-        if (loadPresetLevelOnStart)
+        for (int y = 0; y < mHeight; ++y)
         {
-            for (int y = 0; y < mHeight; ++y)
+            for (int x = 0; x < mWidth; ++x)
             {
-                for (int x = 0; x < mWidth; ++x)
-                {
-                    tilesSprites[x, y] = Instantiate<SpriteRenderer>(tilePrefab);
-                    tilesSprites[x, y].transform.parent = transform;
-                    tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
+                tilesSprites[x, y] = Instantiate<SpriteRenderer>(tilePrefab);
+                tilesSprites[x, y].transform.parent = transform;
+                tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
 
-                    if (mapRoom.tileData[y * mWidth + x] == TileType.Empty)
-                        SetTile(x, y, TileType.Empty);
-                    else if (mapRoom.tileData[y * mWidth + x] == TileType.Block)
-                        SetTile(x, y, TileType.Block);
-                    else
-                        SetTile(x, y, TileType.OneWay);
-                }
+                if (mapRoom.tileData[y * mWidth + x] == TileType.Empty)
+                    SetTile(x, y, TileType.Empty);
+                else if (mapRoom.tileData[y * mWidth + x] == TileType.Block)
+                    SetTile(x, y, TileType.Block);
+                else
+                    SetTile(x, y, TileType.OneWay);
             }
         }
 
