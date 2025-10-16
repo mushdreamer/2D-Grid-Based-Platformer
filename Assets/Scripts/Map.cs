@@ -85,8 +85,7 @@ public partial class Map : MonoBehaviour
     public enum GamePhase
     {
         Drawing,
-        Preview,
-        Playing
+        TrialPlay
     }
 
     [Header("Gameplay State")]
@@ -325,8 +324,8 @@ public partial class Map : MonoBehaviour
 
         // --- 根据 Inspector 的设置来决定如何初始化 ---
 
-        // 如果你在Inspector里设置的是 "Playing"
-        if (currentPhase == GamePhase.Playing)
+        // 如果你在Inspector里设置的是 "TrialPlay"
+        if (currentPhase == GamePhase.TrialPlay)
         {
             Debug.Log("Starting directly in PLAYING mode.");
 
@@ -416,38 +415,26 @@ public partial class Map : MonoBehaviour
         switch (currentPhase)
         {
             case GamePhase.Drawing:
-                Cursor.visible = false;
                 HandleDrawingInput();
 
-                // 按下空格键，进入预览模式
+                // 按下空格键，开始试玩
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    GenerateLevelFromPath();
+                    StartTrialMode();
                 }
                 break;
 
-            case GamePhase.Preview:
-                // 在预览模式下：
-                // 按下 Enter 键，确认关卡并开始游戏
-                if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
-                {
-                    StartPlayingMode();
-                }
+            case GamePhase.TrialPlay:
+                HandlePlayingInput(); // 玩家输入逻辑复用
+
                 // 按下 Backspace 键，返回绘制模式进行修改
-                else if (Input.GetKeyDown(KeyCode.Backspace))
+                if (Input.GetKeyDown(KeyCode.Backspace))
                 {
                     ReturnToDrawingMode();
                 }
-                break;
-
-            case GamePhase.Playing:
-                Cursor.visible = true;
-                HandlePlayingInput();
-
-                // 按下 'R' 键重置，返回绘制模式 (这个是完全重置)
-                if (Input.GetKeyDown(KeyCode.R))
+                // 按下 'R' 键，完全重置所有内容，返回空白画布
+                else if (Input.GetKeyDown(KeyCode.R))
                 {
-                    // 注意：这里的 ResetToDrawingMode 是硬重置，会清空所有东西
                     ResetToDrawingMode();
                 }
                 break;
@@ -656,50 +643,6 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // 新方法：根据玩家选择的路径生成关卡
-    private void GenerateLevelFromPath()
-    {
-        if (playerSelectedPath.Count == 0)
-        {
-            Debug.LogWarning("Path is empty! Cannot generate level.");
-            return;
-        }
-
-        // --- 逻辑不变：根据路径生成砖块和空地 ---
-        for (int y = 0; y < mHeight; y++)
-        {
-            for (int x = 0; x < mWidth; x++)
-            {
-                Vector2i currentTile = new Vector2i(x, y);
-                tilesSprites[x, y].color = Color.white; // 恢复格子的正常颜色
-
-                if (playerSelectedPath.Contains(currentTile))
-                {
-                    SetTile(x, y, TileType.Empty);
-                }
-                else
-                {
-                    SetTile(x, y, TileType.Block);
-                }
-            }
-        }
-
-        // --- 核心修改 ---
-        // 隐藏笔刷和系统鼠标
-        if (brushPreviewInstance != null)
-        {
-            brushPreviewInstance.SetActive(false);
-        }
-        Cursor.visible = true; // 在预览时我们暂时显示鼠标，方便点击UI（如果未来有的话）
-
-        // 将状态切换到“预览”，而不是“游玩”
-        currentPhase = GamePhase.Preview;
-
-        Debug.Log("Level Preview. Press ENTER to play, or BACKSPACE to edit.");
-
-        // --- 已移除：所有关于初始化玩家和切换到Playing状态的代码都移到了 StartPlayingMode() 中 ---
-    }
-
     // 新方法：重置到绘制模式
     private void ResetToDrawingMode()
     {
@@ -769,32 +712,15 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    private void StartPlayingMode()
-    {
-        // 激活并初始化玩家
-        player.gameObject.SetActive(true);
-        player.BotInit(inputs, prevInputs);
-        player.mMap = this;
-
-        // 将游戏状态切换到游玩阶段
-        currentPhase = GamePhase.Playing;
-        Cursor.visible = true; // 恢复系统鼠标
-
-        // 把玩家放到路径的第一个点
-        using (var enumerator = playerSelectedPath.GetEnumerator())
-        {
-            if (enumerator.MoveNext())
-            {
-                Vector2i startPos = enumerator.Current;
-                player.mPosition = GetMapTilePosition(startPos) + new Vector2(0, player.mAABB.HalfSizeY);
-            }
-        }
-
-        Debug.Log("Let's Play! Press 'R' to reset.");
-    }
-
     private void ReturnToDrawingMode()
     {
+        // --- 关键新增：在返回编辑前，禁用玩家对象 ---
+        if (player != null)
+        {
+            player.gameObject.SetActive(false);
+        }
+        // ------------------------------------------
+
         // 遍历所有格子，恢复到绘制时的视觉状态
         for (int y = 0; y < mHeight; y++)
         {
@@ -802,17 +728,15 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // 如果这个格子在我们的路径上，就把它变回半透明绿色
                 if (playerSelectedPath.Contains(currentTile))
                 {
                     tilesSprites[x, y].enabled = true;
                     tilesSprites[x, y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
                 }
-                else // 如果不在路径上，就隐藏它
+                else
                 {
                     tilesSprites[x, y].enabled = false;
                 }
-                // 将实际的格子数据清空，为下次生成做准备
                 tiles[x, y] = TileType.Empty;
             }
         }
@@ -827,6 +751,61 @@ public partial class Map : MonoBehaviour
             brushPreviewInstance.SetActive(true);
         }
 
-        Debug.Log("Back to editing.");
+        Debug.Log("Back to Drawing Mode.");
+    }
+
+    private void StartTrialMode()
+    {
+        if (playerSelectedPath.Count == 0)
+        {
+            Debug.LogWarning("Path is empty! Cannot start trial.");
+            return;
+        }
+
+        // 1. 生成关卡几何体
+        for (int y = 0; y < mHeight; y++)
+        {
+            for (int x = 0; x < mWidth; x++)
+            {
+                Vector2i currentTile = new Vector2i(x, y);
+                tilesSprites[x, y].color = Color.white; // 恢复格子的正常颜色
+
+                if (playerSelectedPath.Contains(currentTile))
+                {
+                    SetTile(x, y, TileType.Empty);
+                }
+                else
+                {
+                    SetTile(x, y, TileType.Block);
+                }
+            }
+        }
+
+        // 2. 隐藏绘制工具
+        if (brushPreviewInstance != null)
+        {
+            brushPreviewInstance.SetActive(false);
+        }
+        Cursor.visible = true; // 显示系统鼠标
+
+        // 3. 激活并初始化玩家
+        player.gameObject.SetActive(true);
+        player.BotInit(inputs, prevInputs);
+        player.mMap = this;
+
+        // 4. 把玩家放到路径的起点
+        using (var enumerator = playerSelectedPath.GetEnumerator())
+        {
+            if (enumerator.MoveNext())
+            {
+                Vector2i startPos = enumerator.Current;
+                player.mPosition = GetMapTilePosition(startPos) + new Vector2(0, player.mAABB.HalfSizeY);
+            }
+        }
+
+        // 5. 切换到试玩状态
+        currentPhase = GamePhase.TrialPlay;
+
+        Debug.Log("Trial Mode! You can play now. Press BACKSPACE to return to editing.");
     }
 }
