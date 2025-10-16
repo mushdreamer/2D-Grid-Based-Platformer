@@ -357,6 +357,12 @@ public partial class Map : MonoBehaviour
                 tiles[x, 1] = TileType.Block;
                 tiles[x, mHeight - 2] = TileType.Block;
             }
+
+            // --- 在游戏模式开始时，初始化玩家 ---
+            player.gameObject.SetActive(true);
+            player.BotInit(inputs, prevInputs);
+            player.mMap = this;
+            player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
             // ***********************************************
         }
         // 如果你在Inspector里设置的是 "Drawing"
@@ -379,14 +385,15 @@ public partial class Map : MonoBehaviour
                     tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
                 }
             }
-
+            // --- 在绘制模式开始时，隐藏并禁用玩家 ---
+            player.gameObject.SetActive(false);
             ResetToDrawingMode();
         }
 
         // --- 玩家初始化 ---
-        player.BotInit(inputs, prevInputs);
+        /*player.BotInit(inputs, prevInputs);
         player.mMap = this;
-        player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
+        player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);*/
     }
 
     void Update()
@@ -619,6 +626,12 @@ public partial class Map : MonoBehaviour
             }
         }
 
+        // --- 在此处激活并初始化玩家 ---
+        player.gameObject.SetActive(true);
+        player.BotInit(inputs, prevInputs);
+        player.mMap = this;
+        // ------------------------------------
+
         // 关卡生成后，切换到游戏阶段
         currentPhase = GamePhase.Playing;
 
@@ -649,6 +662,14 @@ public partial class Map : MonoBehaviour
                 tilesSprites[x, y].color = Color.white; // 恢复颜色
             }
         }
+
+        // --- 新增代码: 重置时再次隐藏玩家 ---
+        if (player != null && player.gameObject.activeSelf)
+        {
+            player.gameObject.SetActive(false);
+        }
+        // ------------------------------------
+
         currentPhase = GamePhase.Drawing;
         Debug.Log("Reset to Drawing Mode. Draw your path and press Space.");
     }
