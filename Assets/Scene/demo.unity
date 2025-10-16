@@ -2856,6 +2856,9 @@ MonoBehaviour:
   position: {x: 0, y: 0, z: 0}
   tilePrefab: {fileID: 21201918, guid: ffcd4b6442878c648af60936cdec0465, type: 3}
   mSpritesContainer: {fileID: 2106156356}
+  brushSize: 5
+  brushPreviewPrefab: {fileID: 1393941975101645099, guid: e6eb37f1bac333d49846fd7fa457cf1e,
+    type: 3}
   mWidth: 512
   mHeight: 128
   currentPhase: 0

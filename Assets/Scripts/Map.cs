@@ -59,11 +59,22 @@ public partial class Map : MonoBehaviour
 	/// The size of a tile in pixels.
 	/// </summary>
 	static public int cTileSize = 16;
-	
-	/// <summary>
-	/// The width of the map in tiles.
-	/// </summary>
-	public int mWidth = 50;
+
+    // --- 新增笔刷大小 ---
+    [Header("Drawing Settings")]
+    [Range(1, 10)] // 使用Range限制笔刷大小在1到10之间，防止设置过大或无效值
+    public int brushSize = 1; // 默认为1，即1x1的格子
+                              // --- 新增代码结束 ---
+
+    // --- 新增代码在这里 ---
+    public GameObject brushPreviewPrefab; // 用于在Inspector中拖入Prefab
+    private GameObject brushPreviewInstance; // 用于在代码中控制实例
+    // --- 新增代码结束 ---
+
+    /// <summary>
+    /// The width of the map in tiles.
+    /// </summary>
+    public int mWidth = 50;
 	/// <summary>
 	/// The height of the map in tiles.
 	/// </summary>
@@ -390,10 +401,13 @@ public partial class Map : MonoBehaviour
             ResetToDrawingMode();
         }
 
-        // --- 玩家初始化 ---
-        /*player.BotInit(inputs, prevInputs);
-        player.mMap = this;
-        player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);*/
+        // 初始化笔刷预览
+        if (brushPreviewPrefab != null)
+        {
+            brushPreviewInstance = Instantiate(brushPreviewPrefab, transform); // 创建实例并设为Map的子对象
+                                                                               // 如果以绘制模式开始，就准备好显示它，否则保持隐藏
+            brushPreviewInstance.SetActive(currentPhase == GamePhase.Drawing);
+        }
     }
 
     void Update()
@@ -401,6 +415,10 @@ public partial class Map : MonoBehaviour
         // 根据当前游戏阶段执行不同逻辑
         if (currentPhase == GamePhase.Drawing)
         {
+            // --- 在绘制模式下隐藏系统鼠标 ---
+            Cursor.visible = false;
+            // ------------------------------------
+
             HandleDrawingInput(); // 处理绘制输入
 
             // 按下空格键，确认路径并生成关卡
@@ -411,6 +429,10 @@ public partial class Map : MonoBehaviour
         }
         else // currentPhase == GamePhase.Playing
         {
+            // --- 在游戏模式下显示系统鼠标 ---
+            Cursor.visible = true;
+            // ------------------------------------
+
             HandlePlayingInput(); // 处理游戏输入
 
             // 按下 'R' 键重置，返回绘制模式
@@ -548,29 +570,57 @@ public partial class Map : MonoBehaviour
         GetMapTileAtPoint(mousePosInWorld, out mouseTileX, out mouseTileY);
         Vector2i currentCell = new Vector2i(mouseTileX, mouseTileY);
 
-        // 如果按住鼠标左键，就将格子添加到路径中
+        // --- 新增代码在这里 ---
+        // 调用新方法来更新笔刷预览的实时状态
+        UpdateBrushPreview(mouseTileX, mouseTileY);
+        // --- 新增代码结束 ---
+
+        // 如果按住鼠标左键，就绘制一个 brushSize * brushSize 的区域
         if (Input.GetKey(KeyCode.Mouse0))
         {
-            // 检查坐标是否有效且未被添加
-            if (mouseTileX >= 0 && mouseTileX < mWidth && mouseTileY >= 0 && mouseTileY < mHeight)
+            // 使用嵌套循环遍历笔刷覆盖的每一个格子
+            for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
-                if (!playerSelectedPath.Contains(currentCell))
+                for (int yOffset = 0; yOffset < brushSize; yOffset++)
                 {
-                    playerSelectedPath.Add(currentCell);
-                    // 我们可以临时改变一下格子的颜色来给玩家反馈
-                    tilesSprites[mouseTileX, mouseTileY].enabled = true;
-                    tilesSprites[mouseTileX, mouseTileY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色作为标记
+                    int currentX = mouseTileX + xOffset;
+                    int currentY = mouseTileY + yOffset;
+                    currentCell = new Vector2i(currentX, currentY);
+
+                    // 检查坐标是否在地图边界内且未被添加
+                    if (currentX >= 0 && currentX < mWidth && currentY >= 0 && currentY < mHeight)
+                    {
+                        if (!playerSelectedPath.Contains(currentCell))
+                        {
+                            playerSelectedPath.Add(currentCell);
+                            // 改变格子的颜色来给玩家反馈
+                            tilesSprites[currentX, currentY].enabled = true;
+                            tilesSprites[currentX, currentY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色
+                        }
+                    }
                 }
             }
         }
-        // (可选) 按住鼠标右键可以擦除已选择的路径
+
+        // (可选) 按住鼠标右键可以擦除一个 brushSize * brushSize 的区域
         if (Input.GetKey(KeyCode.Mouse1))
         {
-            if (playerSelectedPath.Contains(currentCell))
+            // 同样使用嵌套循环来处理擦除逻辑
+            for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
-                playerSelectedPath.Remove(currentCell);
-                tilesSprites[mouseTileX, mouseTileY].enabled = false;
-                tilesSprites[mouseTileX, mouseTileY].color = Color.white; // 恢复原色
+                for (int yOffset = 0; yOffset < brushSize; yOffset++)
+                {
+                    int currentX = mouseTileX + xOffset;
+                    int currentY = mouseTileY + yOffset;
+                    currentCell = new Vector2i(currentX, currentY);
+
+                    if (playerSelectedPath.Contains(currentCell))
+                    {
+                        playerSelectedPath.Remove(currentCell);
+                        tilesSprites[currentX, currentY].enabled = false;
+                        tilesSprites[currentX, currentY].color = Color.white; // 恢复原色
+                    }
+                }
             }
         }
     }
@@ -604,6 +654,10 @@ public partial class Map : MonoBehaviour
             return;
         }
 
+        // --- 恢复显示系统鼠标 ---
+        Cursor.visible = true;
+        // ------------------------------------
+
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
@@ -630,6 +684,13 @@ public partial class Map : MonoBehaviour
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
+        // ------------------------------------
+
+        // --- 新增代码：在生成关卡后，隐藏笔刷预览 ---
+        if (brushPreviewInstance != null)
+        {
+            brushPreviewInstance.SetActive(false);
+        }
         // ------------------------------------
 
         // 关卡生成后，切换到游戏阶段
@@ -670,7 +731,51 @@ public partial class Map : MonoBehaviour
         }
         // ------------------------------------
 
+        // --- 新增代码：重置到绘制模式时，激活笔刷预览 ---
+        if (brushPreviewInstance != null)
+        {
+            brushPreviewInstance.SetActive(true);
+        }
+        // ------------------------------------
+
         currentPhase = GamePhase.Drawing;
+
+        // --- 再次隐藏系统鼠标 ---
+        Cursor.visible = false;
+        // ------------------------------------
+
         Debug.Log("Reset to Drawing Mode. Draw your path and press Space.");
+    }
+
+    private void UpdateBrushPreview(int mouseTileX, int mouseTileY)
+    {
+        if (brushPreviewInstance == null) return;
+
+        bool isMouseInBounds = mouseTileX >= 0 && mouseTileX < mWidth && mouseTileY >= 0 && mouseTileY < mHeight;
+        brushPreviewInstance.SetActive(isMouseInBounds);
+
+        if (isMouseInBounds)
+        {
+            // 1. 计算位置 (这部分逻辑是正确的，无需修改)
+            // 我们需要将预览的左下角对齐到鼠标所在的格子
+            float bottomLeftX = position.x + mouseTileX * cTileSize;
+            float bottomLeftY = position.y + mouseTileY * cTileSize;
+
+            // 预览的中心点位置 = 左下角位置 + 预览尺寸的一半
+            float totalSize = brushSize * cTileSize;
+            float centerX = bottomLeftX + totalSize / 2.0f - cTileSize / 2.0f;
+            float centerY = bottomLeftY + totalSize / 2.0f - cTileSize / 2.0f;
+
+            brushPreviewInstance.transform.position = new Vector3(centerX, centerY, -5f);
+
+            // 2. 计算大小 (这是需要修正的地方)
+
+            // --- 错误的代码 ---
+            // brushPreviewInstance.transform.localScale = new Vector3(totalSize / 100f, totalSize / 100f, 1f);
+
+            // --- 正确的代码 ---
+            // 直接将物体的缩放设置为我们想要的像素尺寸
+            brushPreviewInstance.transform.localScale = new Vector3(totalSize, totalSize, 1f);
+        }
     }
 }

@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\GitHub\\2D-Grid-Based-Platformer\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -41,32 +41,32 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Vector2i.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Vector2i.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Vector2i.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAADwvyoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-16T21:20:28.73Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Map.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Map.cs",
               "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
               "RelativeToolTip": "Assets\\Scripts\\Map.cs",
-              "ViewState": "AgIAAEkAAAAAAAAAAAAgwGIAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAOMCAAAAAAAAAAAkwAsDAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-16T21:12:15.278Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Map_01.cs",
+              "DocumentMoniker": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "RelativeDocumentMoniker": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "ToolTip": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "RelativeToolTip": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "ViewState": "AgIAAEMBAAAAAAAAAAAAADEBAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-16T21:02:22.7Z",
               "EditorCaption": ""
             },
             {
@@ -99,20 +99,19 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Map_01.cs",
-              "DocumentMoniker": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "RelativeDocumentMoniker": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "ToolTip": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "RelativeToolTip": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "ViewState": "AgIAAEMBAAAAAAAAAAAAADEBAAAuAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "Vector2i.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Vector2i.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Vector2i.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAADwvyoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-16T21:02:22.7Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-16T21:20:28.73Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Character.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Character.cs",
@@ -120,8 +119,7 @@
               "RelativeToolTip": "Assets\\Scripts\\Character.cs",
               "ViewState": "AgIAAEUAAAAAAAAAAAAgwGgAAAAoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-15T03:49:22.329Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-15T03:49:22.329Z"
             },
             {
               "$type": "Document",
@@ -145,8 +143,7 @@
               "RelativeToolTip": "Assets\\Scripts\\Bot.cs",
               "ViewState": "AgIAABIBAAAAAAAAAAAgwCoBAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T04:02:07.362Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T04:02:07.362Z"
             },
             {
               "$type": "Document",

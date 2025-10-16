@@ -3,35 +3,35 @@
   "WorkspaceRootPath": "C:\\GitHub\\2D-Grid-Based-Platformer\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\maproomdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\maproomdata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Vector2i.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\GameCamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\MapRoomData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -41,8 +41,105 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Map.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Map.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Map.cs",
+              "ViewState": "AgIAAOMCAAAAAAAAAAAkwAsDAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-16T21:12:15.278Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Map_01.cs",
+              "DocumentMoniker": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "RelativeDocumentMoniker": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "ToolTip": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "RelativeToolTip": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
+              "ViewState": "AgIAAEMBAAAAAAAAAAAAADEBAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-16T21:02:22.7Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Vector2i.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Vector2i.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Vector2i.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAADwvyoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-16T21:20:28.73Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Character.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Character.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Character.cs",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAgwGgAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T03:49:22.329Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LevelGenerator.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAIwD0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-15T01:43:07.048Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Bot.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Bot.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Bot.cs",
+              "ViewState": "AgIAABIBAAAAAAAAAAAgwCoBAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-02T04:02:07.362Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "GameCamera.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\GameCamera.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
+              "RelativeToolTip": "Assets\\Scripts\\GameCamera.cs",
+              "ViewState": "AgIAACUAAAAAAAAAAAAkwDsAAACCAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-02T03:18:08.494Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "MapRoomData.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\MapRoomData.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs",
+              "RelativeToolTip": "Assets\\Scripts\\MapRoomData.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAYwCoAAABYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-10-02T02:42:38.464Z"
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
@@ -70,104 +167,6 @@
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "Vector2i.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Vector2i.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Vector2i.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAADwvyoAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-16T21:20:28.73Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Map.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Map.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Map.cs",
-              "ViewState": "AgIAAH4CAAAAAAAAAAAowJ4CAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-16T21:12:15.278Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Map_01.cs",
-              "DocumentMoniker": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "RelativeDocumentMoniker": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "ToolTip": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "RelativeToolTip": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
-              "ViewState": "AgIAAEMBAAAAAAAAAAAAADEBAAAuAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-16T21:02:22.7Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Character.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Character.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Character.cs",
-              "ViewState": "AgIAAEUAAAAAAAAAAAAgwGgAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-15T03:49:22.329Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "LevelGenerator.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
-              "RelativeToolTip": "Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAIwD0AAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-15T01:43:07.048Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "Bot.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\Bot.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
-              "RelativeToolTip": "Assets\\Scripts\\Bot.cs",
-              "ViewState": "AgIAABIBAAAAAAAAAAAgwCoBAAAUAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T04:02:07.362Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "GameCamera.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\GameCamera.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
-              "RelativeToolTip": "Assets\\Scripts\\GameCamera.cs",
-              "ViewState": "AgIAACUAAAAAAAAAAAAkwDsAAACCAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T03:18:08.494Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MapRoomData.cs",
-              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs",
-              "RelativeDocumentMoniker": "Assets\\Scripts\\MapRoomData.cs",
-              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs",
-              "RelativeToolTip": "Assets\\Scripts\\MapRoomData.cs",
-              "ViewState": "AgIAABgAAAAAAAAAAAAYwCoAAABYAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T02:42:38.464Z"
             }
           ]
         }
