@@ -296,7 +296,7 @@ public class Bot : Character
 		
 		int characterHeight = Mathf.CeilToInt(mAABB.HalfSizeY*2.0f/Map.cTileSize);
 
-        int dir;
+        /*int dir;*/
 
         switch (mCurrentAction)
         {

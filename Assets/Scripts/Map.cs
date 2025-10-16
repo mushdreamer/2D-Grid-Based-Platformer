@@ -92,8 +92,8 @@ public partial class Map : MonoBehaviour
     bool[] inputs;
     bool[] prevInputs;
 
-    int lastMouseTileX = -1;
-    int lastMouseTileY = -1;
+    /*int lastMouseTileX = -1;
+    int lastMouseTileY = -1;*/
 
     public KeyCode goLeftKey = KeyCode.A;
     public KeyCode goRightKey = KeyCode.D;
@@ -386,11 +386,7 @@ public partial class Map : MonoBehaviour
         // --- Íæ¼Ò³õÊ¼»¯ ---
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
-
-        if (currentPhase == GamePhase.Playing)
-        {
-            player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
-        }
+        player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
     }
 
     void Update()

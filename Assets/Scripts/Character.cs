@@ -85,12 +85,24 @@ public class Character : MovingObject
         if (mPath != null && mPath.Count > 0)
         {
             lineRenderer.enabled = true;
-            lineRenderer.SetVertexCount(mPath.Count);
-            lineRenderer.SetWidth(4.0f, 4.0f);
+            // --- FIX STARTS HERE ---
+            // Old: lineRenderer.SetVertexCount(mPath.Count);
+            lineRenderer.positionCount = mPath.Count;
+
+            // Old: lineRenderer.SetWidth(4.0f, 4.0f);
+            lineRenderer.startWidth = 4.0f;
+            lineRenderer.endWidth = 4.0f;
+            // --- FIX ENDS HERE ---
 
             for (var i = 0; i < mPath.Count; ++i)
             {
-                lineRenderer.SetColors(Color.red, Color.red);
+                // --- FIX STARTS HERE ---
+                // Old: lineRenderer.SetColors(Color.red, Color.red);
+                // Note: It's more efficient to set colors outside the loop
+                // but for this fix, we'll keep the structure.
+                lineRenderer.startColor = Color.red;
+                lineRenderer.endColor = Color.red;
+                // --- FIX ENDS HERE ---
                 lineRenderer.SetPosition(i, mMap.transform.position + new Vector3(mPath[i].x * Map.cTileSize, mPath[i].y * Map.cTileSize, -5.0f));
             }
         }

@@ -40,6 +40,23 @@ public struct Vector2i : IEquatable<Vector2i>
     {
         return x == other.x && y == other.y;
     }
+
+    // --- FIX STARTS HERE ---
+    public override bool Equals(object obj)
+    {
+        if (obj is Vector2i)
+        {
+            return Equals((Vector2i)obj);
+        }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        // A common way to generate a hash code for a 2D vector
+        return x.GetHashCode() ^ (y.GetHashCode() << 2);
+    }
+    // --- FIX ENDS HERE ---
 }
 
 class Vector2iEqualityComparer : IEqualityComparer<Vector2i>
