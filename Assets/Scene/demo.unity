@@ -2858,6 +2858,7 @@ MonoBehaviour:
   mSpritesContainer: {fileID: 2106156356}
   mWidth: 512
   mHeight: 128
+  currentPhase: 0
   mapRoomSimple: {fileID: 0}
   mapRoomOneWay: {fileID: 11400000, guid: e8f554fe3fdb0be4f95151c80a7be089, type: 2}
   gameCamera: {fileID: 1799959646}
@@ -2868,7 +2869,6 @@ MonoBehaviour:
   goDownKey: 115
   sliderHigh: {fileID: 878637676}
   sliderLow: {fileID: 448407003}
-  loadPresetLevelOnStart: 1
   mDirtSprites:
   - {fileID: 21300000, guid: f41ea480e2b79d54abbe5cc8aab0258e, type: 3}
   - {fileID: 21300000, guid: 4ec563247c7b29942893b6e8321bc72a, type: 3}

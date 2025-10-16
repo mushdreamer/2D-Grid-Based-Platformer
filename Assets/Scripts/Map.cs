@@ -69,6 +69,21 @@ public partial class Map : MonoBehaviour
 	/// </summary>
 	public int mHeight = 42;
 
+    //新增代码
+    // 记录格子选中的状态
+    public enum GamePhase
+    {
+        Drawing,
+        Playing
+    }
+
+    [Header("Gameplay State")]
+    public GamePhase currentPhase = GamePhase.Drawing;
+
+    // 用一个 HashSet 来存储玩家选择的路径格子坐标，查询效率高
+    private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
+    //新增代码
+
     public MapRoomData mapRoomSimple;
     public MapRoomData mapRoomOneWay;
 
@@ -289,119 +304,116 @@ public partial class Map : MonoBehaviour
 
     public void Start()
     {
-        var mapRoom = mapRoomOneWay;
+        // --- 通用初始化部分 ---
         mRandomNumber = new System.Random();
-
         Application.targetFrameRate = 60;
-        
         inputs = new bool[(int)KeyInput.Count];
         prevInputs = new bool[(int)KeyInput.Count];
-
-        //set the position
         position = transform.position;
 
-        mWidth = mapRoom.width;
-        mHeight = mapRoom.height;
+        // --- 根据 Inspector 的设置来决定如何初始化 ---
 
-        tiles = new TileType[mWidth, mHeight];
-        tilesSprites = new SpriteRenderer[mapRoom.width, mapRoom.height];
-
-        mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
-        InitPathFinder();
-
-        Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
-
-        for (int y = 0; y < mHeight; ++y)
+        // 如果你在Inspector里设置的是 "Playing"
+        if (currentPhase == GamePhase.Playing)
         {
+            Debug.Log("Starting directly in PLAYING mode.");
+
+            var mapRoom = mapRoomOneWay; // 或者 mapRoomSimple
+            mWidth = mapRoom.width;
+            mHeight = mapRoom.height;
+            tiles = new TileType[mWidth, mHeight];
+            tilesSprites = new SpriteRenderer[mapRoom.width, mapRoom.height];
+            mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
+            InitPathFinder();
+            Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
+
+            for (int y = 0; y < mHeight; ++y)
+            {
+                for (int x = 0; x < mWidth; ++x)
+                {
+                    tilesSprites[x, y] = Instantiate<SpriteRenderer>(tilePrefab);
+                    tilesSprites[x, y].transform.parent = transform;
+                    tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
+
+                    // 从 ScriptableObject 加载关卡数据
+                    if (mapRoom.tileData[y * mWidth + x] == TileType.Empty)
+                        SetTile(x, y, TileType.Empty);
+                    else if (mapRoom.tileData[y * mWidth + x] == TileType.Block)
+                        SetTile(x, y, TileType.Block);
+                    else
+                        SetTile(x, y, TileType.OneWay);
+                }
+            }
+
+            // *** 已修正: 重新加入了被遗漏的边界生成代码 ***
+            for (int y = 0; y < mHeight; ++y)
+            {
+                tiles[1, y] = TileType.Block;
+                tiles[mWidth - 2, y] = TileType.Block;
+            }
+
             for (int x = 0; x < mWidth; ++x)
             {
-                tilesSprites[x, y] = Instantiate<SpriteRenderer>(tilePrefab);
-                tilesSprites[x, y].transform.parent = transform;
-                tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
-
-                if (mapRoom.tileData[y * mWidth + x] == TileType.Empty)
-                    SetTile(x, y, TileType.Empty);
-                else if (mapRoom.tileData[y * mWidth + x] == TileType.Block)
-                    SetTile(x, y, TileType.Block);
-                else
-                    SetTile(x, y, TileType.OneWay);
+                tiles[x, 1] = TileType.Block;
+                tiles[x, mHeight - 2] = TileType.Block;
             }
+            // ***********************************************
         }
-
-        for (int y = 0; y < mHeight; ++y)
+        // 如果你在Inspector里设置的是 "Drawing"
+        else
         {
-            tiles[1, y] = TileType.Block;
-            tiles[mWidth - 2, y] = TileType.Block;
-        }
+            Debug.Log("Starting in DRAWING mode.");
 
-        for (int x = 0; x < mWidth; ++x)
-        {
-            tiles[x, 1] = TileType.Block;
-            tiles[x, mHeight - 2] = TileType.Block;
-        }
+            tiles = new TileType[mWidth, mHeight];
+            tilesSprites = new SpriteRenderer[mWidth, mHeight];
+            mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
+            InitPathFinder();
+            Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
-        /*for (int y = 2; y < mHeight - 2; ++y)
-        {
-            for (int x = 2; x < mWidth - 2; ++x)
+            for (int y = 0; y < mHeight; ++y)
             {
-                if (y < mHeight/4)
-                    SetTile(x, y, TileType.Block);
+                for (int x = 0; x < mWidth; ++x)
+                {
+                    tilesSprites[x, y] = Instantiate<SpriteRenderer>(tilePrefab);
+                    tilesSprites[x, y].transform.parent = transform;
+                    tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
+                }
             }
-        }*/
 
+            ResetToDrawingMode();
+        }
+
+        // --- 玩家初始化 ---
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
-        player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
+
+        if (currentPhase == GamePhase.Playing)
+        {
+            player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
+        }
     }
 
     void Update()
     {
-        inputs[(int)KeyInput.GoRight] = Input.GetKey(goRightKey);
-        inputs[(int)KeyInput.GoLeft] = Input.GetKey(goLeftKey);
-        inputs[(int)KeyInput.GoDown] = Input.GetKey(goDownKey);
-        inputs[(int)KeyInput.Jump] = Input.GetKey(goJumpKey);
-
-        if (Input.GetKeyUp(KeyCode.Mouse0))
-            lastMouseTileX = lastMouseTileY = -1;
-
-        Vector2 mousePos = Input.mousePosition;
-        Vector2 cameraPos = Camera.main.transform.position;
-        var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
-
-        int mouseTileX, mouseTileY;
-        GetMapTileAtPoint(mousePosInWorld, out mouseTileX, out mouseTileY);
-
-        Vector2 offsetMouse = (Vector2)(Input.mousePosition) - new Vector2(Camera.main.pixelWidth/2, Camera.main.pixelHeight/2);
-        Vector2 bottomLeft = (Vector2)sliderLow.position + sliderLow.rect.min;
-        Vector2 topRight = (Vector2)sliderHigh.position + sliderHigh.rect.max;
-
-        if (Input.GetKeyDown(KeyCode.Tab))
-            Debug.Break();
-
-        //Debug.Log(mousePos + "   " + bottomLeft + "     " + topRight);
-
-        if (mousePos.x > bottomLeft.x && mousePos.x < topRight.x && mousePos.y < topRight.y && mousePos.y > bottomLeft.y)
-            return;
-
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        // 根据当前游戏阶段执行不同逻辑
+        if (currentPhase == GamePhase.Drawing)
         {
-            player.TappedOnTile(new Vector2i(mouseTileX, mouseTileY));
-            Debug.Log(mouseTileX + "  " + mouseTileY);
-        }
+            HandleDrawingInput(); // 处理绘制输入
 
-        if (Input.GetKey(KeyCode.Mouse1) || Input.GetKey(KeyCode.Mouse2))
-        {
-            if (mouseTileX != lastMouseTileX || mouseTileY != lastMouseTileY || Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKeyDown(KeyCode.Mouse2))
+            // 按下空格键，确认路径并生成关卡
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                if (!IsNotEmpty(mouseTileX, mouseTileY))
-                    SetTile(mouseTileX, mouseTileY, Input.GetKey(KeyCode.Mouse1) ? TileType.Block : TileType.OneWay);
-                else
-                    SetTile(mouseTileX, mouseTileY, TileType.Empty);
+                GenerateLevelFromPath();
+            }
+        }
+        else // currentPhase == GamePhase.Playing
+        {
+            HandlePlayingInput(); // 处理游戏输入
 
-                lastMouseTileX = mouseTileX;
-                lastMouseTileY = mouseTileY;
-
-                Debug.Log(mouseTileX + "  " + mouseTileY);
+            // 按下 'R' 键重置，返回绘制模式
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                ResetToDrawingMode();
             }
         }
     }
@@ -520,5 +532,128 @@ public partial class Map : MonoBehaviour
     void FixedUpdate()
     {
         player.BotUpdate();
+    }
+
+    // 新方法：处理绘制阶段的输入
+    private void HandleDrawingInput()
+    {
+        // 将鼠标位置转换为格子坐标
+        Vector2 mousePos = Input.mousePosition;
+        Vector2 cameraPos = Camera.main.transform.position;
+        var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
+        int mouseTileX, mouseTileY;
+        GetMapTileAtPoint(mousePosInWorld, out mouseTileX, out mouseTileY);
+        Vector2i currentCell = new Vector2i(mouseTileX, mouseTileY);
+
+        // 如果按住鼠标左键，就将格子添加到路径中
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            // 检查坐标是否有效且未被添加
+            if (mouseTileX >= 0 && mouseTileX < mWidth && mouseTileY >= 0 && mouseTileY < mHeight)
+            {
+                if (!playerSelectedPath.Contains(currentCell))
+                {
+                    playerSelectedPath.Add(currentCell);
+                    // 我们可以临时改变一下格子的颜色来给玩家反馈
+                    tilesSprites[mouseTileX, mouseTileY].enabled = true;
+                    tilesSprites[mouseTileX, mouseTileY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色作为标记
+                }
+            }
+        }
+        // (可选) 按住鼠标右键可以擦除已选择的路径
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            if (playerSelectedPath.Contains(currentCell))
+            {
+                playerSelectedPath.Remove(currentCell);
+                tilesSprites[mouseTileX, mouseTileY].enabled = false;
+                tilesSprites[mouseTileX, mouseTileY].color = Color.white; // 恢复原色
+            }
+        }
+    }
+
+    // 新方法：处理游戏阶段的输入（就是你之前Update里的逻辑）
+    private void HandlePlayingInput()
+    {
+        inputs[(int)KeyInput.GoRight] = Input.GetKey(goRightKey);
+        inputs[(int)KeyInput.GoLeft] = Input.GetKey(goLeftKey);
+        inputs[(int)KeyInput.GoDown] = Input.GetKey(goDownKey);
+        inputs[(int)KeyInput.Jump] = Input.GetKey(goJumpKey);
+
+        // 你之前的寻路点击逻辑可以保留，用于测试
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            Vector2 mousePos = Input.mousePosition;
+            Vector2 cameraPos = Camera.main.transform.position;
+            var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
+            int mouseTileX, mouseTileY;
+            GetMapTileAtPoint(mousePosInWorld, out mouseTileX, out mouseTileY);
+            player.TappedOnTile(new Vector2i(mouseTileX, mouseTileY));
+        }
+    }
+
+    // 新方法：根据玩家选择的路径生成关卡
+    private void GenerateLevelFromPath()
+    {
+        if (playerSelectedPath.Count == 0)
+        {
+            Debug.LogWarning("Path is empty! Cannot generate level.");
+            return;
+        }
+
+        for (int y = 0; y < mHeight; y++)
+        {
+            for (int x = 0; x < mWidth; x++)
+            {
+                Vector2i currentTile = new Vector2i(x, y);
+
+                // 恢复所有格子的颜色
+                tilesSprites[x, y].color = Color.white;
+
+                if (playerSelectedPath.Contains(currentTile))
+                {
+                    // 这是玩家选择的路径，设置为 Empty
+                    SetTile(x, y, TileType.Empty);
+                }
+                else
+                {
+                    // 这不是路径，用砖块堵死
+                    SetTile(x, y, TileType.Block);
+                }
+            }
+        }
+
+        // 关卡生成后，切换到游戏阶段
+        currentPhase = GamePhase.Playing;
+
+        // 把玩家放到路径的第一个点（或者一个指定的出生点）
+        // 这里简单地取路径的第一个点作为例子
+        using (var enumerator = playerSelectedPath.GetEnumerator())
+        {
+            if (enumerator.MoveNext())
+            {
+                Vector2i startPos = enumerator.Current;
+                player.mPosition = GetMapTilePosition(startPos) + new Vector2(0, player.mAABB.HalfSizeY);
+            }
+        }
+
+        Debug.Log("Level Generated! You can play now. Press 'R' to reset.");
+    }
+
+    // 新方法：重置到绘制模式
+    private void ResetToDrawingMode()
+    {
+        playerSelectedPath.Clear();
+        for (int y = 0; y < mHeight; y++)
+        {
+            for (int x = 0; x < mWidth; x++)
+            {
+                // 将所有格子清空
+                SetTile(x, y, TileType.Empty);
+                tilesSprites[x, y].color = Color.white; // 恢复颜色
+            }
+        }
+        currentPhase = GamePhase.Drawing;
+        Debug.Log("Reset to Drawing Mode. Draw your path and press Space.");
     }
 }
