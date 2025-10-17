@@ -10,7 +10,8 @@ public enum TileType
 {
     Empty,
     Block,
-    OneWay
+    OneWay,
+    Danger
 }
 
 [System.Serializable]
@@ -88,11 +89,23 @@ public partial class Map : MonoBehaviour
         TrialPlay
     }
 
+    // 管理所有笔刷类型
+    public enum BrushType
+    {
+        Path,   // 安全路径笔刷
+        Danger  // 危险区域笔刷
+    }
+
+    [Header("Brushes")]
+    public BrushType currentBrush = BrushType.Path; // 当前激活的笔刷，默认为路径
+
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
 
     // 用一个 HashSet 来存储玩家选择的路径格子坐标，查询效率高
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
+    // 为危险区域新增一个数据存储集合
+    private HashSet<Vector2i> dangerZoneTiles = new HashSet<Vector2i>();
     //新增代码
 
     public MapRoomData mapRoomSimple;
@@ -301,6 +314,22 @@ public partial class Map : MonoBehaviour
             tilesSprites[x, y].transform.eulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
             tilesSprites[x, y].sprite = mDirtSprites[25];
         }
+        // --- 新增 Danger 类型的处理逻辑 ---
+        else if (type == TileType.Danger)
+        {
+            mGrid[x, y] = 1; // 关键：在寻路网格中，它和 Empty 一样，是可以通行的 (值为1)
+            tilesSprites[x, y].enabled = true; // 我们要让它可见
+
+            // 使用一个基础的 sprite，比如 mDirtSprites 的第一个，作为区域的底色
+            tilesSprites[x, y].sprite = mDirtSprites[0];
+            // 关键：将它的颜色设置为红色，以在视觉上与安全区区分
+            tilesSprites[x, y].color = Color.red;
+
+            // 确保它没有奇怪的缩放和旋转
+            tilesSprites[x, y].transform.localScale = Vector3.one;
+            tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+        }
+        // ------------------------------------
         else
         {
             mGrid[x, y] = 1;
@@ -415,6 +444,18 @@ public partial class Map : MonoBehaviour
         switch (currentPhase)
         {
             case GamePhase.Drawing:
+                // --- 笔刷切换逻辑 ---
+                if (Input.GetKeyDown(KeyCode.Q)) // 按下数字键 1
+                {
+                    currentBrush = BrushType.Path;
+                    Debug.Log("Brush Change! Safe Path");
+                }
+                else if (Input.GetKeyDown(KeyCode.W)) // 按下数字键 2
+                {
+                    currentBrush = BrushType.Danger;
+                    Debug.Log("Brush Change! Dangerous Pool");
+                }
+                // --------------------------
                 HandleDrawingInput();
 
                 // 按下空格键，开始试玩
@@ -588,13 +629,28 @@ public partial class Map : MonoBehaviour
                     // 检查坐标是否在地图边界内且未被添加
                     if (currentX >= 0 && currentX < mWidth && currentY >= 0 && currentY < mHeight)
                     {
-                        if (!playerSelectedPath.Contains(currentCell))
+                        // --- 核心修改：根据当前笔刷决定绘制内容 ---
+                        if (currentBrush == BrushType.Path)
                         {
-                            playerSelectedPath.Add(currentCell);
-                            // 改变格子的颜色来给玩家反馈
-                            tilesSprites[currentX, currentY].enabled = true;
-                            tilesSprites[currentX, currentY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色
+                            if (!playerSelectedPath.Contains(currentCell))
+                            {
+                                dangerZoneTiles.Remove(currentCell); // 确保危险区被路径覆盖
+                                playerSelectedPath.Add(currentCell);
+                                tilesSprites[currentX, currentY].enabled = true;
+                                tilesSprites[currentX, currentY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色
+                            }
                         }
+                        else // currentBrush == BrushType.Danger
+                        {
+                            if (!dangerZoneTiles.Contains(currentCell))
+                            {
+                                playerSelectedPath.Remove(currentCell); // 确保路径被危险区覆盖
+                                dangerZoneTiles.Add(currentCell);
+                                tilesSprites[currentX, currentY].enabled = true;
+                                tilesSprites[currentX, currentY].color = new Color(1f, 0.5f, 0.5f, 0.5f); // 淡红色
+                            }
+                        }
+                        // ------------------------------------------
                     }
                 }
             }
@@ -612,12 +668,13 @@ public partial class Map : MonoBehaviour
                     int currentY = mouseTileY + yOffset;
                     currentCell = new Vector2i(currentX, currentY);
 
-                    if (playerSelectedPath.Contains(currentCell))
+                    // --- 核心修改：擦除时需要同时检查两个集合 ---
+                    if (playerSelectedPath.Remove(currentCell) || dangerZoneTiles.Remove(currentCell))
                     {
-                        playerSelectedPath.Remove(currentCell);
                         tilesSprites[currentX, currentY].enabled = false;
-                        tilesSprites[currentX, currentY].color = Color.white; // 恢复原色
+                        tilesSprites[currentX, currentY].color = Color.white;
                     }
+                    // ------------------------------------------
                 }
             }
         }
@@ -647,6 +704,7 @@ public partial class Map : MonoBehaviour
     private void ResetToDrawingMode()
     {
         playerSelectedPath.Clear();
+        dangerZoneTiles.Clear();
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
@@ -728,15 +786,22 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
+                // --- 核心修改：同时恢复两种笔刷的视觉状态 ---
                 if (playerSelectedPath.Contains(currentTile))
                 {
                     tilesSprites[x, y].enabled = true;
                     tilesSprites[x, y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
                 }
+                else if (dangerZoneTiles.Contains(currentTile))
+                {
+                    tilesSprites[x, y].enabled = true;
+                    tilesSprites[x, y].color = new Color(1f, 0.5f, 0.5f, 0.5f);
+                }
                 else
                 {
                     tilesSprites[x, y].enabled = false;
                 }
+                // ------------------------------------------
                 tiles[x, y] = TileType.Empty;
             }
         }
@@ -770,7 +835,12 @@ public partial class Map : MonoBehaviour
                 Vector2i currentTile = new Vector2i(x, y);
                 tilesSprites[x, y].color = Color.white; // 恢复格子的正常颜色
 
-                if (playerSelectedPath.Contains(currentTile))
+                // --- 核心修改：增加对危险区域的判断 ---
+                if (dangerZoneTiles.Contains(currentTile))
+                {
+                    SetTile(x, y, TileType.Danger);
+                }
+                else if (playerSelectedPath.Contains(currentTile))
                 {
                     SetTile(x, y, TileType.Empty);
                 }
@@ -778,6 +848,7 @@ public partial class Map : MonoBehaviour
                 {
                     SetTile(x, y, TileType.Block);
                 }
+                // ----------------------------------------
             }
         }
 
