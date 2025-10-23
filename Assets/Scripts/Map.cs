@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Threading;
 using Algorithms;
 using UnityEngine.UI;
+using System.IO; // --- 新增代码 ---
+using System.Text;
+using System; // --- 新增代码 ---
 
 [System.Serializable]
 public enum TileType
@@ -892,6 +895,8 @@ public partial class Map : MonoBehaviour
             return;
         }
 
+        SaveLevelToFile();
+
         // 1. 生成关卡几何体
         for (int y = 0; y < mHeight; y++)
         {
@@ -943,5 +948,79 @@ public partial class Map : MonoBehaviour
         currentPhase = GamePhase.TrialPlay;
 
         Debug.Log("Trial Mode! You can play now. Press BACKSPACE to return to editing.");
+    }
+
+    // --- 新增代码：保存关卡到文件 ---
+    // 这是遵从你的要求修改后的完整函数
+    private void SaveLevelToFile()
+    {
+        // 1. 准备文件路径
+        // 遵从你的要求，我在这里使用了你指定的固定路径。
+        // @ 符号允许我们在字符串中直接使用 \ 而不用转义 (即不用写 "C:\\GitHub\\...")
+        string directoryPath = @"C:\GitHub\2D-Grid-Based-Platformer\Level";
+        string fileName = "MyDrawnLevel.lvl"; // 你可以自定义文件名
+        string path = Path.Combine(directoryPath, fileName);
+
+        // 2. 确保目录存在
+        // 这是一个安全检查，如果指定的文件夹不存在，就尝试创建它。
+        try
+        {
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+                Debug.Log($"已创建目录: {directoryPath}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            // 如果因为权限等问题无法创建目录，则打印错误并停止
+            Debug.LogError($"创建目录失败: {e.Message}. 无法保存文件。");
+            return; // 提前退出函数
+        }
+
+        // 3. 使用 StringBuilder 高效构建字符串
+        StringBuilder sb = new StringBuilder();
+
+        // 4. 遍历地图网格 (从上到下)
+        // 我们从 y = mHeight - 1 向下迭代到 0 (地图顶部)
+        for (int y = mHeight - 1; y >= 0; y--)
+        {
+            // 从 x = 0 迭代到 mWidth - 1 (从左到右)
+            for (int x = 0; x < mWidth; x++)
+            {
+                Vector2i currentTile = new Vector2i(x, y);
+
+                // 5. 根据你的定义进行映射：
+                // X = 可达区域 (包括安全路径和危险区)
+                // R = 不可达的墙壁 (所有其他区域)
+                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile))
+                {
+                    // 可达区域
+                    sb.Append('R');
+                }
+                else
+                {
+                    // 不可达的墙壁
+                    sb.Append('X');
+                }
+            }
+
+            // 在每一行的末尾添加换行符
+            sb.AppendLine();
+        }
+
+        // 6. 将构建好的字符串一次性写入文件
+        try
+        {
+            File.WriteAllText(path, sb.ToString());
+
+            // 在控制台打印保存路径，方便你找到文件
+            Debug.Log($"关卡已成功保存到: {path}");
+        }
+        catch (System.Exception e)
+        {
+            // 如果发生错误（例如权限问题），打印错误日志
+            Debug.LogError($"保存关卡失败: {e.Message}");
+        }
     }
 }

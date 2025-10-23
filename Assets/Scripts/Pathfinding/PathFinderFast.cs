@@ -340,7 +340,13 @@ namespace Algorithms
                     {
                         mNewLocationX = (ushort) (mLocationX + mDirection[i,0]);
                         mNewLocationY = (ushort) (mLocationY + mDirection[i,1]);
-                        mNewLocation  = (mNewLocationY << mGridXLog2) + mNewLocationX;
+                        // --- 新增的修复代码 ---
+                        // 这个检查会捕获 mNewLocationX = 65535 (因为它 >= mGridX)
+                        // 也会捕获 mNewLocationY 的溢出
+                        if (mNewLocationX >= mGridX || mNewLocationY >= mGridY)
+                            continue; // 坐标越界，立即跳过这个邻居
+                        // --- 修复代码结束 ---
+                        mNewLocation = (mNewLocationY << mGridXLog2) + mNewLocationX;
 
                         var onGround = false;
                         var atCeiling = false;
