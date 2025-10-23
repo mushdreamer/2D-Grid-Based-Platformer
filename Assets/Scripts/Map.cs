@@ -601,6 +601,35 @@ public partial class Map : MonoBehaviour
     // 新方法：处理绘制阶段的输入
     private void HandleDrawingInput()
     {
+        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+
+        if (scrollInput != 0f) // 检查是否有滚动
+        {
+            // 记录旧大小，以便在变化时打印日志
+            int oldBrushSize = brushSize;
+
+            if (scrollInput > 0f) // 向上滚动
+            {
+                brushSize++;
+            }
+            else if (scrollInput < 0f) // 向下滚动
+            {
+                brushSize--;
+            }
+
+            // 关键：使用 Mathf.Clamp 确保笔刷大小不会超出你设定的范围 (1 到 10)
+            // 这和你变量声明上的 [Range(1, 10)] 属性保持一致
+            brushSize = Mathf.Clamp(brushSize, 1, 10);
+
+            // 如果大小真的改变了，就在控制台打印新大小，方便确认
+            if (oldBrushSize != brushSize)
+            {
+                Debug.Log("笔刷大小调整为: " + brushSize);
+            }
+        }
+        // --- 新增代码结束 ---
+
+
         // 将鼠标位置转换为格子坐标
         Vector2 mousePos = Input.mousePosition;
         Vector2 cameraPos = Camera.main.transform.position;
