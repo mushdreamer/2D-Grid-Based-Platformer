@@ -63,9 +63,10 @@ public partial class Map : MonoBehaviour
 
     // --- 新增笔刷大小 ---
     [Header("Drawing Settings")]
+    public Color gridColor = new Color(0.5f, 0.5f, 0.5f, 0.2f);
     [Range(1, 10)] // 使用Range限制笔刷大小在1到10之间，防止设置过大或无效值
     public int brushSize = 1; // 默认为1，即1x1的格子
-                              // --- 新增代码结束 ---
+    // --- 新增代码结束 ---
 
     // --- 新增代码在这里 ---
     public GameObject brushPreviewPrefab; // 用于在Inspector中拖入Prefab
@@ -666,7 +667,10 @@ public partial class Map : MonoBehaviour
                                 dangerZoneTiles.Remove(currentCell); // 确保危险区被路径覆盖
                                 playerSelectedPath.Add(currentCell);
                                 tilesSprites[currentX, currentY].enabled = true;
+                                tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 使用基础方块
                                 tilesSprites[currentX, currentY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色
+                                tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
+                                tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
                             }
                         }
                         else // currentBrush == BrushType.Danger
@@ -676,7 +680,10 @@ public partial class Map : MonoBehaviour
                                 playerSelectedPath.Remove(currentCell); // 确保路径被危险区覆盖
                                 dangerZoneTiles.Add(currentCell);
                                 tilesSprites[currentX, currentY].enabled = true;
+                                tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 使用基础方块
                                 tilesSprites[currentX, currentY].color = new Color(1f, 0.5f, 0.5f, 0.5f); // 淡红色
+                                tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
+                                tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
                             }
                         }
                         // ------------------------------------------
@@ -700,8 +707,11 @@ public partial class Map : MonoBehaviour
                     // --- 核心修改：擦除时需要同时检查两个集合 ---
                     if (playerSelectedPath.Remove(currentCell) || dangerZoneTiles.Remove(currentCell))
                     {
-                        tilesSprites[currentX, currentY].enabled = false;
-                        tilesSprites[currentX, currentY].color = Color.white;
+                        tilesSprites[currentX, currentY].enabled = true;
+                        tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 确保是基础方块
+                        tilesSprites[currentX, currentY].color = gridColor; // 设置为网格颜色
+                        tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
+                        tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
                     }
                     // ------------------------------------------
                 }
@@ -738,9 +748,19 @@ public partial class Map : MonoBehaviour
         {
             for (int x = 0; x < mWidth; x++)
             {
-                // 将所有格子清空
-                SetTile(x, y, TileType.Empty);
-                tilesSprites[x, y].color = Color.white; // 恢复颜色
+                // 1. 重置游戏逻辑
+                if (!(x <= 1 || x >= mWidth - 2 || y <= 1 || y >= mHeight - 2))
+                {
+                    tiles[x, y] = TileType.Empty;
+                }
+                mGrid[x, y] = 1; // 确保寻路网格是通畅的
+
+                // 2. 设置可视化的网格背景
+                tilesSprites[x, y].enabled = true; // 启用 sprite
+                tilesSprites[x, y].sprite = mDirtSprites[0]; // 使用基础方块
+                tilesSprites[x, y].color = gridColor; // 设置为网格颜色
+                tilesSprites[x, y].transform.localScale = Vector3.one;
+                tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
             }
         }
 
@@ -815,23 +835,39 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // --- 核心修改：同时恢复两种笔刷的视觉状态 ---
+                // 重置游戏逻辑
+                if (!(x <= 1 || x >= mWidth - 2 || y <= 1 || y >= mHeight - 2))
+                {
+                    tiles[x, y] = TileType.Empty;
+                }
+                mGrid[x, y] = 1; // 关键：将试玩模式的障碍物(0)重置为可行走(1)
+
+                // 恢复视觉状态
                 if (playerSelectedPath.Contains(currentTile))
                 {
                     tilesSprites[x, y].enabled = true;
+                    tilesSprites[x, y].sprite = mDirtSprites[0];
                     tilesSprites[x, y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
+                    tilesSprites[x, y].transform.localScale = Vector3.one;
+                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
                 }
                 else if (dangerZoneTiles.Contains(currentTile))
                 {
                     tilesSprites[x, y].enabled = true;
+                    tilesSprites[x, y].sprite = mDirtSprites[0];
                     tilesSprites[x, y].color = new Color(1f, 0.5f, 0.5f, 0.5f);
+                    tilesSprites[x, y].transform.localScale = Vector3.one;
+                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
                 }
                 else
                 {
-                    tilesSprites[x, y].enabled = false;
+                    // 这是对非绘制区域（即试玩时的Block）的处理
+                    tilesSprites[x, y].enabled = true;
+                    tilesSprites[x, y].sprite = mDirtSprites[0];
+                    tilesSprites[x, y].color = gridColor; // 恢复为网格颜色
+                    tilesSprites[x, y].transform.localScale = Vector3.one;
+                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
                 }
-                // ------------------------------------------
-                tiles[x, y] = TileType.Empty;
             }
         }
 

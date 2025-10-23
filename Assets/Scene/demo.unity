@@ -2856,14 +2856,16 @@ MonoBehaviour:
   position: {x: 0, y: 0, z: 0}
   tilePrefab: {fileID: 21201918, guid: ffcd4b6442878c648af60936cdec0465, type: 3}
   mSpritesContainer: {fileID: 2106156356}
+  gridColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.2}
   brushSize: 5
   brushPreviewPrefab: {fileID: 1393941975101645099, guid: e6eb37f1bac333d49846fd7fa457cf1e,
     type: 3}
-  mWidth: 512
-  mHeight: 128
+  mWidth: 100
+  mHeight: 50
+  currentBrush: 0
   currentPhase: 0
   mapRoomSimple: {fileID: 0}
-  mapRoomOneWay: {fileID: 11400000, guid: e8f554fe3fdb0be4f95151c80a7be089, type: 2}
+  mapRoomOneWay: {fileID: 11400000, guid: 2d6365466254ab14894fd8ce8735f75f, type: 2}
   gameCamera: {fileID: 1799959646}
   player: {fileID: 600731197}
   goLeftKey: 97
