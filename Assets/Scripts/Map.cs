@@ -298,9 +298,6 @@ public partial class Map : MonoBehaviour
 
     public void SetTile(int x, int y, TileType type)
     {
-        if (x <= 1 || x >= mWidth - 2 || y <= 1 || y >= mHeight - 2)
-            return;
-
         tiles[x, y] = type;
 
         if (type == TileType.Block)
@@ -521,10 +518,17 @@ public partial class Map : MonoBehaviour
         if (tiles[x, y] != TileType.Block)
             return;
 
-        int tileOnLeft = tiles[x - 1, y] == tiles[x, y] ? 1 : 0;
-        int tileOnRight = tiles[x + 1, y] == tiles[x, y] ? 1 : 0;
-        int tileOnTop = tiles[x, y + 1] == tiles[x, y] ? 1 : 0;
-        int tileOnBottom = tiles[x, y - 1] == tiles[x, y] ? 1 : 0;
+        // 检查左侧 (x-1)，确保 x > 0
+        int tileOnLeft = (x > 0 && tiles[x - 1, y] == tiles[x, y]) ? 1 : 0;
+
+        // 检查右侧 (x+1)，确保 x < mWidth - 1
+        int tileOnRight = (x < mWidth - 1 && tiles[x + 1, y] == tiles[x, y]) ? 1 : 0;
+
+        // 检查上方 (y+1)，确保 y < mHeight - 1
+        int tileOnTop = (y < mHeight - 1 && tiles[x, y + 1] == tiles[x, y]) ? 1 : 0;
+
+        // 检查下方 (y-1)，确保 y > 0
+        int tileOnBottom = (y > 0 && tiles[x, y - 1] == tiles[x, y]) ? 1 : 0;
 
         float scaleX = 1.0f;
         float scaleY = 1.0f;
@@ -775,11 +779,7 @@ public partial class Map : MonoBehaviour
         {
             for (int x = 0; x < mWidth; x++)
             {
-                // 1. 重置游戏逻辑
-                if (!(x <= 1 || x >= mWidth - 2 || y <= 1 || y >= mHeight - 2))
-                {
-                    tiles[x, y] = TileType.Empty;
-                }
+                tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1; // 确保寻路网格是通畅的
 
                 // 2. 设置可视化的网格背景
@@ -862,11 +862,7 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // 重置游戏逻辑
-                if (!(x <= 1 || x >= mWidth - 2 || y <= 1 || y >= mHeight - 2))
-                {
-                    tiles[x, y] = TileType.Empty;
-                }
+                tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1; // 关键：将试玩模式的障碍物(0)重置为可行走(1)
 
                 // 恢复视觉状态

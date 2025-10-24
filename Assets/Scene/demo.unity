@@ -2860,8 +2860,8 @@ MonoBehaviour:
   brushSize: 5
   brushPreviewPrefab: {fileID: 1393941975101645099, guid: e6eb37f1bac333d49846fd7fa457cf1e,
     type: 3}
-  mWidth: 100
-  mHeight: 50
+  mWidth: 120
+  mHeight: 80
   currentBrush: 0
   currentPhase: 0
   mapRoomSimple: {fileID: 0}

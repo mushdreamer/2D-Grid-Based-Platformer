@@ -24,8 +24,8 @@ public class GameCamera : MonoBehaviour
     public float dampTime = 0.15f;
     private Vector3 velocity = Vector3.zero;
 
-    const int cOuterVisibilityX = 2;
-    const int cOuterVisibilityY = 2;
+    const int cOuterVisibilityX = 0;
+    const int cOuterVisibilityY = 0;
 
     void Start()
     {
