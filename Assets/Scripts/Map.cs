@@ -414,11 +414,35 @@ public partial class Map : MonoBehaviour
         {
             Debug.Log("Starting in DRAWING mode.");
 
+            // --- 核心修改开始 ---
+
+            // 1. (移动) 我们把这行代码从后面移到这里
+            // 必须先设置相机大小，这样才能保证 pixelWidth 和 pixelHeight 是我们期望的值
+            Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
+
+            // 2. (新增) 检查 cTileSize，防止除零错误
+            if (cTileSize <= 0)
+            {
+                Debug.LogError("cTileSize 必须大于 0! 无法自动调整 Map 大小。");
+                return; // 终止 Start，防止后续代码出错
+            }
+
+            // 3. (新增) 根据相机的像素大小和瓦片大小，重新计算 mWidth 和 mHeight
+            // 我们使用 FloorToInt 来确保只包含完整的瓦片
+            mWidth = Mathf.FloorToInt((float)Camera.main.pixelWidth / (float)cTileSize);
+            mHeight = Mathf.FloorToInt((float)Camera.main.pixelHeight / (float)cTileSize);
+
+            Debug.Log($"Map 尺寸已根据相机自动调整为: {mWidth} x {mHeight} (基于 {Camera.main.pixelWidth}x{Camera.main.pixelHeight} 屏幕和 {cTileSize} 瓦片大小)");
+
+            // --- 核心修改结束 ---
+
+
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mWidth, mHeight];
+            // (修改) mWidth 和 mHeight 已经是计算后的新值了
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
             InitPathFinder();
-            Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
+            // (移动) 这行代码被移到前面了: Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
             for (int y = 0; y < mHeight; ++y)
             {
