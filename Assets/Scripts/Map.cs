@@ -8,6 +8,10 @@ using System.IO; // --- 新增代码 ---
 using System.Text;
 using System; // --- 新增代码 ---
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 [System.Serializable]
 public enum TileType
 {
@@ -481,6 +485,11 @@ public partial class Map : MonoBehaviour
                     Debug.Log("Brush Change! Dangerous Pool");
                 }
                 // --------------------------
+                // --- 新增加载快捷键 ---
+                if (Input.GetKeyDown(KeyCode.L))
+                {
+                    LoadLevelFromFile();
+                }
                 HandleDrawingInput();
 
                 // 按下空格键，开始试玩
@@ -505,6 +514,83 @@ public partial class Map : MonoBehaviour
                 }
                 break;
         }
+    }
+
+    private void LoadLevelFromFile()
+    {
+        // 1. 确保我们读取的是 *完全相同* 的文件路径
+        string directoryPath = @"C:\GitHub\2D-Grid-Based-Platformer\Level";
+        string fileName = "MyDrawnLevel.lvl";
+        string path = Path.Combine(directoryPath, fileName);
+
+        // 2. 检查文件是否存在
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"加载失败: 文件未找到于 {path}");
+            return;
+        }
+
+        string[] lines;
+        try
+        {
+            // 3. 读取文件的所有行
+            lines = File.ReadAllLines(path);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"读取文件失败: {e.Message}");
+            return;
+        }
+
+        // 4. 关键：首先调用 ResetToDrawingMode() 来清空所有现有数据和视觉效果
+        // 这会为我们提供一个干净的灰色网格画布
+        ResetToDrawingMode();
+
+        // 5. 解析文件内容
+        // 我们从文件的第一行 (lines[0]) 开始向下读取
+        for (int i = 0; i < lines.Length; i++)
+        {
+            // 将文件行号 (i) 转换回地图的 Y 坐标
+            // 文件的第0行 = 地图的第 mHeight - 1 行
+            int mapY = (mHeight - 1) - i;
+
+            // 如果文件行数超出了地图高度，就停止
+            if (mapY < 0) break;
+
+            string line = lines[i];
+            for (int mapX = 0; mapX < line.Length; mapX++)
+            {
+                // 如果文件行宽超出了地图宽度，就停止
+                if (mapX >= mWidth) break;
+
+                char tileChar = line[mapX];
+
+                // 6. 填充数据
+                // 根据您当前的保存逻辑，'R' 代表可通行的路径
+                if (tileChar == 'R')
+                {
+                    // 我们将所有 'R' 默认加载为安全的路径 (Path)
+                    playerSelectedPath.Add(new Vector2i(mapX, mapY));
+                }
+            }
+        }
+
+        // 7. 高效地更新视觉效果
+        // 此时画布是全灰的，我们只需要“涂上”新加载的绿色路径
+        foreach (Vector2i pathTile in playerSelectedPath)
+        {
+            if (pathTile.x >= 0 && pathTile.x < mWidth && pathTile.y >= 0 && pathTile.y < mHeight)
+            {
+                // 这段代码是从 HandleDrawingInput 复制而来的
+                tilesSprites[pathTile.x, pathTile.y].enabled = true;
+                tilesSprites[pathTile.x, pathTile.y].sprite = mDirtSprites[0];
+                tilesSprites[pathTile.x, pathTile.y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
+                tilesSprites[pathTile.x, pathTile.y].transform.localScale = Vector3.one;
+                tilesSprites[pathTile.x, pathTile.y].transform.eulerAngles = Vector3.zero;
+            }
+        }
+
+        Debug.Log($"关卡已成功从 {path} 加载！");
     }
 
     System.Random mRandomNumber;
