@@ -485,11 +485,16 @@ public partial class Map : MonoBehaviour
                     Debug.Log("Brush Change! Dangerous Pool");
                 }
                 // --------------------------
-                // --- 新增加载快捷键 ---
-                if (Input.GetKeyDown(KeyCode.L))
+                // --- 新增：保存和加载快捷键 ---
+                if (Input.GetKeyDown(KeyCode.P))
                 {
-                    LoadLevelFromFile();
+                    SaveLevelToFile(); // 手动保存
                 }
+                else if (Input.GetKeyDown(KeyCode.L))
+                {
+                    LoadLevelFromFile(); // 手动加载
+                }
+                // --- 修改结束 ---
                 HandleDrawingInput();
 
                 // 按下空格键，开始试玩
@@ -514,83 +519,6 @@ public partial class Map : MonoBehaviour
                 }
                 break;
         }
-    }
-
-    private void LoadLevelFromFile()
-    {
-        // 1. 确保我们读取的是 *完全相同* 的文件路径
-        string directoryPath = @"C:\GitHub\2D-Grid-Based-Platformer\Level";
-        string fileName = "MyDrawnLevel.lvl";
-        string path = Path.Combine(directoryPath, fileName);
-
-        // 2. 检查文件是否存在
-        if (!File.Exists(path))
-        {
-            Debug.LogError($"加载失败: 文件未找到于 {path}");
-            return;
-        }
-
-        string[] lines;
-        try
-        {
-            // 3. 读取文件的所有行
-            lines = File.ReadAllLines(path);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"读取文件失败: {e.Message}");
-            return;
-        }
-
-        // 4. 关键：首先调用 ResetToDrawingMode() 来清空所有现有数据和视觉效果
-        // 这会为我们提供一个干净的灰色网格画布
-        ResetToDrawingMode();
-
-        // 5. 解析文件内容
-        // 我们从文件的第一行 (lines[0]) 开始向下读取
-        for (int i = 0; i < lines.Length; i++)
-        {
-            // 将文件行号 (i) 转换回地图的 Y 坐标
-            // 文件的第0行 = 地图的第 mHeight - 1 行
-            int mapY = (mHeight - 1) - i;
-
-            // 如果文件行数超出了地图高度，就停止
-            if (mapY < 0) break;
-
-            string line = lines[i];
-            for (int mapX = 0; mapX < line.Length; mapX++)
-            {
-                // 如果文件行宽超出了地图宽度，就停止
-                if (mapX >= mWidth) break;
-
-                char tileChar = line[mapX];
-
-                // 6. 填充数据
-                // 根据您当前的保存逻辑，'R' 代表可通行的路径
-                if (tileChar == 'R')
-                {
-                    // 我们将所有 'R' 默认加载为安全的路径 (Path)
-                    playerSelectedPath.Add(new Vector2i(mapX, mapY));
-                }
-            }
-        }
-
-        // 7. 高效地更新视觉效果
-        // 此时画布是全灰的，我们只需要“涂上”新加载的绿色路径
-        foreach (Vector2i pathTile in playerSelectedPath)
-        {
-            if (pathTile.x >= 0 && pathTile.x < mWidth && pathTile.y >= 0 && pathTile.y < mHeight)
-            {
-                // 这段代码是从 HandleDrawingInput 复制而来的
-                tilesSprites[pathTile.x, pathTile.y].enabled = true;
-                tilesSprites[pathTile.x, pathTile.y].sprite = mDirtSprites[0];
-                tilesSprites[pathTile.x, pathTile.y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
-                tilesSprites[pathTile.x, pathTile.y].transform.localScale = Vector3.one;
-                tilesSprites[pathTile.x, pathTile.y].transform.eulerAngles = Vector3.zero;
-            }
-        }
-
-        Debug.Log($"关卡已成功从 {path} 加载！");
     }
 
     System.Random mRandomNumber;
@@ -1001,8 +929,6 @@ public partial class Map : MonoBehaviour
             return;
         }
 
-        SaveLevelToFile();
-
         // 1. 生成关卡几何体
         for (int y = 0; y < mHeight; y++)
         {
@@ -1058,75 +984,135 @@ public partial class Map : MonoBehaviour
 
     // --- 新增代码：保存关卡到文件 ---
     // 这是遵从你的要求修改后的完整函数
+#if UNITY_EDITOR
     private void SaveLevelToFile()
     {
-        // 1. 准备文件路径
-        // 遵从你的要求，我在这里使用了你指定的固定路径。
-        // @ 符号允许我们在字符串中直接使用 \ 而不用转义 (即不用写 "C:\\GitHub\\...")
-        string directoryPath = @"C:\GitHub\2D-Grid-Based-Platformer\Level";
-        string fileName = "MyDrawnLevel.lvl"; // 你可以自定义文件名
-        string path = Path.Combine(directoryPath, fileName);
+        // 1. 弹出“另存为”对话框
+        string path = EditorUtility.SaveFilePanel(
+            "保存关卡文件",                                  // 窗口标题
+            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // 默认打开的目录
+            "NewLevel",                                     // 默认文件名
+            "lvl"                                           // 文件扩展名
+        );
 
-        // 2. 确保目录存在
-        // 这是一个安全检查，如果指定的文件夹不存在，就尝试创建它。
-        try
+        // 2. 检查用户是否点击了“取消”
+        if (string.IsNullOrEmpty(path))
         {
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-                Debug.Log($"已创建目录: {directoryPath}");
-            }
-        }
-        catch (System.Exception e)
-        {
-            // 如果因为权限等问题无法创建目录，则打印错误并停止
-            Debug.LogError($"创建目录失败: {e.Message}. 无法保存文件。");
-            return; // 提前退出函数
+            Debug.Log("保存已取消。");
+            return; // 用户取消了操作，函数提前退出
         }
 
-        // 3. 使用 StringBuilder 高效构建字符串
+        // 3. 使用 StringBuilder 高效构建字符串 (这部分逻辑和您原来的一样)
         StringBuilder sb = new StringBuilder();
 
-        // 4. 遍历地图网格 (从上到下)
-        // 我们从 y = mHeight - 1 向下迭代到 0 (地图顶部)
-        for (int y = mHeight - 1; y >= 0; y--)
+        for (int y = mHeight - 1; y >= 0; y--) //
         {
-            // 从 x = 0 迭代到 mWidth - 1 (从左到右)
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // 5. 根据你的定义进行映射：
-                // X = 可达区域 (包括安全路径和危险区)
-                // R = 不可达的墙壁 (所有其他区域)
-                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile))
+                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile)) //
                 {
-                    // 可达区域
-                    sb.Append('R');
+                    sb.Append('R'); //
                 }
                 else
                 {
-                    // 不可达的墙壁
-                    sb.Append('X');
+                    sb.Append('X'); //
                 }
             }
-
-            // 在每一行的末尾添加换行符
             sb.AppendLine();
         }
 
-        // 6. 将构建好的字符串一次性写入文件
+        // 4. 将字符串写入用户选择的文件路径
         try
         {
-            File.WriteAllText(path, sb.ToString());
-
-            // 在控制台打印保存路径，方便你找到文件
+            File.WriteAllText(path, sb.ToString()); //
             Debug.Log($"关卡已成功保存到: {path}");
         }
         catch (System.Exception e)
         {
-            // 如果发生错误（例如权限问题），打印错误日志
-            Debug.LogError($"保存关卡失败: {e.Message}");
+            Debug.LogError($"保存关卡失败: {e.Message}"); //
         }
     }
+#endif
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// (新) 从 .lvl 文件加载关卡到编辑器中
+    /// </summary>
+    private void LoadLevelFromFile()
+    {
+        // 1. 弹出“打开文件”对话框
+        string path = EditorUtility.OpenFilePanel(
+            "加载关卡文件",                                  // 窗口标题
+            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // 默认打开的目录
+            "lvl"                                           // 文件扩展名过滤器
+        );
+
+        // 2. 检查用户是否点击了“取消”
+        if (string.IsNullOrEmpty(path))
+        {
+            Debug.Log("加载已取消。");
+            return; // 用户取消了操作，函数提前退出
+        }
+
+        // 3. 检查文件是否存在
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"加载失败: 文件未找到于 {path}");
+            return;
+        }
+
+        string[] lines;
+        try
+        {
+            // 4. 读取文件的所有行
+            lines = File.ReadAllLines(path);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"读取文件失败: {e.Message}");
+            return;
+        }
+
+        // 5. 关键：调用 ResetToDrawingMode() 来清空所有现有数据
+        ResetToDrawingMode(); //
+
+        // 6. 解析文件内容 (从上到下)
+        for (int i = 0; i < lines.Length; i++)
+        {
+            int mapY = (mHeight - 1) - i; //
+            if (mapY < 0) break;
+
+            string line = lines[i];
+            for (int mapX = 0; mapX < line.Length; mapX++)
+            {
+                if (mapX >= mWidth) break;
+
+                char tileChar = line[mapX];
+
+                // 7. 填充数据 (R = 路径)
+                if (tileChar == 'R')
+                {
+                    playerSelectedPath.Add(new Vector2i(mapX, mapY)); //
+                }
+            }
+        }
+
+        // 8. 高效地更新视觉效果 (将加载的路径“涂”成绿色)
+        foreach (Vector2i pathTile in playerSelectedPath)
+        {
+            if (pathTile.x >= 0 && pathTile.x < mWidth && pathTile.y >= 0 && pathTile.y < mHeight)
+            {
+                tilesSprites[pathTile.x, pathTile.y].enabled = true;
+                tilesSprites[pathTile.x, pathTile.y].sprite = mDirtSprites[0]; //
+                tilesSprites[pathTile.x, pathTile.y].color = new Color(0.5f, 1f, 0.5f, 0.5f); //
+                tilesSprites[pathTile.x, pathTile.y].transform.localScale = Vector3.one; //
+                tilesSprites[pathTile.x, pathTile.y].transform.eulerAngles = Vector3.zero; //
+            }
+        }
+
+        Debug.Log($"关卡已成功从 {path} 加载！");
+    }
+#endif
 }
