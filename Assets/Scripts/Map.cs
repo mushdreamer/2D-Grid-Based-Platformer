@@ -89,6 +89,18 @@ public partial class Map : MonoBehaviour
 	/// </summary>
 	public int mHeight = 42;
 
+    // --- 新增代码：用于手动控制地图大小 ---
+    [Header("Drawing Mode Size")]
+    [Tooltip("如果勾选，地图大小将自动匹配相机屏幕。")]
+    public bool autoSizeToCamera = true; // 默认勾选，保持当前行为
+
+    [Tooltip("如果 autoSizeToCamera 未勾选，将使用这个宽度。")]
+    public int manualWidth = 100; // 手动模式的默认宽度
+
+    [Tooltip("如果 autoSizeToCamera 未勾选，将使用这个高度。")]
+    public int manualHeight = 60; // 手动模式的默认高度
+    // --- 新增代码结束 ---
+
     //新增代码
     // 记录格子选中的状态
     public enum GamePhase
@@ -430,11 +442,20 @@ public partial class Map : MonoBehaviour
 
             // 3. (新增) 根据相机的像素大小和瓦片大小，重新计算 mWidth 和 mHeight
             // 我们使用 FloorToInt 来确保只包含完整的瓦片
-            mWidth = Mathf.FloorToInt((float)Camera.main.pixelWidth / (float)cTileSize);
-            mHeight = Mathf.FloorToInt((float)Camera.main.pixelHeight / (float)cTileSize);
-
-            Debug.Log($"Map 尺寸已根据相机自动调整为: {mWidth} x {mHeight} (基于 {Camera.main.pixelWidth}x{Camera.main.pixelHeight} 屏幕和 {cTileSize} 瓦片大小)");
-
+            if (autoSizeToCamera)
+            {
+                // 自动模式：使用相机大小 (和以前一样)
+                mWidth = Mathf.FloorToInt((float)Camera.main.pixelWidth / (float)cTileSize);
+                mHeight = Mathf.FloorToInt((float)Camera.main.pixelHeight / (float)cTileSize);
+                Debug.Log($"Map 尺寸已[自动]调整为: {mWidth} x {mHeight}");
+            }
+            else
+            {
+                // 手动模式：使用 Inspector 中设置的值
+                mWidth = manualWidth;
+                mHeight = manualHeight;
+                Debug.Log($"Map 尺寸已[手动]设置为: {mWidth} x {mHeight}");
+            }
             // --- 核心修改结束 ---
 
 

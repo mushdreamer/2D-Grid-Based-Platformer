@@ -1449,7 +1449,7 @@ MonoBehaviour:
   m_MinValue: 1
   m_MaxValue: 9
   m_WholeNumbers: 1
-  m_Value: 3
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -2862,6 +2862,9 @@ MonoBehaviour:
     type: 3}
   mWidth: 120
   mHeight: 80
+  autoSizeToCamera: 1
+  manualWidth: 100
+  manualHeight: 60
   currentBrush: 0
   currentPhase: 0
   mapRoomSimple: {fileID: 0}

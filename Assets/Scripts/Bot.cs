@@ -23,7 +23,7 @@ public class Bot : Character
 
     public int mMaxJumpHeight = 5;
     public int mWidth = 1;
-    public int mHeight = 3;
+    public int mHeight = 1;
 	
 	
 	public const int cMaxStuckFrames = 20;
@@ -40,8 +40,12 @@ public class Bot : Character
     public void BotInit(bool[] inputs, bool[] prevInputs)
     {
         mWidth = 1;
-        mHeight = 3;
+        mHeight = 1;
         mScale = Vector2.one;
+
+        mScale.x = Mathf.Sign(mScale.x) * (float)mWidth;
+        mScale.y = (float)mHeight * 0.33333f; // mHeight=1, mScale.y ½«ÊÇ 0.33333f
+        transform.localScale = new Vector3(mScale.x, mScale.y, 1.0f);
 
         mInputs = inputs;
         mPrevInputs = prevInputs;
