@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Threading;
 using Algorithms;
 using UnityEngine.UI;
-using System.IO; // --- 新增代码 ---
+using System.IO;
 using System.Text;
-using System; // --- 新增代码 ---
+using System;
+using System.Diagnostics; // --- 新增代码：用于执行外部 Python 命令 ---
+using Debug = UnityEngine.Debug; // --- 新增代码：明确指定 Debug，避免与 System.Diagnostics 冲突 ---
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -22,51 +24,51 @@ public enum TileType
 }
 
 [System.Serializable]
-public partial class Map : MonoBehaviour 
+public partial class Map : MonoBehaviour
 {
-	
-	/// <summary>
-	/// The map's position in world space. Bottom left corner.
-	/// </summary>
-	public Vector3 position;
-	
-	/// <summary>
-	/// The base tile sprite prefab that populates the map.
-	/// Assigned in the inspector.
-	/// </summary>
-	public SpriteRenderer tilePrefab;
-	
-	/// <summary>
-	/// The path finder.
-	/// </summary>
-	public PathFinderFast mPathFinder;
-	
-	/// <summary>
-	/// The nodes that are fed to pathfinder.
-	/// </summary>
-	[HideInInspector]
-	public byte[,] mGrid;
-	
-	/// <summary>
-	/// The map's tile data.
-	/// </summary>
-	[HideInInspector]
-	private TileType[,] tiles;
 
-	/// <summary>
-	/// The map's sprites.
-	/// </summary>
-	private SpriteRenderer[,] tilesSprites;
-	
-	/// <summary>
-	/// A parent for all the sprites. Assigned from the inspector.
-	/// </summary>
-	public Transform mSpritesContainer;
-	
-	/// <summary>
-	/// The size of a tile in pixels.
-	/// </summary>
-	static public int cTileSize = 16;
+    /// <summary>
+    /// The map's position in world space. Bottom left corner.
+    /// </summary>
+    public Vector3 position;
+
+    /// <summary>
+    /// The base tile sprite prefab that populates the map.
+    /// Assigned in the inspector.
+    /// </summary>
+    public SpriteRenderer tilePrefab;
+
+    /// <summary>
+    /// The path finder.
+    /// </summary>
+    public PathFinderFast mPathFinder;
+
+    /// <summary>
+    /// The nodes that are fed to pathfinder.
+    /// </summary>
+    [HideInInspector]
+    public byte[,] mGrid;
+
+    /// <summary>
+    /// The map's tile data.
+    /// </summary>
+    [HideInInspector]
+    private TileType[,] tiles;
+
+    /// <summary>
+    /// The map's sprites.
+    /// </summary>
+    private SpriteRenderer[,] tilesSprites;
+
+    /// <summary>
+    /// A parent for all the sprites. Assigned from the inspector.
+    /// </summary>
+    public Transform mSpritesContainer;
+
+    /// <summary>
+    /// The size of a tile in pixels.
+    /// </summary>
+    static public int cTileSize = 16;
 
     // --- 新增笔刷大小 ---
     [Header("Drawing Settings")]
@@ -84,10 +86,10 @@ public partial class Map : MonoBehaviour
     /// The width of the map in tiles.
     /// </summary>
     public int mWidth = 50;
-	/// <summary>
-	/// The height of the map in tiles.
-	/// </summary>
-	public int mHeight = 42;
+    /// <summary>
+    /// The height of the map in tiles.
+    /// </summary>
+    public int mHeight = 42;
 
     // --- 新增代码：用于手动控制地图大小 ---
     [Header("Drawing Mode Size")]
@@ -147,14 +149,14 @@ public partial class Map : MonoBehaviour
     public RectTransform sliderHigh;
     public RectTransform sliderLow;
 
-    public TileType GetTile(int x, int y) 
-	{
+    public TileType GetTile(int x, int y)
+    {
         if (x < 0 || x >= mWidth
             || y < 0 || y >= mHeight)
             return TileType.Block;
 
-		return tiles[x, y]; 
-	}
+        return tiles[x, y];
+    }
 
     public bool IsOneWayPlatform(int x, int y)
     {
@@ -192,58 +194,58 @@ public partial class Map : MonoBehaviour
         return (tiles[x, y] != TileType.Empty);
     }
 
-	public void InitPathFinder()
-	{
-		mPathFinder = new PathFinderFast(mGrid, this);
-		
-		mPathFinder.Formula                 = HeuristicFormula.Manhattan;
-		//if false then diagonal movement will be prohibited
-        mPathFinder.Diagonals               = false;
-		//if true then diagonal movement will have higher cost
-        mPathFinder.HeavyDiagonals          = false;
-		//estimate of path length
-        mPathFinder.HeuristicEstimate       = 6;
-        mPathFinder.PunishChangeDirection   = false;
-        mPathFinder.TieBreaker              = false;
-        mPathFinder.SearchLimit             = 1000000;
-        mPathFinder.DebugProgress           = false;
-        mPathFinder.DebugFoundPath          = false;
-	}
-	
-	public void GetMapTileAtPoint(Vector2 point, out int tileIndexX, out int tileIndexY)
-	{
-		tileIndexY =(int)((point.y - position.y + cTileSize/2.0f)/(float)(cTileSize));
-		tileIndexX =(int)((point.x - position.x + cTileSize/2.0f)/(float)(cTileSize));
-	}
-	
-	public Vector2i GetMapTileAtPoint(Vector2 point)
-	{
-		return new Vector2i((int)((point.x - position.x + cTileSize/2.0f)/(float)(cTileSize)),
-					(int)((point.y - position.y + cTileSize/2.0f)/(float)(cTileSize)));
-	}
-	
-	public Vector2 GetMapTilePosition(int tileIndexX, int tileIndexY)
-	{
-		return new Vector2(
-				(float) (tileIndexX * cTileSize) + position.x,
-				(float) (tileIndexY * cTileSize) + position.y
-			);
-	}
+    public void InitPathFinder()
+    {
+        mPathFinder = new PathFinderFast(mGrid, this);
 
-	public Vector2 GetMapTilePosition(Vector2i tileCoords)
-	{
-		return new Vector2(
-			(float) (tileCoords.x * cTileSize) + position.x,
-			(float) (tileCoords.y * cTileSize) + position.y
-			);
-	}
-	
-	public bool CollidesWithMapTile(AABB aabb, int tileIndexX, int tileIndexY)
-	{
-		var tilePos = GetMapTilePosition (tileIndexX, tileIndexY);
-		
-		return aabb.Overlaps(tilePos, new Vector2( (float)(cTileSize)/2.0f, (float)(cTileSize)/2.0f));
-	}
+        mPathFinder.Formula = HeuristicFormula.Manhattan;
+        //if false then diagonal movement will be prohibited
+        mPathFinder.Diagonals = false;
+        //if true then diagonal movement will have higher cost
+        mPathFinder.HeavyDiagonals = false;
+        //estimate of path length
+        mPathFinder.HeuristicEstimate = 6;
+        mPathFinder.PunishChangeDirection = false;
+        mPathFinder.TieBreaker = false;
+        mPathFinder.SearchLimit = 1000000;
+        mPathFinder.DebugProgress = false;
+        mPathFinder.DebugFoundPath = false;
+    }
+
+    public void GetMapTileAtPoint(Vector2 point, out int tileIndexX, out int tileIndexY)
+    {
+        tileIndexY = (int)((point.y - position.y + cTileSize / 2.0f) / (float)(cTileSize));
+        tileIndexX = (int)((point.x - position.x + cTileSize / 2.0f) / (float)(cTileSize));
+    }
+
+    public Vector2i GetMapTileAtPoint(Vector2 point)
+    {
+        return new Vector2i((int)((point.x - position.x + cTileSize / 2.0f) / (float)(cTileSize)),
+                    (int)((point.y - position.y + cTileSize / 2.0f) / (float)(cTileSize)));
+    }
+
+    public Vector2 GetMapTilePosition(int tileIndexX, int tileIndexY)
+    {
+        return new Vector2(
+                (float)(tileIndexX * cTileSize) + position.x,
+                (float)(tileIndexY * cTileSize) + position.y
+            );
+    }
+
+    public Vector2 GetMapTilePosition(Vector2i tileCoords)
+    {
+        return new Vector2(
+            (float)(tileCoords.x * cTileSize) + position.x,
+            (float)(tileCoords.y * cTileSize) + position.y
+            );
+    }
+
+    public bool CollidesWithMapTile(AABB aabb, int tileIndexX, int tileIndexY)
+    {
+        var tilePos = GetMapTilePosition(tileIndexX, tileIndexY);
+
+        return aabb.Overlaps(tilePos, new Vector2((float)(cTileSize) / 2.0f, (float)(cTileSize) / 2.0f));
+    }
 
     public bool AnySolidBlockInRectangle(Vector2 start, Vector2 end)
     {
@@ -506,16 +508,22 @@ public partial class Map : MonoBehaviour
                     Debug.Log("Brush Change! Dangerous Pool");
                 }
                 // --------------------------
-                // --- 新增：保存和加载快捷键 ---
+                // --- 修改：保存和加载快捷键 ---
                 if (Input.GetKeyDown(KeyCode.P))
                 {
-                    SaveLevelToFile(); // 手动保存
+                    SaveLevelToFile(); // 手动保存 (P)
                 }
                 else if (Input.GetKeyDown(KeyCode.L))
                 {
-                    LoadLevelFromFile(); // 手动加载
+                    LoadLevelFromFile(); // 手动加载 (L)
+                }
+                // --- 新增代码：处理 Enter 键保存和执行脚本 ---
+                else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+                {
+                    HandleEnterKeySave(); // 按下 Enter 键
                 }
                 // --- 修改结束 ---
+
                 HandleDrawingInput();
 
                 // 按下空格键，开始试玩
@@ -1003,8 +1011,166 @@ public partial class Map : MonoBehaviour
         Debug.Log("Trial Mode! You can play now. Press BACKSPACE to return to editing.");
     }
 
-    // --- 新增代码：保存关卡到文件 ---
-    // 这是遵从你的要求修改后的完整函数
+    // --- 新增代码：用于 Enter 键保存和执行Python脚本的所有逻辑 ---
+#if UNITY_EDITOR
+    /// <summary>
+    /// (新) 处理 Enter 键按下，保存文件并启动Python脚本。
+    /// </summary>
+    private void HandleEnterKeySave()
+    {
+        string workingDirectory = @"C:\GitHub\sturgeon-pub";
+        string levelFileName = "MyDrawnLevel.lvl";
+        string fullSavePath = Path.Combine(workingDirectory, levelFileName);
+
+        // 1. 保存文件 (在主线程同步执行)
+        try
+        {
+            SaveLevelDirectly(fullSavePath);
+            Debug.Log($"关卡已成功保存到: {fullSavePath}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"直接保存关卡失败: {e.Message}");
+            return; // 如果保存失败，就不执行后续脚本
+        }
+
+        // 2. 在新线程中运行 Python 脚本，防止Unity编辑器卡死
+        new Thread(new ThreadStart(RunPythonScripts)).Start();
+    }
+
+    /// <summary>
+    /// (新) 这是一个不带对话框的保存函数。
+    /// 它只负责将关卡数据写入指定的完整路径。
+    /// </summary>
+    /// <param name="path">要保存到的完整文件路径</param>
+    private void SaveLevelDirectly(string path)
+    {
+        // 这个逻辑与你原来的 SaveLevelToFile 相同，只是没有对话框
+        StringBuilder sb = new StringBuilder();
+
+        for (int y = mHeight - 1; y >= 0; y--) //
+        {
+            for (int x = 0; x < mWidth; x++)
+            {
+                Vector2i currentTile = new Vector2i(x, y);
+
+                // 按照你现有的逻辑，路径和危险区都保存为 'R'
+                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile)) //
+                {
+                    sb.Append('R'); //
+                }
+                else
+                {
+                    sb.Append('X'); //
+                }
+            }
+            sb.AppendLine();
+        }
+
+        // 直接写入文件，try-catch 放在了 HandleEnterKeySave 中
+        File.WriteAllText(path, sb.ToString());
+    }
+
+    /// <summary>
+    /// (新) 在后台线程中依次执行 Python 脚本。
+    /// </summary>
+    private void RunPythonScripts()
+    {
+        string workingDirectory = @"C:\GitHub\sturgeon-pub";
+
+        // --- 修改代码：可执行文件改为 'pipenv' ---
+        // 假设 'pipenv' 已经
+        // 在你系统的 PATH 环境变量中
+        string executable = "pipenv";
+
+        // --- 修改代码：在 python 命令前添加 'run' ---
+        string args1 = "run python input2tile.py --outfile work/mario.tile --textfile levels/vglc/mario-1-1-generic.lvl";
+        string args2 = "run python tile2scheme.py --outfile work/mario.scheme --tilefile work/mario.tile --count-divs 1 1 --pattern ring";
+
+        // C# 中的字符串需要正确处理引号。
+        // 你命令中的 '...' 和 "..." 会被原样传递
+        string args3 = "run python scheme2output.py --outfile work/my-level-output --schemefile work/mario.scheme --size 10 29 --pattern-hard --reach-junction \"{\" l 3 --reach-junction \"}\" r 3 --reach-connect \"--src { --dst } --move platform --sink-bottom --fwdbwd-layers 25\" --reach-print-internal --custom fwdbwd-nostuck hard --custom fwdbwd-grid MyDrawnLevel.lvl soft";
+
+        try
+        {
+            Debug.Log("开始执行 Python 脚本 (后台线程)...");
+
+            // --- 修改代码：添加了错误检查 ---
+            // 依次执行命令，如果任何一个失败 (返回 false)，则停止后续操作
+            if (!RunProcess(executable, args1, workingDirectory))
+            {
+                Debug.LogError("步骤 1 (input2tile) 失败。终止执行。");
+                return;
+            }
+
+            if (!RunProcess(executable, args2, workingDirectory))
+            {
+                Debug.LogError("步骤 2 (tile2scheme) 失败。终止执行。");
+                return;
+            }
+
+            if (!RunProcess(executable, args3, workingDirectory))
+            {
+                Debug.LogError("步骤 3 (scheme2output) 失败。");
+                return;
+            }
+
+            Debug.Log("所有 Python 脚本执行完毕。");
+        }
+        catch (Exception e)
+        {
+            // E确保错误能被 Unity 控制台捕获
+            Debug.LogError($"Python 脚本执行出错: {e.Message}\n{e.StackTrace}");
+        }
+    }
+
+    /// <summary>
+    /// (新) 启动一个外部进程，等待它完成，并将其输出记录到 Unity 控制台。
+    /// </summary>
+    /// <returns>如果 ExitCode 为 0 (成功) 则返回 true，否则返回 false</returns>
+    private bool RunProcess(string executable, string args, string workingDir)
+    {
+        ProcessStartInfo startInfo = new ProcessStartInfo
+        {
+            FileName = executable,
+            Arguments = args,
+            WorkingDirectory = workingDir,
+            UseShellExecute = false,      // 必须为 false 才能重定向输出
+            RedirectStandardOutput = true,  // 捕获标准输出
+            RedirectStandardError = true,   // 捕获标准错误
+            CreateNoWindow = true           // 不显示黑色的 cmd 窗口
+        };
+
+        Debug.Log($"正在执行: {executable} {args} @ {workingDir}");
+
+        using (Process process = Process.Start(startInfo))
+        {
+            // 因为我们在后台线程，所以可以安全地同步等待
+            // 读取所有输出
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit(); // 等待进程执行完毕
+
+            // --- 修改代码：检查 ExitCode 并返回 bool 值 ---
+            if (process.ExitCode == 0)
+            {
+                Debug.Log($"执行成功: {executable} {args}\n输出:\n{output}");
+                return true; // 成功
+            }
+            else
+            {
+                // 如果出错，打印错误信息
+                Debug.LogError($"执行失败 (ExitCode {process.ExitCode}): {executable} {args}\n错误:\n{error}\n输出:\n{output}");
+                return false; // 失败
+            }
+        }
+    }
+#endif
+    // --- 修改代码结束 ---
+
+
+    // --- (这是你原有的 'P' 键保存功能，保持不变) ---
 #if UNITY_EDITOR
     private void SaveLevelToFile()
     {
