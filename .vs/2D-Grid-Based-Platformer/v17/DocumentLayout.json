@@ -7,12 +7,16 @@
       "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\map.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|c:\\github\\2d-grid-based-platformer\\assets\\scripts\\bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\2d platformer\\scripts\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\2d platformer\\scripts\\cameracontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\gamecamera.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\assets\\scripts\\pathfinding\\pathfinderfast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -32,10 +36,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:Assets\\Scripts\\Character.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|solutionrelative:Assets\\Scripts\\Bot.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{1F013AF9-19CD-52DA-AAC7-6C4DF813C31C}|Assembly-CSharp.csproj|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\MapRoomData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -87,13 +87,13 @@
               "RelativeDocumentMoniker": "Assets\\2D Platformer\\Scripts\\CameraController.cs",
               "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\2D Platformer\\Scripts\\CameraController.cs",
               "RelativeToolTip": "Assets\\2D Platformer\\Scripts\\CameraController.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAABMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-24T01:03:04.46Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "PathFinderFast.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Pathfinding\\PathFinderFast.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Pathfinding\\PathFinderFast.cs",
@@ -111,14 +111,14 @@
               "RelativeDocumentMoniker": "Assets\\Scripts\\Map.cs",
               "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Map.cs",
               "RelativeToolTip": "Assets\\Scripts\\Map.cs",
-              "ViewState": "AgIAAOwDAAAAAAAAAAAswPADAAARAAAAAAAAAA==",
+              "ViewState": "AgIAADUFAAAAAAAAAAAqwIgFAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-10-16T21:12:15.278Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "Map_01.cs",
               "DocumentMoniker": "C:\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
               "RelativeDocumentMoniker": "..\\..\\Users\\xcy01\\OneDrive\\Desktop\\Map_01.cs",
@@ -130,7 +130,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "Vector2i.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Vector2i.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Vector2i.cs",
@@ -142,7 +142,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "Character.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Character.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Character.cs",
@@ -154,7 +154,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 6,
               "Title": "LevelGenerator.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\LevelGenerator\\LevelGenerator.cs",
@@ -166,28 +166,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 1,
               "Title": "Bot.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\Bot.cs",
               "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Bot.cs",
               "RelativeToolTip": "Assets\\Scripts\\Bot.cs",
-              "ViewState": "AgIAABIBAAAAAAAAAAAgwCoBAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAAG0BAAAAAAAAAIBJwCoBAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T04:02:07.362Z"
+              "WhenOpened": "2025-10-02T04:02:07.362Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "GameCamera.cs",
               "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
               "RelativeDocumentMoniker": "Assets\\Scripts\\GameCamera.cs",
               "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\GameCamera.cs",
               "RelativeToolTip": "Assets\\Scripts\\GameCamera.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABsAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-10-02T03:18:08.494Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-10-02T03:18:08.494Z"
             },
             {
               "$type": "Document",

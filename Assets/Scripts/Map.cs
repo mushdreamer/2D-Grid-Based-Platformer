@@ -124,6 +124,12 @@ public partial class Map : MonoBehaviour
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
 
+    // --- 新增代码：用于线程间通信 ---
+    // 这个 "busy" 标志防止用户在脚本运行时重复按 Enter
+    private volatile bool pythonScriptsRunning = false;
+    // 这个 "signal" 标志由后台线程设置，告诉 Update() 它可以加载关卡了
+    private volatile bool pythonScriptsFinished = false;
+
     // 用一个 HashSet 来存储玩家选择的路径格子坐标，查询效率高
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
     // 为危险区域新增一个数据存储集合
@@ -493,6 +499,15 @@ public partial class Map : MonoBehaviour
 
     void Update()
     {
+        // --- 新增代码：检查后台线程信号 ---
+        if (pythonScriptsFinished)
+        {
+            pythonScriptsFinished = false; // 立即重置信号，防止重复执行
+            Debug.Log("主线程收到信号。正在加载生成的关卡...");
+            LoadGeneratedLevel(); // 调用我们新的加载函数
+        }
+        // --- 新增代码结束 ---
+
         switch (currentPhase)
         {
             case GamePhase.Drawing:
@@ -1018,6 +1033,15 @@ public partial class Map : MonoBehaviour
     /// </summary>
     private void HandleEnterKeySave()
     {
+        // --- 修改开始 ---
+        // 如果脚本已经在运行，就阻止再次执行
+        if (pythonScriptsRunning)
+        {
+            Debug.LogWarning("Python 脚本已在运行，请稍候...");
+            return;
+        }
+        // --- 修改结束 ---
+
         string workingDirectory = @"C:\GitHub\sturgeon-pub";
         string levelFileName = "MyDrawnLevel.lvl";
         string fullSavePath = Path.Combine(workingDirectory, levelFileName);
@@ -1033,6 +1057,12 @@ public partial class Map : MonoBehaviour
             Debug.LogError($"直接保存关卡失败: {e.Message}");
             return; // 如果保存失败，就不执行后续脚本
         }
+
+        // 2. 设置标志并启动后台线程
+        pythonScriptsRunning = true; // 设置为 "忙碌"
+        pythonScriptsFinished = false; // 重置 "完成" 标志
+
+        Debug.Log("关卡已保存。正在后台启动 Python 脚本...");
 
         // 2. 在新线程中运行 Python 脚本，防止Unity编辑器卡死
         new Thread(new ThreadStart(RunPythonScripts)).Start();
@@ -1121,6 +1151,14 @@ public partial class Map : MonoBehaviour
         {
             // E确保错误能被 Unity 控制台捕获
             Debug.LogError($"Python 脚本执行出错: {e.Message}\n{e.StackTrace}");
+        }
+        finally
+        {
+            // --- 关键新增 ---
+            // 无论成功还是失败，都通知主线程
+            pythonScriptsFinished = true; // 发送 "完成" 信号
+            pythonScriptsRunning = false; // 解除 "忙碌" 状态
+            // --- 新增结束 ---
         }
     }
 
@@ -1302,4 +1340,79 @@ public partial class Map : MonoBehaviour
         Debug.Log($"关卡已成功从 {path} 加载！");
     }
 #endif
+
+    /// <summary>
+    /// (新) 读取由 Python 脚本生成的 my-level-output.lvl 文件，
+    /// 解析其内容以填充关卡数据，然后启动试玩模式。
+    /// </summary>
+    private void LoadGeneratedLevel()
+    {
+        // 1. 确定文件路径 (这必须与 scheme2output.py 的 --outfile 匹配)
+        string generatedLevelPath = Path.Combine(@"C:\GitHub\sturgeon-pub", "work", "my-level-output.lvl");
+
+        if (!File.Exists(generatedLevelPath))
+        {
+            Debug.LogError($"加载失败: 未找到生成的关卡文件于 {generatedLevelPath}");
+            return;
+        }
+
+        string[] lines;
+        try
+        {
+            // 2. 读取文件所有行
+            lines = File.ReadAllLines(generatedLevelPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"读取生成的关卡文件失败: {e.Message}");
+            return;
+        }
+
+        // 3. 清空当前的绘制数据，为新关卡做准备
+        playerSelectedPath.Clear();
+        dangerZoneTiles.Clear();
+
+        // 4. 解析关卡网格
+        List<string> levelGridLines = new List<string>();
+        foreach (string line in lines)
+        {
+            if (line.StartsWith("META")) // 遇到 META 数据则停止
+                break;
+            levelGridLines.Add(line);
+        }
+
+        // 5. 将文件行转换为关卡数据
+        // .lvl 文件是从上到下保存的，
+        // 而我们的 `LoadLevelFromFile` 逻辑 (y = mHeight - 1 - i) 是正确的
+        int fileHeight = levelGridLines.Count;
+        for (int i = 0; i < fileHeight; i++)
+        {
+            int mapY = (fileHeight - 1) - i; // 文件第0行是地图的Y轴顶端
+            if (mapY < 0 || mapY >= mHeight) continue; // 确保在地图Y轴边界内
+
+            string line = levelGridLines[i];
+            for (int mapX = 0; mapX < line.Length; mapX++)
+            {
+                if (mapX >= mWidth) break; // 确保在地图X轴边界内
+
+                char tileChar = line[mapX];
+
+                // --- 这是我们商定的核心逻辑 ---
+                if (tileChar == '-') // 只有空白/天空 被视为空
+                {
+                    // `StartTrialMode` 会将 `playerSelectedPath` 设为 TileType.Empty
+                    playerSelectedPath.Add(new Vector2i(mapX, mapY));
+                }
+                // (其他所有字符: 'X', 'S', 'Q', '{', '}' 都被视为障碍物)
+                // 我们什么都不用做。`StartTrialMode` 会自动将
+                // 不在 playerSelectedPath 中的格子设为 TileType.Block
+            }
+        }
+
+        Debug.Log($"已成功解析 {playerSelectedPath.Count} 个可通行格子。");
+
+        // 6. (关键) 调用您现有的 StartTrialMode()
+        // 它会根据我们刚刚填充的 playerSelectedPath 数据来渲染关卡并启动游戏！
+        StartTrialMode();
+    }
 }
