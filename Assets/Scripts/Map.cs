@@ -1023,8 +1023,57 @@ public partial class Map : MonoBehaviour
         // 5. 切换到试玩状态
         currentPhase = GamePhase.TrialPlay;
 
+        ScanLevelData();
+
         Debug.Log("Trial Mode! You can play now. Press BACKSPACE to return to editing.");
     }
+
+    // --- 关卡扫描器实现方法 ---
+    /// <summary>
+    /// 扫描当前地图的所有格子，并打印其坐标和通行状态。
+    /// </summary>
+    private void ScanLevelData()
+    {
+        Debug.Log(">>> 开始扫描关卡数据 (按空格键触发) <<<");
+
+        // 使用 StringBuilder 避免在循环中频繁进行字符串拼接，提高性能
+        StringBuilder report = new StringBuilder();
+        int walkableCount = 0;
+        int wallCount = 0;
+
+        for (int y = 0; y < mHeight; y++)
+        {
+            for (int x = 0; x < mWidth; x++)
+            {
+                TileType type = tiles[x, y];
+                string status;
+
+                // 判断逻辑：Block 为墙壁，其他（Empty, Danger, OneWay）在物理上都算作可行走的路径（尽管Danger会死）
+                if (type == TileType.Block)
+                {
+                    status = "不可通行的墙壁 [Wall]";
+                    wallCount++;
+                }
+                else
+                {
+                    status = "可通行的路径 [Path]";
+                    walkableCount++;
+                }
+
+                // 将单条信息格式化
+                string info = $"坐标 ({x}, {y}) : {status} (类型: {type})";
+
+                // 打印每一行（如果不需要每行都打印，可以注释掉下面这行，只看最后的统计）
+                Debug.Log(info);
+
+                // 也可以存入 StringBuilder 稍后作为一个大文本块处理或保存
+                report.AppendLine(info);
+            }
+        }
+
+        Debug.Log($">>> 关卡扫描结束。统计：路径格子 {walkableCount} 个，墙壁格子 {wallCount} 个。 <<<");
+    }
+    // ------------------------------------
 
     // --- 新增代码：用于 Enter 键保存和执行Python脚本的所有逻辑 ---
 #if UNITY_EDITOR
