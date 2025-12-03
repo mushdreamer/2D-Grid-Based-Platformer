@@ -685,7 +685,10 @@ public partial class Map : MonoBehaviour
 
     void FixedUpdate()
     {
-        player.BotUpdate();
+        if (currentPhase == GamePhase.TrialPlay && player.gameObject.activeInHierarchy)
+        {
+            player.BotUpdate();
+        }
     }
 
     // 新方法：处理绘制阶段的输入
