@@ -114,12 +114,17 @@ public partial class Map : MonoBehaviour
     // 管理所有笔刷类型
     public enum BrushType
     {
-        Path,   // 安全路径笔刷
-        Danger  // 危险区域笔刷
+        StartPoint, // 1. 起点
+        Path,       // 2. 路径
+        EndPoint    // 3. 终点
     }
 
     [Header("Brushes")]
     public BrushType currentBrush = BrushType.Path; // 当前激活的笔刷，默认为路径
+
+    // 存储唯一的起点和终点坐标，初始化为 (-1, -1) 表示未设置
+    private Vector2i startTile = new Vector2i(-1, -1);
+    private Vector2i endTile = new Vector2i(-1, -1);
 
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
@@ -132,8 +137,6 @@ public partial class Map : MonoBehaviour
 
     // 用一个 HashSet 来存储玩家选择的路径格子坐标，查询效率高
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
-    // 为危险区域新增一个数据存储集合
-    private HashSet<Vector2i> dangerZoneTiles = new HashSet<Vector2i>();
     //新增代码
 
     public MapRoomData mapRoomSimple;
@@ -499,64 +502,78 @@ public partial class Map : MonoBehaviour
 
     void Update()
     {
-        // --- 新增代码：检查后台线程信号 ---
+        // 1. 检查后台线程信号 (用于 Enter 键执行 Python 后的回调)
         if (pythonScriptsFinished)
         {
-            pythonScriptsFinished = false; // 立即重置信号，防止重复执行
+            pythonScriptsFinished = false;
             Debug.Log("主线程收到信号。正在加载生成的关卡...");
-            LoadGeneratedLevel(); // 调用我们新的加载函数
+            LoadGeneratedLevel();
         }
-        // --- 新增代码结束 ---
 
         switch (currentPhase)
         {
             case GamePhase.Drawing:
-                // --- 笔刷切换逻辑 ---
-                if (Input.GetKeyDown(KeyCode.Q)) // 按下数字键 1
+                // --- 笔刷切换 ---
+                if (Input.GetKeyDown(KeyCode.Alpha1))
+                {
+                    currentBrush = BrushType.StartPoint;
+                    Debug.Log("Brush: Start Point (起点)");
+                }
+                else if (Input.GetKeyDown(KeyCode.Alpha2))
                 {
                     currentBrush = BrushType.Path;
-                    Debug.Log("Brush Change! Safe Path");
+                    Debug.Log("Brush: Path (路径)");
                 }
-                else if (Input.GetKeyDown(KeyCode.W)) // 按下数字键 2
+                else if (Input.GetKeyDown(KeyCode.Alpha3))
                 {
-                    currentBrush = BrushType.Danger;
-                    Debug.Log("Brush Change! Dangerous Pool");
+                    currentBrush = BrushType.EndPoint;
+                    Debug.Log("Brush: End Point (终点)");
                 }
-                // --------------------------
-                // --- 修改：保存和加载快捷键 ---
-                if (Input.GetKeyDown(KeyCode.P))
+
+                // --- 快捷键功能区 ---
+
+                // [P] 键：手动保存关卡 (调用刚才修复过的 SaveLevelToFile)
+                else if (Input.GetKeyDown(KeyCode.P))
                 {
-                    SaveLevelToFile(); // 手动保存 (P)
+                    SaveLevelToFile();
                 }
+                // [L] 键：手动加载关卡
                 else if (Input.GetKeyDown(KeyCode.L))
                 {
-                    LoadLevelFromFile(); // 手动加载 (L)
+                    LoadLevelFromFile();
                 }
-                // --- 新增代码：处理 Enter 键保存和执行脚本 ---
+                // [Enter] 键：保存并执行 Python 脚本
                 else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
                 {
-                    HandleEnterKeySave(); // 按下 Enter 键
+                    HandleEnterKeySave();
                 }
-                // --- 修改结束 ---
 
+                // --- 绘制逻辑 ---
                 HandleDrawingInput();
 
-                // 按下空格键，开始试玩
+                // [Space] 键：开始试玩
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    StartTrialMode();
+                    if (startTile.x == -1 || endTile.x == -1)
+                    {
+                        Debug.LogError("无法开始：请先设置 起点(1) 和 终点(3)！");
+                    }
+                    else
+                    {
+                        StartTrialMode();
+                    }
                 }
                 break;
 
             case GamePhase.TrialPlay:
-                HandlePlayingInput(); // 玩家输入逻辑复用
+                HandlePlayingInput();
 
-                // 按下 Backspace 键，返回绘制模式进行修改
+                // [Backspace] 键：返回绘制模式
                 if (Input.GetKeyDown(KeyCode.Backspace))
                 {
                     ReturnToDrawingMode();
                 }
-                // 按下 'R' 键，完全重置所有内容，返回空白画布
+                // [R] 键：重置画布
                 else if (Input.GetKeyDown(KeyCode.R))
                 {
                     ResetToDrawingMode();
@@ -696,119 +713,111 @@ public partial class Map : MonoBehaviour
     {
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
 
-        if (scrollInput != 0f) // 检查是否有滚动
+        if (scrollInput != 0f)
         {
-            // 记录旧大小，以便在变化时打印日志
             int oldBrushSize = brushSize;
-
-            if (scrollInput > 0f) // 向上滚动
-            {
-                brushSize++;
-            }
-            else if (scrollInput < 0f) // 向下滚动
-            {
-                brushSize--;
-            }
-
-            // 关键：使用 Mathf.Clamp 确保笔刷大小不会超出你设定的范围 (1 到 10)
-            // 这和你变量声明上的 [Range(1, 10)] 属性保持一致
+            if (scrollInput > 0f) brushSize++;
+            else if (scrollInput < 0f) brushSize--;
             brushSize = Mathf.Clamp(brushSize, 1, 10);
-
-            // 如果大小真的改变了，就在控制台打印新大小，方便确认
-            if (oldBrushSize != brushSize)
-            {
-                Debug.Log("笔刷大小调整为: " + brushSize);
-            }
+            if (oldBrushSize != brushSize) Debug.Log("笔刷大小调整为: " + brushSize);
         }
-        // --- 新增代码结束 ---
 
-
-        // 将鼠标位置转换为格子坐标
         Vector2 mousePos = Input.mousePosition;
         Vector2 cameraPos = Camera.main.transform.position;
         var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
         int mouseTileX, mouseTileY;
         GetMapTileAtPoint(mousePosInWorld, out mouseTileX, out mouseTileY);
-        Vector2i currentCell = new Vector2i(mouseTileX, mouseTileY);
 
-        // --- 新增代码在这里 ---
-        // 调用新方法来更新笔刷预览的实时状态
         UpdateBrushPreview(mouseTileX, mouseTileY);
-        // --- 新增代码结束 ---
 
-        // 如果按住鼠标左键，就绘制一个 brushSize * brushSize 的区域
+        // 左键绘制
         if (Input.GetKey(KeyCode.Mouse0))
         {
-            // 使用嵌套循环遍历笔刷覆盖的每一个格子
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
                 for (int yOffset = 0; yOffset < brushSize; yOffset++)
                 {
                     int currentX = mouseTileX + xOffset;
                     int currentY = mouseTileY + yOffset;
-                    currentCell = new Vector2i(currentX, currentY);
+                    Vector2i targetCell = new Vector2i(currentX, currentY);
 
-                    // 检查坐标是否在地图边界内且未被添加
                     if (currentX >= 0 && currentX < mWidth && currentY >= 0 && currentY < mHeight)
                     {
-                        // --- 核心修改：根据当前笔刷决定绘制内容 ---
-                        if (currentBrush == BrushType.Path)
+                        ClearTileState(targetCell); // 清除旧状态
+
+                        if (currentBrush == BrushType.StartPoint)
                         {
-                            if (!playerSelectedPath.Contains(currentCell))
-                            {
-                                dangerZoneTiles.Remove(currentCell); // 确保危险区被路径覆盖
-                                playerSelectedPath.Add(currentCell);
-                                tilesSprites[currentX, currentY].enabled = true;
-                                tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 使用基础方块
-                                tilesSprites[currentX, currentY].color = new Color(0.5f, 1f, 0.5f, 0.5f); // 淡绿色
-                                tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
-                                tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
-                            }
+                            if (startTile.x != -1) ResetVisual(startTile.x, startTile.y);
+                            startTile = targetCell;
+                            SetVisual(currentX, currentY, Color.cyan);
                         }
-                        else // currentBrush == BrushType.Danger
+                        else if (currentBrush == BrushType.EndPoint)
                         {
-                            if (!dangerZoneTiles.Contains(currentCell))
-                            {
-                                playerSelectedPath.Remove(currentCell); // 确保路径被危险区覆盖
-                                dangerZoneTiles.Add(currentCell);
-                                tilesSprites[currentX, currentY].enabled = true;
-                                tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 使用基础方块
-                                tilesSprites[currentX, currentY].color = new Color(1f, 0.5f, 0.5f, 0.5f); // 淡红色
-                                tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
-                                tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
-                            }
+                            if (endTile.x != -1) ResetVisual(endTile.x, endTile.y);
+                            endTile = targetCell;
+                            SetVisual(currentX, currentY, Color.yellow);
                         }
-                        // ------------------------------------------
+                        else if (currentBrush == BrushType.Path)
+                        {
+                            playerSelectedPath.Add(targetCell);
+                            SetVisual(currentX, currentY, new Color(0.5f, 1f, 0.5f, 0.5f));
+                        }
                     }
                 }
             }
         }
 
-        // (可选) 按住鼠标右键可以擦除一个 brushSize * brushSize 的区域
+        // 右键擦除
         if (Input.GetKey(KeyCode.Mouse1))
         {
-            // 同样使用嵌套循环来处理擦除逻辑
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
                 for (int yOffset = 0; yOffset < brushSize; yOffset++)
                 {
                     int currentX = mouseTileX + xOffset;
                     int currentY = mouseTileY + yOffset;
-                    currentCell = new Vector2i(currentX, currentY);
+                    Vector2i currentCell = new Vector2i(currentX, currentY);
 
-                    // --- 核心修改：擦除时需要同时检查两个集合 ---
-                    if (playerSelectedPath.Remove(currentCell) || dangerZoneTiles.Remove(currentCell))
+                    // --- 修复：移除了 dangerZoneTiles 的引用 ---
+                    bool removed = playerSelectedPath.Remove(currentCell);
+                    if (startTile == currentCell) { startTile = new Vector2i(-1, -1); removed = true; }
+                    if (endTile == currentCell) { endTile = new Vector2i(-1, -1); removed = true; }
+
+                    if (removed)
                     {
-                        tilesSprites[currentX, currentY].enabled = true;
-                        tilesSprites[currentX, currentY].sprite = mDirtSprites[0]; // 确保是基础方块
-                        tilesSprites[currentX, currentY].color = gridColor; // 设置为网格颜色
-                        tilesSprites[currentX, currentY].transform.localScale = Vector3.one;
-                        tilesSprites[currentX, currentY].transform.eulerAngles = Vector3.zero;
+                        ResetVisual(currentX, currentY);
                     }
-                    // ------------------------------------------
                 }
             }
         }
+    }
+
+    // 辅助方法：清除某个坐标的所有逻辑状态
+    private void ClearTileState(Vector2i cell)
+    {
+        if (startTile == cell) startTile = new Vector2i(-1, -1);
+        if (endTile == cell) endTile = new Vector2i(-1, -1);
+        playerSelectedPath.Remove(cell);
+    }
+
+    // 辅助方法：设置视觉
+    private void SetVisual(int x, int y, Color color)
+    {
+        tilesSprites[x, y].enabled = true;
+        tilesSprites[x, y].sprite = mDirtSprites[0];
+        tilesSprites[x, y].color = color;
+        tilesSprites[x, y].transform.localScale = Vector3.one;
+        tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+    }
+
+    // 辅助方法：重置视觉（变回灰色网格）
+    private void ResetVisual(int x, int y)
+    {
+        tilesSprites[x, y].enabled = true;
+        tilesSprites[x, y].sprite = mDirtSprites[0];
+        tilesSprites[x, y].color = gridColor;
+        tilesSprites[x, y].transform.localScale = Vector3.one;
+        tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
     }
 
     // 新方法：处理游戏阶段的输入（就是你之前Update里的逻辑）
@@ -835,20 +844,17 @@ public partial class Map : MonoBehaviour
     private void ResetToDrawingMode()
     {
         playerSelectedPath.Clear();
-        dangerZoneTiles.Clear();
+        // dangerZoneTiles.Clear(); // 移除
+        startTile = new Vector2i(-1, -1); // 重置起点
+        endTile = new Vector2i(-1, -1);   // 重置终点
+
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 tiles[x, y] = TileType.Empty;
-                mGrid[x, y] = 1; // 确保寻路网格是通畅的
-
-                // 2. 设置可视化的网格背景
-                tilesSprites[x, y].enabled = true; // 启用 sprite
-                tilesSprites[x, y].sprite = mDirtSprites[0]; // 使用基础方块
-                tilesSprites[x, y].color = gridColor; // 设置为网格颜色
-                tilesSprites[x, y].transform.localScale = Vector3.one;
-                tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+                mGrid[x, y] = 1;
+                ResetVisual(x, y); // 使用上面定义的辅助方法
             }
         }
 
@@ -909,14 +915,8 @@ public partial class Map : MonoBehaviour
 
     private void ReturnToDrawingMode()
     {
-        // --- 关键新增：在返回编辑前，禁用玩家对象 ---
-        if (player != null)
-        {
-            player.gameObject.SetActive(false);
-        }
-        // ------------------------------------------
+        if (player != null) player.gameObject.SetActive(false);
 
-        // 遍历所有格子，恢复到绘制时的视觉状态
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
@@ -924,55 +924,41 @@ public partial class Map : MonoBehaviour
                 Vector2i currentTile = new Vector2i(x, y);
 
                 tiles[x, y] = TileType.Empty;
-                mGrid[x, y] = 1; // 关键：将试玩模式的障碍物(0)重置为可行走(1)
+                mGrid[x, y] = 1;
 
-                // 恢复视觉状态
-                if (playerSelectedPath.Contains(currentTile))
+                // --- 修复：分别恢复起点、终点和路径的颜色 ---
+                if (currentTile == startTile)
                 {
-                    tilesSprites[x, y].enabled = true;
-                    tilesSprites[x, y].sprite = mDirtSprites[0];
-                    tilesSprites[x, y].color = new Color(0.5f, 1f, 0.5f, 0.5f);
-                    tilesSprites[x, y].transform.localScale = Vector3.one;
-                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+                    SetVisual(x, y, Color.cyan);
                 }
-                else if (dangerZoneTiles.Contains(currentTile))
+                else if (currentTile == endTile)
                 {
-                    tilesSprites[x, y].enabled = true;
-                    tilesSprites[x, y].sprite = mDirtSprites[0];
-                    tilesSprites[x, y].color = new Color(1f, 0.5f, 0.5f, 0.5f);
-                    tilesSprites[x, y].transform.localScale = Vector3.one;
-                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+                    SetVisual(x, y, Color.yellow);
+                }
+                else if (playerSelectedPath.Contains(currentTile))
+                {
+                    SetVisual(x, y, new Color(0.5f, 1f, 0.5f, 0.5f));
                 }
                 else
                 {
-                    // 这是对非绘制区域（即试玩时的Block）的处理
-                    tilesSprites[x, y].enabled = true;
-                    tilesSprites[x, y].sprite = mDirtSprites[0];
-                    tilesSprites[x, y].color = gridColor; // 恢复为网格颜色
-                    tilesSprites[x, y].transform.localScale = Vector3.one;
-                    tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+                    ResetVisual(x, y);
                 }
             }
         }
 
-        // 切换回绘制状态
         currentPhase = GamePhase.Drawing;
-        Cursor.visible = false; // 隐藏系统鼠标
-
-        // 重新显示笔刷预览
-        if (brushPreviewInstance != null)
-        {
-            brushPreviewInstance.SetActive(true);
-        }
+        Cursor.visible = false;
+        if (brushPreviewInstance != null) brushPreviewInstance.SetActive(true);
 
         Debug.Log("Back to Drawing Mode.");
     }
 
     private void StartTrialMode()
     {
-        if (playerSelectedPath.Count == 0)
+        // 检查起点和终点是否有效
+        if (startTile.x == -1 || endTile.x == -1)
         {
-            Debug.LogWarning("Path is empty! Cannot start trial.");
+            Debug.LogError("无法开始：未设置起点或终点！");
             return;
         }
 
@@ -982,101 +968,108 @@ public partial class Map : MonoBehaviour
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
-                tilesSprites[x, y].color = Color.white; // 恢复格子的正常颜色
+                tilesSprites[x, y].color = Color.white;
 
-                // --- 核心修改：增加对危险区域的判断 ---
-                if (dangerZoneTiles.Contains(currentTile))
+                // --- 修复：移除了 dangerZoneTiles，增加了 Start/End 的处理 ---
+                if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
-                    SetTile(x, y, TileType.Danger);
-                }
-                else if (playerSelectedPath.Contains(currentTile))
-                {
+                    // 起点、终点、路径在物理上都是 Empty (可通行)
                     SetTile(x, y, TileType.Empty);
                 }
                 else
                 {
+                    // 其他地方是墙
                     SetTile(x, y, TileType.Block);
                 }
-                // ----------------------------------------
             }
         }
 
         // 2. 隐藏绘制工具
-        if (brushPreviewInstance != null)
-        {
-            brushPreviewInstance.SetActive(false);
-        }
-        Cursor.visible = true; // 显示系统鼠标
+        if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
+        Cursor.visible = true;
 
         // 3. 激活并初始化玩家
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
 
-        // 4. 把玩家放到路径的起点
-        using (var enumerator = playerSelectedPath.GetEnumerator())
-        {
-            if (enumerator.MoveNext())
-            {
-                Vector2i startPos = enumerator.Current;
-                player.mPosition = GetMapTilePosition(startPos) + new Vector2(0, player.mAABB.HalfSizeY);
-            }
-        }
+        // 4. --- 修复：让玩家出生在设置的【起点】 ---
+        player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
+        // ----------------------------------------
 
-        // 5. 切换到试玩状态
+        // 5. 切换状态
         currentPhase = GamePhase.TrialPlay;
 
+        // 6. 触发扫描器
         ScanLevelData();
 
-        Debug.Log("Trial Mode! You can play now. Press BACKSPACE to return to editing.");
+        Debug.Log("Trial Mode Started.");
     }
 
     // --- 关卡扫描器实现方法 ---
     /// <summary>
-    /// 扫描当前地图的所有格子，并打印其坐标和通行状态。
+    /// 扫描当前地图，区分可修改区域（墙壁）和不可修改区域（起点、终点、路径）。
     /// </summary>
     private void ScanLevelData()
     {
-        Debug.Log(">>> 开始扫描关卡数据 (按空格键触发) <<<");
+        Debug.Log(">>> ----------------------------------- <<<");
+        Debug.Log(">>> 关卡扫描器启动：正在生成约束图... <<<");
 
-        // 使用 StringBuilder 避免在循环中频繁进行字符串拼接，提高性能
         StringBuilder report = new StringBuilder();
-        int walkableCount = 0;
-        int wallCount = 0;
+        int immutableCount = 0;
+        int modifiableCount = 0;
 
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
-                TileType type = tiles[x, y];
-                string status;
+                Vector2i currentPos = new Vector2i(x, y);
+                string tileTypeStr;
+                string modifyPermission; // 权限：可修改 vs 不可修改
 
-                // 判断逻辑：Block 为墙壁，其他（Empty, Danger, OneWay）在物理上都算作可行走的路径（尽管Danger会死）
-                if (type == TileType.Block)
+                // 优先级判断：起点 > 终点 > 路径 > 墙壁
+                if (currentPos == startTile)
                 {
-                    status = "不可通行的墙壁 [Wall]";
-                    wallCount++;
+                    tileTypeStr = "【起点 Start】";
+                    modifyPermission = "不可修改 (Immutable)";
+                    immutableCount++;
+                }
+                else if (currentPos == endTile)
+                {
+                    tileTypeStr = "【终点 End】";
+                    modifyPermission = "不可修改 (Immutable)";
+                    immutableCount++;
+                }
+                else if (playerSelectedPath.Contains(currentPos))
+                {
+                    tileTypeStr = "【路径 Path】";
+                    modifyPermission = "不可修改 (Immutable)";
+                    immutableCount++;
                 }
                 else
                 {
-                    status = "可通行的路径 [Path]";
-                    walkableCount++;
+                    // 剩下的所有空白区域，默认为墙壁，且可以被算法修改
+                    tileTypeStr = "【墙壁 Wall】";
+                    modifyPermission = "可修改 (Modifiable)";
+                    modifiableCount++;
                 }
 
-                // 将单条信息格式化
-                string info = $"坐标 ({x}, {y}) : {status} (类型: {type})";
+                // 格式化输出: 坐标 | 类型 | 权限
+                string info = $"Pos: ({x}, {y}) \t| Type: {tileTypeStr} \t| {modifyPermission}";
 
-                // 打印每一行（如果不需要每行都打印，可以注释掉下面这行，只看最后的统计）
-                Debug.Log(info);
-
-                // 也可以存入 StringBuilder 稍后作为一个大文本块处理或保存
+                // 打印
+                // Debug.Log(info); // 如果不想刷屏，可以注释掉这行，只看最后统计
                 report.AppendLine(info);
             }
         }
 
-        Debug.Log($">>> 关卡扫描结束。统计：路径格子 {walkableCount} 个，墙壁格子 {wallCount} 个。 <<<");
+        // 这里可以将 report.ToString() 保存到文件或者发送给 Python
+        Debug.Log(report.ToString()); // 打印完整报告
+
+        Debug.Log($">>> 扫描完成 <<<");
+        Debug.Log($">>> 约束统计: 不可修改(约束)格子: {immutableCount} 个 | 可修改(自由)格子: {modifiableCount} 个");
+        Debug.Log(">>> ----------------------------------- <<<");
     }
-    // ------------------------------------
 
     // --- 新增代码：用于 Enter 键保存和执行Python脚本的所有逻辑 ---
 #if UNITY_EDITOR
@@ -1127,29 +1120,27 @@ public partial class Map : MonoBehaviour
     /// <param name="path">要保存到的完整文件路径</param>
     private void SaveLevelDirectly(string path)
     {
-        // 这个逻辑与你原来的 SaveLevelToFile 相同，只是没有对话框
         StringBuilder sb = new StringBuilder();
 
-        for (int y = mHeight - 1; y >= 0; y--) //
+        for (int y = mHeight - 1; y >= 0; y--)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // 按照你现有的逻辑，路径和危险区都保存为 'R'
-                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile)) //
+                // --- 修复：包含 StartTile 和 EndTile ---
+                if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
-                    sb.Append('R'); //
+                    sb.Append('R'); // Path
                 }
                 else
                 {
-                    sb.Append('X'); //
+                    sb.Append('X'); // Wall
                 }
             }
             sb.AppendLine();
         }
 
-        // 直接写入文件，try-catch 放在了 HandleEnterKeySave 中
         File.WriteAllText(path, sb.ToString());
     }
 
@@ -1279,36 +1270,40 @@ public partial class Map : MonoBehaviour
             return; // 用户取消了操作，函数提前退出
         }
 
-        // 3. 使用 StringBuilder 高效构建字符串 (这部分逻辑和您原来的一样)
+        // 3. 使用 StringBuilder 高效构建字符串
         StringBuilder sb = new StringBuilder();
 
-        for (int y = mHeight - 1; y >= 0; y--) //
+        // 从上到下遍历（y 从 mHeight-1 到 0），符合 .lvl 文件格式标准
+        for (int y = mHeight - 1; y >= 0; y--)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                if (playerSelectedPath.Contains(currentTile) || dangerZoneTiles.Contains(currentTile)) //
+                // --- 修复核心逻辑 ---
+                // 起点、终点、以及绘制的路径，都被记录为 'R' (表示由人类设计的路径约束)
+                // 移除了 dangerZoneTiles 的引用
+                if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
-                    sb.Append('R'); //
+                    sb.Append('R');
                 }
                 else
                 {
-                    sb.Append('X'); //
+                    sb.Append('X'); // 其他区域记录为墙壁，由算法自由发挥
                 }
             }
-            sb.AppendLine();
+            sb.AppendLine(); // 换行
         }
 
         // 4. 将字符串写入用户选择的文件路径
         try
         {
-            File.WriteAllText(path, sb.ToString()); //
+            File.WriteAllText(path, sb.ToString());
             Debug.Log($"关卡已成功保存到: {path}");
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"保存关卡失败: {e.Message}"); //
+            Debug.LogError($"保存关卡失败: {e.Message}");
         }
     }
 #endif
@@ -1399,72 +1394,48 @@ public partial class Map : MonoBehaviour
     /// </summary>
     private void LoadGeneratedLevel()
     {
-        // 1. 确定文件路径 (这必须与 scheme2output.py 的 --outfile 匹配)
         string generatedLevelPath = Path.Combine(@"C:\GitHub\sturgeon-pub", "work", "my-level-output.lvl");
 
         if (!File.Exists(generatedLevelPath))
         {
-            Debug.LogError($"加载失败: 未找到生成的关卡文件于 {generatedLevelPath}");
+            Debug.LogError($"加载失败: 未找到文件 {generatedLevelPath}");
             return;
         }
 
         string[] lines;
-        try
-        {
-            // 2. 读取文件所有行
-            lines = File.ReadAllLines(generatedLevelPath);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"读取生成的关卡文件失败: {e.Message}");
-            return;
-        }
+        try { lines = File.ReadAllLines(generatedLevelPath); }
+        catch (System.Exception e) { Debug.LogError(e.Message); return; }
 
-        // 3. 清空当前的绘制数据，为新关卡做准备
         playerSelectedPath.Clear();
-        dangerZoneTiles.Clear();
+        // --- 修复：移除 dangerZoneTiles.Clear() ---
 
-        // 4. 解析关卡网格
         List<string> levelGridLines = new List<string>();
         foreach (string line in lines)
         {
-            if (line.StartsWith("META")) // 遇到 META 数据则停止
-                break;
+            if (line.StartsWith("META")) break;
             levelGridLines.Add(line);
         }
 
-        // 5. 将文件行转换为关卡数据
-        // .lvl 文件是从上到下保存的，
-        // 而我们的 `LoadLevelFromFile` 逻辑 (y = mHeight - 1 - i) 是正确的
         int fileHeight = levelGridLines.Count;
         for (int i = 0; i < fileHeight; i++)
         {
-            int mapY = (fileHeight - 1) - i; // 文件第0行是地图的Y轴顶端
-            if (mapY < 0 || mapY >= mHeight) continue; // 确保在地图Y轴边界内
+            int mapY = (fileHeight - 1) - i;
+            if (mapY < 0 || mapY >= mHeight) continue;
 
             string line = levelGridLines[i];
             for (int mapX = 0; mapX < line.Length; mapX++)
             {
-                if (mapX >= mWidth) break; // 确保在地图X轴边界内
-
+                if (mapX >= mWidth) break;
                 char tileChar = line[mapX];
 
-                // --- 这是我们商定的核心逻辑 ---
-                if (tileChar == '-') // 只有空白/天空 被视为空
+                if (tileChar == '-')
                 {
-                    // `StartTrialMode` 会将 `playerSelectedPath` 设为 TileType.Empty
                     playerSelectedPath.Add(new Vector2i(mapX, mapY));
                 }
-                // (其他所有字符: 'X', 'S', 'Q', '{', '}' 都被视为障碍物)
-                // 我们什么都不用做。`StartTrialMode` 会自动将
-                // 不在 playerSelectedPath 中的格子设为 TileType.Block
             }
         }
 
         Debug.Log($"已成功解析 {playerSelectedPath.Count} 个可通行格子。");
-
-        // 6. (关键) 调用您现有的 StartTrialMode()
-        // 它会根据我们刚刚填充的 playerSelectedPath 数据来渲染关卡并启动游戏！
         StartTrialMode();
     }
 }
