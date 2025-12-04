@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,8 +7,8 @@ using UnityEngine.UI;
 using System.IO;
 using System.Text;
 using System;
-using System.Diagnostics; // --- ĞÂÔö´úÂë£ºÓÃÓÚÖ´ĞĞÍâ²¿ Python ÃüÁî ---
-using Debug = UnityEngine.Debug; // --- ĞÂÔö´úÂë£ºÃ÷È·Ö¸¶¨ Debug£¬±ÜÃâÓë System.Diagnostics ³åÍ» ---
+using System.Diagnostics; // --- æ–°å¢ä»£ç ï¼šç”¨äºæ‰§è¡Œå¤–éƒ¨ Python å‘½ä»¤ ---
+using Debug = UnityEngine.Debug; // --- æ–°å¢ä»£ç ï¼šæ˜ç¡®æŒ‡å®š Debugï¼Œé¿å…ä¸ System.Diagnostics å†²çª ---
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -70,17 +70,17 @@ public partial class Map : MonoBehaviour
     /// </summary>
     static public int cTileSize = 16;
 
-    // --- ĞÂÔö±ÊË¢´óĞ¡ ---
+    // --- æ–°å¢ç¬”åˆ·å¤§å° ---
     [Header("Drawing Settings")]
     public Color gridColor = new Color(0.5f, 0.5f, 0.5f, 0.2f);
-    [Range(1, 10)] // Ê¹ÓÃRangeÏŞÖÆ±ÊË¢´óĞ¡ÔÚ1µ½10Ö®¼ä£¬·ÀÖ¹ÉèÖÃ¹ı´ó»òÎŞĞ§Öµ
-    public int brushSize = 1; // Ä¬ÈÏÎª1£¬¼´1x1µÄ¸ñ×Ó
-    // --- ĞÂÔö´úÂë½áÊø ---
+    [Range(1, 10)] // ä½¿ç”¨Rangeé™åˆ¶ç¬”åˆ·å¤§å°åœ¨1åˆ°10ä¹‹é—´ï¼Œé˜²æ­¢è®¾ç½®è¿‡å¤§æˆ–æ— æ•ˆå€¼
+    public int brushSize = 1; // é»˜è®¤ä¸º1ï¼Œå³1x1çš„æ ¼å­
+    // --- æ–°å¢ä»£ç ç»“æŸ ---
 
-    // --- ĞÂÔö´úÂëÔÚÕâÀï ---
-    public GameObject brushPreviewPrefab; // ÓÃÓÚÔÚInspectorÖĞÍÏÈëPrefab
-    private GameObject brushPreviewInstance; // ÓÃÓÚÔÚ´úÂëÖĞ¿ØÖÆÊµÀı
-    // --- ĞÂÔö´úÂë½áÊø ---
+    // --- æ–°å¢ä»£ç åœ¨è¿™é‡Œ ---
+    public GameObject brushPreviewPrefab; // ç”¨äºåœ¨Inspectorä¸­æ‹–å…¥Prefab
+    private GameObject brushPreviewInstance; // ç”¨äºåœ¨ä»£ç ä¸­æ§åˆ¶å®ä¾‹
+    // --- æ–°å¢ä»£ç ç»“æŸ ---
 
     /// <summary>
     /// The width of the map in tiles.
@@ -91,53 +91,53 @@ public partial class Map : MonoBehaviour
     /// </summary>
     public int mHeight = 42;
 
-    // --- ĞÂÔö´úÂë£ºÓÃÓÚÊÖ¶¯¿ØÖÆµØÍ¼´óĞ¡ ---
+    // --- æ–°å¢ä»£ç ï¼šç”¨äºæ‰‹åŠ¨æ§åˆ¶åœ°å›¾å¤§å° ---
     [Header("Drawing Mode Size")]
-    [Tooltip("Èç¹û¹´Ñ¡£¬µØÍ¼´óĞ¡½«×Ô¶¯Æ¥ÅäÏà»úÆÁÄ»¡£")]
-    public bool autoSizeToCamera = true; // Ä¬ÈÏ¹´Ñ¡£¬±£³Öµ±Ç°ĞĞÎª
+    [Tooltip("å¦‚æœå‹¾é€‰ï¼Œåœ°å›¾å¤§å°å°†è‡ªåŠ¨åŒ¹é…ç›¸æœºå±å¹•ã€‚")]
+    public bool autoSizeToCamera = true; // é»˜è®¤å‹¾é€‰ï¼Œä¿æŒå½“å‰è¡Œä¸º
 
-    [Tooltip("Èç¹û autoSizeToCamera Î´¹´Ñ¡£¬½«Ê¹ÓÃÕâ¸ö¿í¶È¡£")]
-    public int manualWidth = 100; // ÊÖ¶¯Ä£Ê½µÄÄ¬ÈÏ¿í¶È
+    [Tooltip("å¦‚æœ autoSizeToCamera æœªå‹¾é€‰ï¼Œå°†ä½¿ç”¨è¿™ä¸ªå®½åº¦ã€‚")]
+    public int manualWidth = 100; // æ‰‹åŠ¨æ¨¡å¼çš„é»˜è®¤å®½åº¦
 
-    [Tooltip("Èç¹û autoSizeToCamera Î´¹´Ñ¡£¬½«Ê¹ÓÃÕâ¸ö¸ß¶È¡£")]
-    public int manualHeight = 60; // ÊÖ¶¯Ä£Ê½µÄÄ¬ÈÏ¸ß¶È
-    // --- ĞÂÔö´úÂë½áÊø ---
+    [Tooltip("å¦‚æœ autoSizeToCamera æœªå‹¾é€‰ï¼Œå°†ä½¿ç”¨è¿™ä¸ªé«˜åº¦ã€‚")]
+    public int manualHeight = 60; // æ‰‹åŠ¨æ¨¡å¼çš„é»˜è®¤é«˜åº¦
+    // --- æ–°å¢ä»£ç ç»“æŸ ---
 
-    //ĞÂÔö´úÂë
-    // ¼ÇÂ¼¸ñ×ÓÑ¡ÖĞµÄ×´Ì¬
+    //æ–°å¢ä»£ç 
+    // è®°å½•æ ¼å­é€‰ä¸­çš„çŠ¶æ€
     public enum GamePhase
     {
         Drawing,
         TrialPlay
     }
 
-    // ¹ÜÀíËùÓĞ±ÊË¢ÀàĞÍ
+    // ç®¡ç†æ‰€æœ‰ç¬”åˆ·ç±»å‹
     public enum BrushType
     {
-        StartPoint, // 1. Æğµã
-        Path,       // 2. Â·¾¶
-        EndPoint    // 3. ÖÕµã
+        StartPoint, // 1. èµ·ç‚¹
+        Path,       // 2. è·¯å¾„
+        EndPoint    // 3. ç»ˆç‚¹
     }
 
     [Header("Brushes")]
-    public BrushType currentBrush = BrushType.Path; // µ±Ç°¼¤»îµÄ±ÊË¢£¬Ä¬ÈÏÎªÂ·¾¶
+    public BrushType currentBrush = BrushType.Path; // å½“å‰æ¿€æ´»çš„ç¬”åˆ·ï¼Œé»˜è®¤ä¸ºè·¯å¾„
 
-    // ´æ´¢Î¨Ò»µÄÆğµãºÍÖÕµã×ø±ê£¬³õÊ¼»¯Îª (-1, -1) ±íÊ¾Î´ÉèÖÃ
+    // å­˜å‚¨å”¯ä¸€çš„èµ·ç‚¹å’Œç»ˆç‚¹åæ ‡ï¼Œåˆå§‹åŒ–ä¸º (-1, -1) è¡¨ç¤ºæœªè®¾ç½®
     private Vector2i startTile = new Vector2i(-1, -1);
     private Vector2i endTile = new Vector2i(-1, -1);
 
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
 
-    // --- ĞÂÔö´úÂë£ºÓÃÓÚÏß³Ì¼äÍ¨ĞÅ ---
-    // Õâ¸ö "busy" ±êÖ¾·ÀÖ¹ÓÃ»§ÔÚ½Å±¾ÔËĞĞÊ±ÖØ¸´°´ Enter
+    // --- æ–°å¢ä»£ç ï¼šç”¨äºçº¿ç¨‹é—´é€šä¿¡ ---
+    // è¿™ä¸ª "busy" æ ‡å¿—é˜²æ­¢ç”¨æˆ·åœ¨è„šæœ¬è¿è¡Œæ—¶é‡å¤æŒ‰ Enter
     private volatile bool pythonScriptsRunning = false;
-    // Õâ¸ö "signal" ±êÖ¾ÓÉºóÌ¨Ïß³ÌÉèÖÃ£¬¸æËß Update() Ëü¿ÉÒÔ¼ÓÔØ¹Ø¿¨ÁË
+    // è¿™ä¸ª "signal" æ ‡å¿—ç”±åå°çº¿ç¨‹è®¾ç½®ï¼Œå‘Šè¯‰ Update() å®ƒå¯ä»¥åŠ è½½å…³å¡äº†
     private volatile bool pythonScriptsFinished = false;
 
-    // ÓÃÒ»¸ö HashSet À´´æ´¢Íæ¼ÒÑ¡ÔñµÄÂ·¾¶¸ñ×Ó×ø±ê£¬²éÑ¯Ğ§ÂÊ¸ß
+    // ç”¨ä¸€ä¸ª HashSet æ¥å­˜å‚¨ç©å®¶é€‰æ‹©çš„è·¯å¾„æ ¼å­åæ ‡ï¼ŒæŸ¥è¯¢æ•ˆç‡é«˜
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
-    //ĞÂÔö´úÂë
+    //æ–°å¢ä»£ç 
 
     public MapRoomData mapRoomSimple;
     public MapRoomData mapRoomOneWay;
@@ -342,18 +342,18 @@ public partial class Map : MonoBehaviour
             tilesSprites[x, y].transform.eulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
             tilesSprites[x, y].sprite = mDirtSprites[25];
         }
-        // --- ĞÂÔö Danger ÀàĞÍµÄ´¦ÀíÂß¼­ ---
+        // --- æ–°å¢ Danger ç±»å‹çš„å¤„ç†é€»è¾‘ ---
         else if (type == TileType.Danger)
         {
-            mGrid[x, y] = 1; // ¹Ø¼ü£ºÔÚÑ°Â·Íø¸ñÖĞ£¬ËüºÍ Empty Ò»Ñù£¬ÊÇ¿ÉÒÔÍ¨ĞĞµÄ (ÖµÎª1)
-            tilesSprites[x, y].enabled = true; // ÎÒÃÇÒªÈÃËü¿É¼û
+            mGrid[x, y] = 1; // å…³é”®ï¼šåœ¨å¯»è·¯ç½‘æ ¼ä¸­ï¼Œå®ƒå’Œ Empty ä¸€æ ·ï¼Œæ˜¯å¯ä»¥é€šè¡Œçš„ (å€¼ä¸º1)
+            tilesSprites[x, y].enabled = true; // æˆ‘ä»¬è¦è®©å®ƒå¯è§
 
-            // Ê¹ÓÃÒ»¸ö»ù´¡µÄ sprite£¬±ÈÈç mDirtSprites µÄµÚÒ»¸ö£¬×÷ÎªÇøÓòµÄµ×É«
+            // ä½¿ç”¨ä¸€ä¸ªåŸºç¡€çš„ spriteï¼Œæ¯”å¦‚ mDirtSprites çš„ç¬¬ä¸€ä¸ªï¼Œä½œä¸ºåŒºåŸŸçš„åº•è‰²
             tilesSprites[x, y].sprite = mDirtSprites[0];
-            // ¹Ø¼ü£º½«ËüµÄÑÕÉ«ÉèÖÃÎªºìÉ«£¬ÒÔÔÚÊÓ¾õÉÏÓë°²È«ÇøÇø·Ö
+            // å…³é”®ï¼šå°†å®ƒçš„é¢œè‰²è®¾ç½®ä¸ºçº¢è‰²ï¼Œä»¥åœ¨è§†è§‰ä¸Šä¸å®‰å…¨åŒºåŒºåˆ†
             tilesSprites[x, y].color = Color.red;
 
-            // È·±£ËüÃ»ÓĞÆæ¹ÖµÄËõ·ÅºÍĞı×ª
+            // ç¡®ä¿å®ƒæ²¡æœ‰å¥‡æ€ªçš„ç¼©æ”¾å’Œæ—‹è½¬
             tilesSprites[x, y].transform.localScale = Vector3.one;
             tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
         }
@@ -372,21 +372,21 @@ public partial class Map : MonoBehaviour
 
     public void Start()
     {
-        // --- Í¨ÓÃ³õÊ¼»¯²¿·Ö ---
+        // --- é€šç”¨åˆå§‹åŒ–éƒ¨åˆ† ---
         mRandomNumber = new System.Random();
         Application.targetFrameRate = 60;
         inputs = new bool[(int)KeyInput.Count];
         prevInputs = new bool[(int)KeyInput.Count];
         position = transform.position;
 
-        // --- ¸ù¾İ Inspector µÄÉèÖÃÀ´¾ö¶¨ÈçºÎ³õÊ¼»¯ ---
+        // --- æ ¹æ® Inspector çš„è®¾ç½®æ¥å†³å®šå¦‚ä½•åˆå§‹åŒ– ---
 
-        // Èç¹ûÄãÔÚInspectorÀïÉèÖÃµÄÊÇ "TrialPlay"
+        // å¦‚æœä½ åœ¨Inspectoré‡Œè®¾ç½®çš„æ˜¯ "TrialPlay"
         if (currentPhase == GamePhase.TrialPlay)
         {
             Debug.Log("Starting directly in PLAYING mode.");
 
-            var mapRoom = mapRoomOneWay; // »òÕß mapRoomSimple
+            var mapRoom = mapRoomOneWay; // æˆ–è€… mapRoomSimple
             mWidth = mapRoom.width;
             mHeight = mapRoom.height;
             tiles = new TileType[mWidth, mHeight];
@@ -403,7 +403,7 @@ public partial class Map : MonoBehaviour
                     tilesSprites[x, y].transform.parent = transform;
                     tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
 
-                    // ´Ó ScriptableObject ¼ÓÔØ¹Ø¿¨Êı¾İ
+                    // ä» ScriptableObject åŠ è½½å…³å¡æ•°æ®
                     if (mapRoom.tileData[y * mWidth + x] == TileType.Empty)
                         SetTile(x, y, TileType.Empty);
                     else if (mapRoom.tileData[y * mWidth + x] == TileType.Block)
@@ -413,7 +413,7 @@ public partial class Map : MonoBehaviour
                 }
             }
 
-            // *** ÒÑĞŞÕı: ÖØĞÂ¼ÓÈëÁË±»ÒÅÂ©µÄ±ß½çÉú³É´úÂë ***
+            // *** å·²ä¿®æ­£: é‡æ–°åŠ å…¥äº†è¢«é—æ¼çš„è¾¹ç•Œç”Ÿæˆä»£ç  ***
             for (int y = 0; y < mHeight; ++y)
             {
                 tiles[1, y] = TileType.Block;
@@ -426,56 +426,56 @@ public partial class Map : MonoBehaviour
                 tiles[x, mHeight - 2] = TileType.Block;
             }
 
-            // --- ÔÚÓÎÏ·Ä£Ê½¿ªÊ¼Ê±£¬³õÊ¼»¯Íæ¼Ò ---
+            // --- åœ¨æ¸¸æˆæ¨¡å¼å¼€å§‹æ—¶ï¼Œåˆå§‹åŒ–ç©å®¶ ---
             player.gameObject.SetActive(true);
             player.BotInit(inputs, prevInputs);
             player.mMap = this;
             player.mPosition = new Vector2(2 * Map.cTileSize, (mHeight / 2) * Map.cTileSize + player.mAABB.HalfSizeY);
             // ***********************************************
         }
-        // Èç¹ûÄãÔÚInspectorÀïÉèÖÃµÄÊÇ "Drawing"
+        // å¦‚æœä½ åœ¨Inspectoré‡Œè®¾ç½®çš„æ˜¯ "Drawing"
         else
         {
             Debug.Log("Starting in DRAWING mode.");
 
-            // --- ºËĞÄĞŞ¸Ä¿ªÊ¼ ---
+            // --- æ ¸å¿ƒä¿®æ”¹å¼€å§‹ ---
 
-            // 1. (ÒÆ¶¯) ÎÒÃÇ°ÑÕâĞĞ´úÂë´ÓºóÃæÒÆµ½ÕâÀï
-            // ±ØĞëÏÈÉèÖÃÏà»ú´óĞ¡£¬ÕâÑù²ÅÄÜ±£Ö¤ pixelWidth ºÍ pixelHeight ÊÇÎÒÃÇÆÚÍûµÄÖµ
+            // 1. (ç§»åŠ¨) æˆ‘ä»¬æŠŠè¿™è¡Œä»£ç ä»åé¢ç§»åˆ°è¿™é‡Œ
+            // å¿…é¡»å…ˆè®¾ç½®ç›¸æœºå¤§å°ï¼Œè¿™æ ·æ‰èƒ½ä¿è¯ pixelWidth å’Œ pixelHeight æ˜¯æˆ‘ä»¬æœŸæœ›çš„å€¼
             Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
-            // 2. (ĞÂÔö) ¼ì²é cTileSize£¬·ÀÖ¹³ıÁã´íÎó
+            // 2. (æ–°å¢) æ£€æŸ¥ cTileSizeï¼Œé˜²æ­¢é™¤é›¶é”™è¯¯
             if (cTileSize <= 0)
             {
-                Debug.LogError("cTileSize ±ØĞë´óÓÚ 0! ÎŞ·¨×Ô¶¯µ÷Õû Map ´óĞ¡¡£");
-                return; // ÖÕÖ¹ Start£¬·ÀÖ¹ºóĞø´úÂë³ö´í
+                Debug.LogError("cTileSize å¿…é¡»å¤§äº 0! æ— æ³•è‡ªåŠ¨è°ƒæ•´ Map å¤§å°ã€‚");
+                return; // ç»ˆæ­¢ Startï¼Œé˜²æ­¢åç»­ä»£ç å‡ºé”™
             }
 
-            // 3. (ĞÂÔö) ¸ù¾İÏà»úµÄÏñËØ´óĞ¡ºÍÍßÆ¬´óĞ¡£¬ÖØĞÂ¼ÆËã mWidth ºÍ mHeight
-            // ÎÒÃÇÊ¹ÓÃ FloorToInt À´È·±£Ö»°üº¬ÍêÕûµÄÍßÆ¬
+            // 3. (æ–°å¢) æ ¹æ®ç›¸æœºçš„åƒç´ å¤§å°å’Œç“¦ç‰‡å¤§å°ï¼Œé‡æ–°è®¡ç®— mWidth å’Œ mHeight
+            // æˆ‘ä»¬ä½¿ç”¨ FloorToInt æ¥ç¡®ä¿åªåŒ…å«å®Œæ•´çš„ç“¦ç‰‡
             if (autoSizeToCamera)
             {
-                // ×Ô¶¯Ä£Ê½£ºÊ¹ÓÃÏà»ú´óĞ¡ (ºÍÒÔÇ°Ò»Ñù)
+                // è‡ªåŠ¨æ¨¡å¼ï¼šä½¿ç”¨ç›¸æœºå¤§å° (å’Œä»¥å‰ä¸€æ ·)
                 mWidth = Mathf.FloorToInt((float)Camera.main.pixelWidth / (float)cTileSize);
                 mHeight = Mathf.FloorToInt((float)Camera.main.pixelHeight / (float)cTileSize);
-                Debug.Log($"Map ³ß´çÒÑ[×Ô¶¯]µ÷ÕûÎª: {mWidth} x {mHeight}");
+                Debug.Log($"Map å°ºå¯¸å·²[è‡ªåŠ¨]è°ƒæ•´ä¸º: {mWidth} x {mHeight}");
             }
             else
             {
-                // ÊÖ¶¯Ä£Ê½£ºÊ¹ÓÃ Inspector ÖĞÉèÖÃµÄÖµ
+                // æ‰‹åŠ¨æ¨¡å¼ï¼šä½¿ç”¨ Inspector ä¸­è®¾ç½®çš„å€¼
                 mWidth = manualWidth;
                 mHeight = manualHeight;
-                Debug.Log($"Map ³ß´çÒÑ[ÊÖ¶¯]ÉèÖÃÎª: {mWidth} x {mHeight}");
+                Debug.Log($"Map å°ºå¯¸å·²[æ‰‹åŠ¨]è®¾ç½®ä¸º: {mWidth} x {mHeight}");
             }
-            // --- ºËĞÄĞŞ¸Ä½áÊø ---
+            // --- æ ¸å¿ƒä¿®æ”¹ç»“æŸ ---
 
 
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mWidth, mHeight];
-            // (ĞŞ¸Ä) mWidth ºÍ mHeight ÒÑ¾­ÊÇ¼ÆËãºóµÄĞÂÖµÁË
+            // (ä¿®æ”¹) mWidth å’Œ mHeight å·²ç»æ˜¯è®¡ç®—åçš„æ–°å€¼äº†
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
             InitPathFinder();
-            // (ÒÆ¶¯) ÕâĞĞ´úÂë±»ÒÆµ½Ç°ÃæÁË: Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
+            // (ç§»åŠ¨) è¿™è¡Œä»£ç è¢«ç§»åˆ°å‰é¢äº†: Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
             for (int y = 0; y < mHeight; ++y)
             {
@@ -486,77 +486,77 @@ public partial class Map : MonoBehaviour
                     tilesSprites[x, y].transform.position = position + new Vector3(cTileSize * x, cTileSize * y, 10.0f);
                 }
             }
-            // --- ÔÚ»æÖÆÄ£Ê½¿ªÊ¼Ê±£¬Òş²Ø²¢½ûÓÃÍæ¼Ò ---
+            // --- åœ¨ç»˜åˆ¶æ¨¡å¼å¼€å§‹æ—¶ï¼Œéšè—å¹¶ç¦ç”¨ç©å®¶ ---
             player.gameObject.SetActive(false);
             ResetToDrawingMode();
         }
 
-        // ³õÊ¼»¯±ÊË¢Ô¤ÀÀ
+        // åˆå§‹åŒ–ç¬”åˆ·é¢„è§ˆ
         if (brushPreviewPrefab != null)
         {
-            brushPreviewInstance = Instantiate(brushPreviewPrefab, transform); // ´´½¨ÊµÀı²¢ÉèÎªMapµÄ×Ó¶ÔÏó
-                                                                               // Èç¹ûÒÔ»æÖÆÄ£Ê½¿ªÊ¼£¬¾Í×¼±¸ºÃÏÔÊ¾Ëü£¬·ñÔò±£³ÖÒş²Ø
+            brushPreviewInstance = Instantiate(brushPreviewPrefab, transform); // åˆ›å»ºå®ä¾‹å¹¶è®¾ä¸ºMapçš„å­å¯¹è±¡
+                                                                               // å¦‚æœä»¥ç»˜åˆ¶æ¨¡å¼å¼€å§‹ï¼Œå°±å‡†å¤‡å¥½æ˜¾ç¤ºå®ƒï¼Œå¦åˆ™ä¿æŒéšè—
             brushPreviewInstance.SetActive(currentPhase == GamePhase.Drawing);
         }
     }
 
     void Update()
     {
-        // 1. ¼ì²éºóÌ¨Ïß³ÌĞÅºÅ (ÓÃÓÚ Enter ¼üÖ´ĞĞ Python ºóµÄ»Øµ÷)
+        // 1. æ£€æŸ¥åå°çº¿ç¨‹ä¿¡å· (ç”¨äº Enter é”®æ‰§è¡Œ Python åçš„å›è°ƒ)
         if (pythonScriptsFinished)
         {
             pythonScriptsFinished = false;
-            Debug.Log("Ö÷Ïß³ÌÊÕµ½ĞÅºÅ¡£ÕıÔÚ¼ÓÔØÉú³ÉµÄ¹Ø¿¨...");
+            Debug.Log("ä¸»çº¿ç¨‹æ”¶åˆ°ä¿¡å·ã€‚æ­£åœ¨åŠ è½½ç”Ÿæˆçš„å…³å¡...");
             LoadGeneratedLevel();
         }
 
         switch (currentPhase)
         {
             case GamePhase.Drawing:
-                // --- ±ÊË¢ÇĞ»» ---
+                // --- ç¬”åˆ·åˆ‡æ¢ ---
                 if (Input.GetKeyDown(KeyCode.Alpha1))
                 {
                     currentBrush = BrushType.StartPoint;
-                    Debug.Log("Brush: Start Point (Æğµã)");
+                    Debug.Log("Brush: Start Point (èµ·ç‚¹)");
                 }
                 else if (Input.GetKeyDown(KeyCode.Alpha2))
                 {
                     currentBrush = BrushType.Path;
-                    Debug.Log("Brush: Path (Â·¾¶)");
+                    Debug.Log("Brush: Path (è·¯å¾„)");
                 }
                 else if (Input.GetKeyDown(KeyCode.Alpha3))
                 {
                     currentBrush = BrushType.EndPoint;
-                    Debug.Log("Brush: End Point (ÖÕµã)");
+                    Debug.Log("Brush: End Point (ç»ˆç‚¹)");
                 }
 
-                // --- ¿ì½İ¼ü¹¦ÄÜÇø ---
+                // --- å¿«æ·é”®åŠŸèƒ½åŒº ---
 
-                // [P] ¼ü£ºÊÖ¶¯±£´æ¹Ø¿¨ (µ÷ÓÃ¸Õ²ÅĞŞ¸´¹ıµÄ SaveLevelToFile)
+                // [P] é”®ï¼šæ‰‹åŠ¨ä¿å­˜å…³å¡ (è°ƒç”¨åˆšæ‰ä¿®å¤è¿‡çš„ SaveLevelToFile)
                 else if (Input.GetKeyDown(KeyCode.P))
                 {
                     SaveLevelToFile();
                 }
-                // [L] ¼ü£ºÊÖ¶¯¼ÓÔØ¹Ø¿¨
+                // [L] é”®ï¼šæ‰‹åŠ¨åŠ è½½å…³å¡
                 else if (Input.GetKeyDown(KeyCode.L))
                 {
                     LoadLevelFromFile();
                 }
-                // [Enter] ¼ü£º±£´æ²¢Ö´ĞĞ Python ½Å±¾
+                // [Enter] é”®ï¼šä¿å­˜å¹¶æ‰§è¡Œ Python è„šæœ¬
                 else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
                 {
                     HandleEnterKeySave();
                 }
 
-                // --- »æÖÆÂß¼­ ---
+                // --- ç»˜åˆ¶é€»è¾‘ ---
                 HandleDrawingInput();
 
-                // [Space] ¼ü£º¿ªÊ¼ÊÔÍæ
+                // [Space] é”®ï¼šå¼€å§‹è¯•ç©
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     if (startTile.x == -1 || endTile.x == -1)
                     {
-                        Debug.LogError("ÎŞ·¨¿ªÊ¼£ºÇëÏÈÉèÖÃ Æğµã(1) ºÍ ÖÕµã(3)£¡");
+                        Debug.LogError("æ— æ³•å¼€å§‹ï¼šè¯·å…ˆè®¾ç½® èµ·ç‚¹(1) å’Œ ç»ˆç‚¹(3)ï¼");
                     }
                     else
                     {
@@ -568,12 +568,12 @@ public partial class Map : MonoBehaviour
             case GamePhase.TrialPlay:
                 HandlePlayingInput();
 
-                // [Backspace] ¼ü£º·µ»Ø»æÖÆÄ£Ê½
+                // [Backspace] é”®ï¼šè¿”å›ç»˜åˆ¶æ¨¡å¼
                 if (Input.GetKeyDown(KeyCode.Backspace))
                 {
                     ReturnToDrawingMode();
                 }
-                // [R] ¼ü£ºÖØÖÃ»­²¼
+                // [R] é”®ï¼šé‡ç½®ç”»å¸ƒ
                 else if (Input.GetKeyDown(KeyCode.R))
                 {
                     ResetToDrawingMode();
@@ -593,16 +593,16 @@ public partial class Map : MonoBehaviour
         if (tiles[x, y] != TileType.Block)
             return;
 
-        // ¼ì²é×ó²à (x-1)£¬È·±£ x > 0
+        // æ£€æŸ¥å·¦ä¾§ (x-1)ï¼Œç¡®ä¿ x > 0
         int tileOnLeft = (x > 0 && tiles[x - 1, y] == tiles[x, y]) ? 1 : 0;
 
-        // ¼ì²éÓÒ²à (x+1)£¬È·±£ x < mWidth - 1
+        // æ£€æŸ¥å³ä¾§ (x+1)ï¼Œç¡®ä¿ x < mWidth - 1
         int tileOnRight = (x < mWidth - 1 && tiles[x + 1, y] == tiles[x, y]) ? 1 : 0;
 
-        // ¼ì²éÉÏ·½ (y+1)£¬È·±£ y < mHeight - 1
+        // æ£€æŸ¥ä¸Šæ–¹ (y+1)ï¼Œç¡®ä¿ y < mHeight - 1
         int tileOnTop = (y < mHeight - 1 && tiles[x, y + 1] == tiles[x, y]) ? 1 : 0;
 
-        // ¼ì²éÏÂ·½ (y-1)£¬È·±£ y > 0
+        // æ£€æŸ¥ä¸‹æ–¹ (y-1)ï¼Œç¡®ä¿ y > 0
         int tileOnBottom = (y > 0 && tiles[x, y - 1] == tiles[x, y]) ? 1 : 0;
 
         float scaleX = 1.0f;
@@ -708,7 +708,7 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // ĞÂ·½·¨£º´¦Àí»æÖÆ½×¶ÎµÄÊäÈë
+    // æ–°æ–¹æ³•ï¼šå¤„ç†ç»˜åˆ¶é˜¶æ®µçš„è¾“å…¥
     private void HandleDrawingInput()
     {
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
@@ -719,7 +719,7 @@ public partial class Map : MonoBehaviour
             if (scrollInput > 0f) brushSize++;
             else if (scrollInput < 0f) brushSize--;
             brushSize = Mathf.Clamp(brushSize, 1, 10);
-            if (oldBrushSize != brushSize) Debug.Log("±ÊË¢´óĞ¡µ÷ÕûÎª: " + brushSize);
+            if (oldBrushSize != brushSize) Debug.Log("ç¬”åˆ·å¤§å°è°ƒæ•´ä¸º: " + brushSize);
         }
 
         Vector2 mousePos = Input.mousePosition;
@@ -730,7 +730,7 @@ public partial class Map : MonoBehaviour
 
         UpdateBrushPreview(mouseTileX, mouseTileY);
 
-        // ×ó¼ü»æÖÆ
+        // å·¦é”®ç»˜åˆ¶
         if (Input.GetKey(KeyCode.Mouse0))
         {
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
@@ -743,7 +743,7 @@ public partial class Map : MonoBehaviour
 
                     if (currentX >= 0 && currentX < mWidth && currentY >= 0 && currentY < mHeight)
                     {
-                        ClearTileState(targetCell); // Çå³ı¾É×´Ì¬
+                        ClearTileState(targetCell); // æ¸…é™¤æ—§çŠ¶æ€
 
                         if (currentBrush == BrushType.StartPoint)
                         {
@@ -767,7 +767,7 @@ public partial class Map : MonoBehaviour
             }
         }
 
-        // ÓÒ¼ü²Á³ı
+        // å³é”®æ“¦é™¤
         if (Input.GetKey(KeyCode.Mouse1))
         {
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
@@ -778,7 +778,7 @@ public partial class Map : MonoBehaviour
                     int currentY = mouseTileY + yOffset;
                     Vector2i currentCell = new Vector2i(currentX, currentY);
 
-                    // --- ĞŞ¸´£ºÒÆ³ıÁË dangerZoneTiles µÄÒıÓÃ ---
+                    // --- ä¿®å¤ï¼šç§»é™¤äº† dangerZoneTiles çš„å¼•ç”¨ ---
                     bool removed = playerSelectedPath.Remove(currentCell);
                     if (startTile == currentCell) { startTile = new Vector2i(-1, -1); removed = true; }
                     if (endTile == currentCell) { endTile = new Vector2i(-1, -1); removed = true; }
@@ -792,7 +792,7 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // ¸¨Öú·½·¨£ºÇå³ıÄ³¸ö×ø±êµÄËùÓĞÂß¼­×´Ì¬
+    // è¾…åŠ©æ–¹æ³•ï¼šæ¸…é™¤æŸä¸ªåæ ‡çš„æ‰€æœ‰é€»è¾‘çŠ¶æ€
     private void ClearTileState(Vector2i cell)
     {
         if (startTile == cell) startTile = new Vector2i(-1, -1);
@@ -800,7 +800,7 @@ public partial class Map : MonoBehaviour
         playerSelectedPath.Remove(cell);
     }
 
-    // ¸¨Öú·½·¨£ºÉèÖÃÊÓ¾õ
+    // è¾…åŠ©æ–¹æ³•ï¼šè®¾ç½®è§†è§‰
     private void SetVisual(int x, int y, Color color)
     {
         tilesSprites[x, y].enabled = true;
@@ -810,7 +810,7 @@ public partial class Map : MonoBehaviour
         tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
     }
 
-    // ¸¨Öú·½·¨£ºÖØÖÃÊÓ¾õ£¨±ä»Ø»ÒÉ«Íø¸ñ£©
+    // è¾…åŠ©æ–¹æ³•ï¼šé‡ç½®è§†è§‰ï¼ˆå˜å›ç°è‰²ç½‘æ ¼ï¼‰
     private void ResetVisual(int x, int y)
     {
         tilesSprites[x, y].enabled = true;
@@ -820,7 +820,7 @@ public partial class Map : MonoBehaviour
         tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
     }
 
-    // ĞÂ·½·¨£º´¦ÀíÓÎÏ·½×¶ÎµÄÊäÈë£¨¾ÍÊÇÄãÖ®Ç°UpdateÀïµÄÂß¼­£©
+    // æ–°æ–¹æ³•ï¼šå¤„ç†æ¸¸æˆé˜¶æ®µçš„è¾“å…¥ï¼ˆå°±æ˜¯ä½ ä¹‹å‰Updateé‡Œçš„é€»è¾‘ï¼‰
     private void HandlePlayingInput()
     {
         inputs[(int)KeyInput.GoRight] = Input.GetKey(goRightKey);
@@ -828,7 +828,7 @@ public partial class Map : MonoBehaviour
         inputs[(int)KeyInput.GoDown] = Input.GetKey(goDownKey);
         inputs[(int)KeyInput.Jump] = Input.GetKey(goJumpKey);
 
-        // ÄãÖ®Ç°µÄÑ°Â·µã»÷Âß¼­¿ÉÒÔ±£Áô£¬ÓÃÓÚ²âÊÔ
+        // ä½ ä¹‹å‰çš„å¯»è·¯ç‚¹å‡»é€»è¾‘å¯ä»¥ä¿ç•™ï¼Œç”¨äºæµ‹è¯•
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             Vector2 mousePos = Input.mousePosition;
@@ -840,13 +840,13 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // ĞÂ·½·¨£ºÖØÖÃµ½»æÖÆÄ£Ê½
+    // æ–°æ–¹æ³•ï¼šé‡ç½®åˆ°ç»˜åˆ¶æ¨¡å¼
     private void ResetToDrawingMode()
     {
         playerSelectedPath.Clear();
-        // dangerZoneTiles.Clear(); // ÒÆ³ı
-        startTile = new Vector2i(-1, -1); // ÖØÖÃÆğµã
-        endTile = new Vector2i(-1, -1);   // ÖØÖÃÖÕµã
+        // dangerZoneTiles.Clear(); // ç§»é™¤
+        startTile = new Vector2i(-1, -1); // é‡ç½®èµ·ç‚¹
+        endTile = new Vector2i(-1, -1);   // é‡ç½®ç»ˆç‚¹
 
         for (int y = 0; y < mHeight; y++)
         {
@@ -854,18 +854,18 @@ public partial class Map : MonoBehaviour
             {
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
-                ResetVisual(x, y); // Ê¹ÓÃÉÏÃæ¶¨ÒåµÄ¸¨Öú·½·¨
+                ResetVisual(x, y); // ä½¿ç”¨ä¸Šé¢å®šä¹‰çš„è¾…åŠ©æ–¹æ³•
             }
         }
 
-        // --- ĞÂÔö´úÂë: ÖØÖÃÊ±ÔÙ´ÎÒş²ØÍæ¼Ò ---
+        // --- æ–°å¢ä»£ç : é‡ç½®æ—¶å†æ¬¡éšè—ç©å®¶ ---
         if (player != null && player.gameObject.activeSelf)
         {
             player.gameObject.SetActive(false);
         }
         // ------------------------------------
 
-        // --- ĞÂÔö´úÂë£ºÖØÖÃµ½»æÖÆÄ£Ê½Ê±£¬¼¤»î±ÊË¢Ô¤ÀÀ ---
+        // --- æ–°å¢ä»£ç ï¼šé‡ç½®åˆ°ç»˜åˆ¶æ¨¡å¼æ—¶ï¼Œæ¿€æ´»ç¬”åˆ·é¢„è§ˆ ---
         if (brushPreviewInstance != null)
         {
             brushPreviewInstance.SetActive(true);
@@ -874,7 +874,7 @@ public partial class Map : MonoBehaviour
 
         currentPhase = GamePhase.Drawing;
 
-        // --- ÔÙ´ÎÒş²ØÏµÍ³Êó±ê ---
+        // --- å†æ¬¡éšè—ç³»ç»Ÿé¼ æ ‡ ---
         Cursor.visible = false;
         // ------------------------------------
 
@@ -890,25 +890,25 @@ public partial class Map : MonoBehaviour
 
         if (isMouseInBounds)
         {
-            // 1. ¼ÆËãÎ»ÖÃ (Õâ²¿·ÖÂß¼­ÊÇÕıÈ·µÄ£¬ÎŞĞèĞŞ¸Ä)
-            // ÎÒÃÇĞèÒª½«Ô¤ÀÀµÄ×óÏÂ½Ç¶ÔÆëµ½Êó±êËùÔÚµÄ¸ñ×Ó
+            // 1. è®¡ç®—ä½ç½® (è¿™éƒ¨åˆ†é€»è¾‘æ˜¯æ­£ç¡®çš„ï¼Œæ— éœ€ä¿®æ”¹)
+            // æˆ‘ä»¬éœ€è¦å°†é¢„è§ˆçš„å·¦ä¸‹è§’å¯¹é½åˆ°é¼ æ ‡æ‰€åœ¨çš„æ ¼å­
             float bottomLeftX = position.x + mouseTileX * cTileSize;
             float bottomLeftY = position.y + mouseTileY * cTileSize;
 
-            // Ô¤ÀÀµÄÖĞĞÄµãÎ»ÖÃ = ×óÏÂ½ÇÎ»ÖÃ + Ô¤ÀÀ³ß´çµÄÒ»°ë
+            // é¢„è§ˆçš„ä¸­å¿ƒç‚¹ä½ç½® = å·¦ä¸‹è§’ä½ç½® + é¢„è§ˆå°ºå¯¸çš„ä¸€åŠ
             float totalSize = brushSize * cTileSize;
             float centerX = bottomLeftX + totalSize / 2.0f - cTileSize / 2.0f;
             float centerY = bottomLeftY + totalSize / 2.0f - cTileSize / 2.0f;
 
             brushPreviewInstance.transform.position = new Vector3(centerX, centerY, -5f);
 
-            // 2. ¼ÆËã´óĞ¡ (ÕâÊÇĞèÒªĞŞÕıµÄµØ·½)
+            // 2. è®¡ç®—å¤§å° (è¿™æ˜¯éœ€è¦ä¿®æ­£çš„åœ°æ–¹)
 
-            // --- ´íÎóµÄ´úÂë ---
+            // --- é”™è¯¯çš„ä»£ç  ---
             // brushPreviewInstance.transform.localScale = new Vector3(totalSize / 100f, totalSize / 100f, 1f);
 
-            // --- ÕıÈ·µÄ´úÂë ---
-            // Ö±½Ó½«ÎïÌåµÄËõ·ÅÉèÖÃÎªÎÒÃÇÏëÒªµÄÏñËØ³ß´ç
+            // --- æ­£ç¡®çš„ä»£ç  ---
+            // ç›´æ¥å°†ç‰©ä½“çš„ç¼©æ”¾è®¾ç½®ä¸ºæˆ‘ä»¬æƒ³è¦çš„åƒç´ å°ºå¯¸
             brushPreviewInstance.transform.localScale = new Vector3(totalSize, totalSize, 1f);
         }
     }
@@ -926,7 +926,7 @@ public partial class Map : MonoBehaviour
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
 
-                // --- ĞŞ¸´£º·Ö±ğ»Ö¸´Æğµã¡¢ÖÕµãºÍÂ·¾¶µÄÑÕÉ« ---
+                // --- ä¿®å¤ï¼šåˆ†åˆ«æ¢å¤èµ·ç‚¹ã€ç»ˆç‚¹å’Œè·¯å¾„çš„é¢œè‰² ---
                 if (currentTile == startTile)
                 {
                     SetVisual(x, y, Color.cyan);
@@ -955,14 +955,14 @@ public partial class Map : MonoBehaviour
 
     private void StartTrialMode()
     {
-        // ¼ì²éÆğµãºÍÖÕµãÊÇ·ñÓĞĞ§
+        // æ£€æŸ¥èµ·ç‚¹å’Œç»ˆç‚¹æ˜¯å¦æœ‰æ•ˆ
         if (startTile.x == -1 || endTile.x == -1)
         {
-            Debug.LogError("ÎŞ·¨¿ªÊ¼£ºÎ´ÉèÖÃÆğµã»òÖÕµã£¡");
+            Debug.LogError("æ— æ³•å¼€å§‹ï¼šæœªè®¾ç½®èµ·ç‚¹æˆ–ç»ˆç‚¹ï¼");
             return;
         }
 
-        // 1. Éú³É¹Ø¿¨¼¸ºÎÌå
+        // 1. ç”Ÿæˆå…³å¡å‡ ä½•ä½“
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
@@ -970,50 +970,50 @@ public partial class Map : MonoBehaviour
                 Vector2i currentTile = new Vector2i(x, y);
                 tilesSprites[x, y].color = Color.white;
 
-                // --- ĞŞ¸´£ºÒÆ³ıÁË dangerZoneTiles£¬Ôö¼ÓÁË Start/End µÄ´¦Àí ---
+                // --- ä¿®å¤ï¼šç§»é™¤äº† dangerZoneTilesï¼Œå¢åŠ äº† Start/End çš„å¤„ç† ---
                 if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
-                    // Æğµã¡¢ÖÕµã¡¢Â·¾¶ÔÚÎïÀíÉÏ¶¼ÊÇ Empty (¿ÉÍ¨ĞĞ)
+                    // èµ·ç‚¹ã€ç»ˆç‚¹ã€è·¯å¾„åœ¨ç‰©ç†ä¸Šéƒ½æ˜¯ Empty (å¯é€šè¡Œ)
                     SetTile(x, y, TileType.Empty);
                 }
                 else
                 {
-                    // ÆäËûµØ·½ÊÇÇ½
+                    // å…¶ä»–åœ°æ–¹æ˜¯å¢™
                     SetTile(x, y, TileType.Block);
                 }
             }
         }
 
-        // 2. Òş²Ø»æÖÆ¹¤¾ß
+        // 2. éšè—ç»˜åˆ¶å·¥å…·
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
 
-        // 3. ¼¤»î²¢³õÊ¼»¯Íæ¼Ò
+        // 3. æ¿€æ´»å¹¶åˆå§‹åŒ–ç©å®¶
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
 
-        // 4. --- ĞŞ¸´£ºÈÃÍæ¼Ò³öÉúÔÚÉèÖÃµÄ¡¾Æğµã¡¿ ---
+        // 4. --- ä¿®å¤ï¼šè®©ç©å®¶å‡ºç”Ÿåœ¨è®¾ç½®çš„ã€èµ·ç‚¹ã€‘ ---
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         // ----------------------------------------
 
-        // 5. ÇĞ»»×´Ì¬
+        // 5. åˆ‡æ¢çŠ¶æ€
         currentPhase = GamePhase.TrialPlay;
 
-        // 6. ´¥·¢É¨ÃèÆ÷
+        // 6. è§¦å‘æ‰«æå™¨
         ScanLevelData();
 
         Debug.Log("Trial Mode Started.");
     }
 
-    // --- ¹Ø¿¨É¨ÃèÆ÷ÊµÏÖ·½·¨ ---
+    // --- å…³å¡æ‰«æå™¨å®ç°æ–¹æ³• ---
     /// <summary>
-    /// É¨Ãèµ±Ç°µØÍ¼£¬Çø·Ö¿ÉĞŞ¸ÄÇøÓò£¨Ç½±Ú£©ºÍ²»¿ÉĞŞ¸ÄÇøÓò£¨Æğµã¡¢ÖÕµã¡¢Â·¾¶£©¡£
+    /// æ‰«æå½“å‰åœ°å›¾ï¼ŒåŒºåˆ†å¯ä¿®æ”¹åŒºåŸŸï¼ˆå¢™å£ï¼‰å’Œä¸å¯ä¿®æ”¹åŒºåŸŸï¼ˆèµ·ç‚¹ã€ç»ˆç‚¹ã€è·¯å¾„ï¼‰ã€‚
     /// </summary>
     private void ScanLevelData()
     {
         Debug.Log(">>> ----------------------------------- <<<");
-        Debug.Log(">>> ¹Ø¿¨É¨ÃèÆ÷Æô¶¯£ºÕıÔÚÉú³ÉÔ¼ÊøÍ¼... <<<");
+        Debug.Log(">>> å…³å¡æ‰«æå™¨å¯åŠ¨ï¼šæ­£åœ¨ç”Ÿæˆçº¦æŸå›¾... <<<");
 
         StringBuilder report = new StringBuilder();
         int immutableCount = 0;
@@ -1025,99 +1025,99 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentPos = new Vector2i(x, y);
                 string tileTypeStr;
-                string modifyPermission; // È¨ÏŞ£º¿ÉĞŞ¸Ä vs ²»¿ÉĞŞ¸Ä
+                string modifyPermission; // æƒé™ï¼šå¯ä¿®æ”¹ vs ä¸å¯ä¿®æ”¹
 
-                // ÓÅÏÈ¼¶ÅĞ¶Ï£ºÆğµã > ÖÕµã > Â·¾¶ > Ç½±Ú
+                // ä¼˜å…ˆçº§åˆ¤æ–­ï¼šèµ·ç‚¹ > ç»ˆç‚¹ > è·¯å¾„ > å¢™å£
                 if (currentPos == startTile)
                 {
-                    tileTypeStr = "¡¾Æğµã Start¡¿";
-                    modifyPermission = "²»¿ÉĞŞ¸Ä (Immutable)";
+                    tileTypeStr = "ã€èµ·ç‚¹ Startã€‘";
+                    modifyPermission = "ä¸å¯ä¿®æ”¹ (Immutable)";
                     immutableCount++;
                 }
                 else if (currentPos == endTile)
                 {
-                    tileTypeStr = "¡¾ÖÕµã End¡¿";
-                    modifyPermission = "²»¿ÉĞŞ¸Ä (Immutable)";
+                    tileTypeStr = "ã€ç»ˆç‚¹ Endã€‘";
+                    modifyPermission = "ä¸å¯ä¿®æ”¹ (Immutable)";
                     immutableCount++;
                 }
                 else if (playerSelectedPath.Contains(currentPos))
                 {
-                    tileTypeStr = "¡¾Â·¾¶ Path¡¿";
-                    modifyPermission = "²»¿ÉĞŞ¸Ä (Immutable)";
+                    tileTypeStr = "ã€è·¯å¾„ Pathã€‘";
+                    modifyPermission = "ä¸å¯ä¿®æ”¹ (Immutable)";
                     immutableCount++;
                 }
                 else
                 {
-                    // Ê£ÏÂµÄËùÓĞ¿Õ°×ÇøÓò£¬Ä¬ÈÏÎªÇ½±Ú£¬ÇÒ¿ÉÒÔ±»Ëã·¨ĞŞ¸Ä
-                    tileTypeStr = "¡¾Ç½±Ú Wall¡¿";
-                    modifyPermission = "¿ÉĞŞ¸Ä (Modifiable)";
+                    // å‰©ä¸‹çš„æ‰€æœ‰ç©ºç™½åŒºåŸŸï¼Œé»˜è®¤ä¸ºå¢™å£ï¼Œä¸”å¯ä»¥è¢«ç®—æ³•ä¿®æ”¹
+                    tileTypeStr = "ã€å¢™å£ Wallã€‘";
+                    modifyPermission = "å¯ä¿®æ”¹ (Modifiable)";
                     modifiableCount++;
                 }
 
-                // ¸ñÊ½»¯Êä³ö: ×ø±ê | ÀàĞÍ | È¨ÏŞ
+                // æ ¼å¼åŒ–è¾“å‡º: åæ ‡ | ç±»å‹ | æƒé™
                 string info = $"Pos: ({x}, {y}) \t| Type: {tileTypeStr} \t| {modifyPermission}";
 
-                // ´òÓ¡
-                // Debug.Log(info); // Èç¹û²»ÏëË¢ÆÁ£¬¿ÉÒÔ×¢ÊÍµôÕâĞĞ£¬Ö»¿´×îºóÍ³¼Æ
+                // æ‰“å°
+                // Debug.Log(info); // å¦‚æœä¸æƒ³åˆ·å±ï¼Œå¯ä»¥æ³¨é‡Šæ‰è¿™è¡Œï¼Œåªçœ‹æœ€åç»Ÿè®¡
                 report.AppendLine(info);
             }
         }
 
-        // ÕâÀï¿ÉÒÔ½« report.ToString() ±£´æµ½ÎÄ¼ş»òÕß·¢ËÍ¸ø Python
-        Debug.Log(report.ToString()); // ´òÓ¡ÍêÕû±¨¸æ
+        // è¿™é‡Œå¯ä»¥å°† report.ToString() ä¿å­˜åˆ°æ–‡ä»¶æˆ–è€…å‘é€ç»™ Python
+        Debug.Log(report.ToString()); // æ‰“å°å®Œæ•´æŠ¥å‘Š
 
-        Debug.Log($">>> É¨ÃèÍê³É <<<");
-        Debug.Log($">>> Ô¼ÊøÍ³¼Æ: ²»¿ÉĞŞ¸Ä(Ô¼Êø)¸ñ×Ó: {immutableCount} ¸ö | ¿ÉĞŞ¸Ä(×ÔÓÉ)¸ñ×Ó: {modifiableCount} ¸ö");
+        Debug.Log($">>> æ‰«æå®Œæˆ <<<");
+        Debug.Log($">>> çº¦æŸç»Ÿè®¡: ä¸å¯ä¿®æ”¹(çº¦æŸ)æ ¼å­: {immutableCount} ä¸ª | å¯ä¿®æ”¹(è‡ªç”±)æ ¼å­: {modifiableCount} ä¸ª");
         Debug.Log(">>> ----------------------------------- <<<");
     }
 
-    // --- ĞÂÔö´úÂë£ºÓÃÓÚ Enter ¼ü±£´æºÍÖ´ĞĞPython½Å±¾µÄËùÓĞÂß¼­ ---
+    // --- æ–°å¢ä»£ç ï¼šç”¨äº Enter é”®ä¿å­˜å’Œæ‰§è¡ŒPythonè„šæœ¬çš„æ‰€æœ‰é€»è¾‘ ---
 #if UNITY_EDITOR
     /// <summary>
-    /// (ĞÂ) ´¦Àí Enter ¼ü°´ÏÂ£¬±£´æÎÄ¼ş²¢Æô¶¯Python½Å±¾¡£
+    /// (æ–°) å¤„ç† Enter é”®æŒ‰ä¸‹ï¼Œä¿å­˜æ–‡ä»¶å¹¶å¯åŠ¨Pythonè„šæœ¬ã€‚
     /// </summary>
     private void HandleEnterKeySave()
     {
-        // --- ĞŞ¸Ä¿ªÊ¼ ---
-        // Èç¹û½Å±¾ÒÑ¾­ÔÚÔËĞĞ£¬¾Í×èÖ¹ÔÙ´ÎÖ´ĞĞ
+        // --- ä¿®æ”¹å¼€å§‹ ---
+        // å¦‚æœè„šæœ¬å·²ç»åœ¨è¿è¡Œï¼Œå°±é˜»æ­¢å†æ¬¡æ‰§è¡Œ
         if (pythonScriptsRunning)
         {
-            Debug.LogWarning("Python ½Å±¾ÒÑÔÚÔËĞĞ£¬ÇëÉÔºò...");
+            Debug.LogWarning("Python è„šæœ¬å·²åœ¨è¿è¡Œï¼Œè¯·ç¨å€™...");
             return;
         }
-        // --- ĞŞ¸Ä½áÊø ---
+        // --- ä¿®æ”¹ç»“æŸ ---
 
         string workingDirectory = @"C:\GitHub\sturgeon-pub";
         string levelFileName = "MyDrawnLevel.lvl";
         string fullSavePath = Path.Combine(workingDirectory, levelFileName);
 
-        // 1. ±£´æÎÄ¼ş (ÔÚÖ÷Ïß³ÌÍ¬²½Ö´ĞĞ)
+        // 1. ä¿å­˜æ–‡ä»¶ (åœ¨ä¸»çº¿ç¨‹åŒæ­¥æ‰§è¡Œ)
         try
         {
             SaveLevelDirectly(fullSavePath);
-            Debug.Log($"¹Ø¿¨ÒÑ³É¹¦±£´æµ½: {fullSavePath}");
+            Debug.Log($"å…³å¡å·²æˆåŠŸä¿å­˜åˆ°: {fullSavePath}");
         }
         catch (Exception e)
         {
-            Debug.LogError($"Ö±½Ó±£´æ¹Ø¿¨Ê§°Ü: {e.Message}");
-            return; // Èç¹û±£´æÊ§°Ü£¬¾Í²»Ö´ĞĞºóĞø½Å±¾
+            Debug.LogError($"ç›´æ¥ä¿å­˜å…³å¡å¤±è´¥: {e.Message}");
+            return; // å¦‚æœä¿å­˜å¤±è´¥ï¼Œå°±ä¸æ‰§è¡Œåç»­è„šæœ¬
         }
 
-        // 2. ÉèÖÃ±êÖ¾²¢Æô¶¯ºóÌ¨Ïß³Ì
-        pythonScriptsRunning = true; // ÉèÖÃÎª "Ã¦Âµ"
-        pythonScriptsFinished = false; // ÖØÖÃ "Íê³É" ±êÖ¾
+        // 2. è®¾ç½®æ ‡å¿—å¹¶å¯åŠ¨åå°çº¿ç¨‹
+        pythonScriptsRunning = true; // è®¾ç½®ä¸º "å¿™ç¢Œ"
+        pythonScriptsFinished = false; // é‡ç½® "å®Œæˆ" æ ‡å¿—
 
-        Debug.Log("¹Ø¿¨ÒÑ±£´æ¡£ÕıÔÚºóÌ¨Æô¶¯ Python ½Å±¾...");
+        Debug.Log("å…³å¡å·²ä¿å­˜ã€‚æ­£åœ¨åå°å¯åŠ¨ Python è„šæœ¬...");
 
-        // 2. ÔÚĞÂÏß³ÌÖĞÔËĞĞ Python ½Å±¾£¬·ÀÖ¹Unity±à¼­Æ÷¿¨ËÀ
+        // 2. åœ¨æ–°çº¿ç¨‹ä¸­è¿è¡Œ Python è„šæœ¬ï¼Œé˜²æ­¢Unityç¼–è¾‘å™¨å¡æ­»
         new Thread(new ThreadStart(RunPythonScripts)).Start();
     }
 
     /// <summary>
-    /// (ĞÂ) ÕâÊÇÒ»¸ö²»´ø¶Ô»°¿òµÄ±£´æº¯Êı¡£
-    /// ËüÖ»¸ºÔğ½«¹Ø¿¨Êı¾İĞ´ÈëÖ¸¶¨µÄÍêÕûÂ·¾¶¡£
+    /// (æ–°) è¿™æ˜¯ä¸€ä¸ªä¸å¸¦å¯¹è¯æ¡†çš„ä¿å­˜å‡½æ•°ã€‚
+    /// å®ƒåªè´Ÿè´£å°†å…³å¡æ•°æ®å†™å…¥æŒ‡å®šçš„å®Œæ•´è·¯å¾„ã€‚
     /// </summary>
-    /// <param name="path">Òª±£´æµ½µÄÍêÕûÎÄ¼şÂ·¾¶</param>
+    /// <param name="path">è¦ä¿å­˜åˆ°çš„å®Œæ•´æ–‡ä»¶è·¯å¾„</param>
     private void SaveLevelDirectly(string path)
     {
         StringBuilder sb = new StringBuilder();
@@ -1128,7 +1128,7 @@ public partial class Map : MonoBehaviour
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // --- ĞŞ¸´£º°üº¬ StartTile ºÍ EndTile ---
+                // --- ä¿®å¤ï¼šåŒ…å« StartTile å’Œ EndTile ---
                 if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
                     sb.Append('R'); // Path
@@ -1145,70 +1145,70 @@ public partial class Map : MonoBehaviour
     }
 
     /// <summary>
-    /// (ĞÂ) ÔÚºóÌ¨Ïß³ÌÖĞÒÀ´ÎÖ´ĞĞ Python ½Å±¾¡£
+    /// (æ–°) åœ¨åå°çº¿ç¨‹ä¸­ä¾æ¬¡æ‰§è¡Œ Python è„šæœ¬ã€‚
     /// </summary>
     private void RunPythonScripts()
     {
         string workingDirectory = @"C:\GitHub\sturgeon-pub";
 
-        // --- ĞŞ¸Ä´úÂë£º¿ÉÖ´ĞĞÎÄ¼ş¸ÄÎª 'pipenv' ---
-        // ¼ÙÉè 'pipenv' ÒÑ¾­
-        // ÔÚÄãÏµÍ³µÄ PATH »·¾³±äÁ¿ÖĞ
+        // --- ä¿®æ”¹ä»£ç ï¼šå¯æ‰§è¡Œæ–‡ä»¶æ”¹ä¸º 'pipenv' ---
+        // å‡è®¾ 'pipenv' å·²ç»
+        // åœ¨ä½ ç³»ç»Ÿçš„ PATH ç¯å¢ƒå˜é‡ä¸­
         string executable = "pipenv";
 
-        // --- ĞŞ¸Ä´úÂë£ºÔÚ python ÃüÁîÇ°Ìí¼Ó 'run' ---
+        // --- ä¿®æ”¹ä»£ç ï¼šåœ¨ python å‘½ä»¤å‰æ·»åŠ  'run' ---
         string args1 = "run python input2tile.py --outfile work/mario.tile --textfile levels/vglc/mario-1-1-generic.lvl";
         string args2 = "run python tile2scheme.py --outfile work/mario.scheme --tilefile work/mario.tile --count-divs 1 1 --pattern ring";
 
-        // C# ÖĞµÄ×Ö·û´®ĞèÒªÕıÈ·´¦ÀíÒıºÅ¡£
-        // ÄãÃüÁîÖĞµÄ '...' ºÍ "..." »á±»Ô­Ñù´«µİ
+        // C# ä¸­çš„å­—ç¬¦ä¸²éœ€è¦æ­£ç¡®å¤„ç†å¼•å·ã€‚
+        // ä½ å‘½ä»¤ä¸­çš„ '...' å’Œ "..." ä¼šè¢«åŸæ ·ä¼ é€’
         string args3 = "run python scheme2output.py --outfile work/my-level-output --schemefile work/mario.scheme --size 10 29 --pattern-hard --reach-junction \"{\" l 3 --reach-junction \"}\" r 3 --reach-connect \"--src { --dst } --move platform --sink-bottom --fwdbwd-layers 25\" --reach-print-internal --custom fwdbwd-nostuck hard --custom fwdbwd-grid MyDrawnLevel.lvl soft";
 
         try
         {
-            Debug.Log("¿ªÊ¼Ö´ĞĞ Python ½Å±¾ (ºóÌ¨Ïß³Ì)...");
+            Debug.Log("å¼€å§‹æ‰§è¡Œ Python è„šæœ¬ (åå°çº¿ç¨‹)...");
 
-            // --- ĞŞ¸Ä´úÂë£ºÌí¼ÓÁË´íÎó¼ì²é ---
-            // ÒÀ´ÎÖ´ĞĞÃüÁî£¬Èç¹ûÈÎºÎÒ»¸öÊ§°Ü (·µ»Ø false)£¬ÔòÍ£Ö¹ºóĞø²Ù×÷
+            // --- ä¿®æ”¹ä»£ç ï¼šæ·»åŠ äº†é”™è¯¯æ£€æŸ¥ ---
+            // ä¾æ¬¡æ‰§è¡Œå‘½ä»¤ï¼Œå¦‚æœä»»ä½•ä¸€ä¸ªå¤±è´¥ (è¿”å› false)ï¼Œåˆ™åœæ­¢åç»­æ“ä½œ
             if (!RunProcess(executable, args1, workingDirectory))
             {
-                Debug.LogError("²½Öè 1 (input2tile) Ê§°Ü¡£ÖÕÖ¹Ö´ĞĞ¡£");
+                Debug.LogError("æ­¥éª¤ 1 (input2tile) å¤±è´¥ã€‚ç»ˆæ­¢æ‰§è¡Œã€‚");
                 return;
             }
 
             if (!RunProcess(executable, args2, workingDirectory))
             {
-                Debug.LogError("²½Öè 2 (tile2scheme) Ê§°Ü¡£ÖÕÖ¹Ö´ĞĞ¡£");
+                Debug.LogError("æ­¥éª¤ 2 (tile2scheme) å¤±è´¥ã€‚ç»ˆæ­¢æ‰§è¡Œã€‚");
                 return;
             }
 
             if (!RunProcess(executable, args3, workingDirectory))
             {
-                Debug.LogError("²½Öè 3 (scheme2output) Ê§°Ü¡£");
+                Debug.LogError("æ­¥éª¤ 3 (scheme2output) å¤±è´¥ã€‚");
                 return;
             }
 
-            Debug.Log("ËùÓĞ Python ½Å±¾Ö´ĞĞÍê±Ï¡£");
+            Debug.Log("æ‰€æœ‰ Python è„šæœ¬æ‰§è¡Œå®Œæ¯•ã€‚");
         }
         catch (Exception e)
         {
-            // EÈ·±£´íÎóÄÜ±» Unity ¿ØÖÆÌ¨²¶»ñ
-            Debug.LogError($"Python ½Å±¾Ö´ĞĞ³ö´í: {e.Message}\n{e.StackTrace}");
+            // Eç¡®ä¿é”™è¯¯èƒ½è¢« Unity æ§åˆ¶å°æ•è·
+            Debug.LogError($"Python è„šæœ¬æ‰§è¡Œå‡ºé”™: {e.Message}\n{e.StackTrace}");
         }
         finally
         {
-            // --- ¹Ø¼üĞÂÔö ---
-            // ÎŞÂÛ³É¹¦»¹ÊÇÊ§°Ü£¬¶¼Í¨ÖªÖ÷Ïß³Ì
-            pythonScriptsFinished = true; // ·¢ËÍ "Íê³É" ĞÅºÅ
-            pythonScriptsRunning = false; // ½â³ı "Ã¦Âµ" ×´Ì¬
-            // --- ĞÂÔö½áÊø ---
+            // --- å…³é”®æ–°å¢ ---
+            // æ— è®ºæˆåŠŸè¿˜æ˜¯å¤±è´¥ï¼Œéƒ½é€šçŸ¥ä¸»çº¿ç¨‹
+            pythonScriptsFinished = true; // å‘é€ "å®Œæˆ" ä¿¡å·
+            pythonScriptsRunning = false; // è§£é™¤ "å¿™ç¢Œ" çŠ¶æ€
+            // --- æ–°å¢ç»“æŸ ---
         }
     }
 
     /// <summary>
-    /// (ĞÂ) Æô¶¯Ò»¸öÍâ²¿½ø³Ì£¬µÈ´ıËüÍê³É£¬²¢½«ÆäÊä³ö¼ÇÂ¼µ½ Unity ¿ØÖÆÌ¨¡£
+    /// (æ–°) å¯åŠ¨ä¸€ä¸ªå¤–éƒ¨è¿›ç¨‹ï¼Œç­‰å¾…å®ƒå®Œæˆï¼Œå¹¶å°†å…¶è¾“å‡ºè®°å½•åˆ° Unity æ§åˆ¶å°ã€‚
     /// </summary>
-    /// <returns>Èç¹û ExitCode Îª 0 (³É¹¦) Ôò·µ»Ø true£¬·ñÔò·µ»Ø false</returns>
+    /// <returns>å¦‚æœ ExitCode ä¸º 0 (æˆåŠŸ) åˆ™è¿”å› trueï¼Œå¦åˆ™è¿”å› false</returns>
     private bool RunProcess(string executable, string args, string workingDir)
     {
         ProcessStartInfo startInfo = new ProcessStartInfo
@@ -1216,141 +1216,141 @@ public partial class Map : MonoBehaviour
             FileName = executable,
             Arguments = args,
             WorkingDirectory = workingDir,
-            UseShellExecute = false,      // ±ØĞëÎª false ²ÅÄÜÖØ¶¨ÏòÊä³ö
-            RedirectStandardOutput = true,  // ²¶»ñ±ê×¼Êä³ö
-            RedirectStandardError = true,   // ²¶»ñ±ê×¼´íÎó
-            CreateNoWindow = true           // ²»ÏÔÊ¾ºÚÉ«µÄ cmd ´°¿Ú
+            UseShellExecute = false,      // å¿…é¡»ä¸º false æ‰èƒ½é‡å®šå‘è¾“å‡º
+            RedirectStandardOutput = true,  // æ•è·æ ‡å‡†è¾“å‡º
+            RedirectStandardError = true,   // æ•è·æ ‡å‡†é”™è¯¯
+            CreateNoWindow = true           // ä¸æ˜¾ç¤ºé»‘è‰²çš„ cmd çª—å£
         };
 
-        Debug.Log($"ÕıÔÚÖ´ĞĞ: {executable} {args} @ {workingDir}");
+        Debug.Log($"æ­£åœ¨æ‰§è¡Œ: {executable} {args} @ {workingDir}");
 
         using (Process process = Process.Start(startInfo))
         {
-            // ÒòÎªÎÒÃÇÔÚºóÌ¨Ïß³Ì£¬ËùÒÔ¿ÉÒÔ°²È«µØÍ¬²½µÈ´ı
-            // ¶ÁÈ¡ËùÓĞÊä³ö
+            // å› ä¸ºæˆ‘ä»¬åœ¨åå°çº¿ç¨‹ï¼Œæ‰€ä»¥å¯ä»¥å®‰å…¨åœ°åŒæ­¥ç­‰å¾…
+            // è¯»å–æ‰€æœ‰è¾“å‡º
             string output = process.StandardOutput.ReadToEnd();
             string error = process.StandardError.ReadToEnd();
 
-            process.WaitForExit(); // µÈ´ı½ø³ÌÖ´ĞĞÍê±Ï
+            process.WaitForExit(); // ç­‰å¾…è¿›ç¨‹æ‰§è¡Œå®Œæ¯•
 
-            // --- ĞŞ¸Ä´úÂë£º¼ì²é ExitCode ²¢·µ»Ø bool Öµ ---
+            // --- ä¿®æ”¹ä»£ç ï¼šæ£€æŸ¥ ExitCode å¹¶è¿”å› bool å€¼ ---
             if (process.ExitCode == 0)
             {
-                Debug.Log($"Ö´ĞĞ³É¹¦: {executable} {args}\nÊä³ö:\n{output}");
-                return true; // ³É¹¦
+                Debug.Log($"æ‰§è¡ŒæˆåŠŸ: {executable} {args}\nè¾“å‡º:\n{output}");
+                return true; // æˆåŠŸ
             }
             else
             {
-                // Èç¹û³ö´í£¬´òÓ¡´íÎóĞÅÏ¢
-                Debug.LogError($"Ö´ĞĞÊ§°Ü (ExitCode {process.ExitCode}): {executable} {args}\n´íÎó:\n{error}\nÊä³ö:\n{output}");
-                return false; // Ê§°Ü
+                // å¦‚æœå‡ºé”™ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯
+                Debug.LogError($"æ‰§è¡Œå¤±è´¥ (ExitCode {process.ExitCode}): {executable} {args}\né”™è¯¯:\n{error}\nè¾“å‡º:\n{output}");
+                return false; // å¤±è´¥
             }
         }
     }
 #endif
-    // --- ĞŞ¸Ä´úÂë½áÊø ---
+    // --- ä¿®æ”¹ä»£ç ç»“æŸ ---
 
 
-    // --- (ÕâÊÇÄãÔ­ÓĞµÄ 'P' ¼ü±£´æ¹¦ÄÜ£¬±£³Ö²»±ä) ---
+    // --- (è¿™æ˜¯ä½ åŸæœ‰çš„ 'P' é”®ä¿å­˜åŠŸèƒ½ï¼Œä¿æŒä¸å˜) ---
 #if UNITY_EDITOR
     private void SaveLevelToFile()
     {
-        // 1. µ¯³ö¡°Áí´æÎª¡±¶Ô»°¿ò
+        // 1. å¼¹å‡ºâ€œå¦å­˜ä¸ºâ€å¯¹è¯æ¡†
         string path = EditorUtility.SaveFilePanel(
-            "±£´æ¹Ø¿¨ÎÄ¼ş",                                  // ´°¿Ú±êÌâ
-            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // Ä¬ÈÏ´ò¿ªµÄÄ¿Â¼
-            "NewLevel",                                     // Ä¬ÈÏÎÄ¼şÃû
-            "lvl"                                           // ÎÄ¼şÀ©Õ¹Ãû
+            "ä¿å­˜å…³å¡æ–‡ä»¶",                                  // çª—å£æ ‡é¢˜
+            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // é»˜è®¤æ‰“å¼€çš„ç›®å½•
+            "NewLevel",                                     // é»˜è®¤æ–‡ä»¶å
+            "lvl"                                           // æ–‡ä»¶æ‰©å±•å
         );
 
-        // 2. ¼ì²éÓÃ»§ÊÇ·ñµã»÷ÁË¡°È¡Ïû¡±
+        // 2. æ£€æŸ¥ç”¨æˆ·æ˜¯å¦ç‚¹å‡»äº†â€œå–æ¶ˆâ€
         if (string.IsNullOrEmpty(path))
         {
-            Debug.Log("±£´æÒÑÈ¡Ïû¡£");
-            return; // ÓÃ»§È¡ÏûÁË²Ù×÷£¬º¯ÊıÌáÇ°ÍË³ö
+            Debug.Log("ä¿å­˜å·²å–æ¶ˆã€‚");
+            return; // ç”¨æˆ·å–æ¶ˆäº†æ“ä½œï¼Œå‡½æ•°æå‰é€€å‡º
         }
 
-        // 3. Ê¹ÓÃ StringBuilder ¸ßĞ§¹¹½¨×Ö·û´®
+        // 3. ä½¿ç”¨ StringBuilder é«˜æ•ˆæ„å»ºå­—ç¬¦ä¸²
         StringBuilder sb = new StringBuilder();
 
-        // ´ÓÉÏµ½ÏÂ±éÀú£¨y ´Ó mHeight-1 µ½ 0£©£¬·ûºÏ .lvl ÎÄ¼ş¸ñÊ½±ê×¼
+        // ä»ä¸Šåˆ°ä¸‹éå†ï¼ˆy ä» mHeight-1 åˆ° 0ï¼‰ï¼Œç¬¦åˆ .lvl æ–‡ä»¶æ ¼å¼æ ‡å‡†
         for (int y = mHeight - 1; y >= 0; y--)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // --- ĞŞ¸´ºËĞÄÂß¼­ ---
-                // Æğµã¡¢ÖÕµã¡¢ÒÔ¼°»æÖÆµÄÂ·¾¶£¬¶¼±»¼ÇÂ¼Îª 'R' (±íÊ¾ÓÉÈËÀàÉè¼ÆµÄÂ·¾¶Ô¼Êø)
-                // ÒÆ³ıÁË dangerZoneTiles µÄÒıÓÃ
+                // --- ä¿®å¤æ ¸å¿ƒé€»è¾‘ ---
+                // èµ·ç‚¹ã€ç»ˆç‚¹ã€ä»¥åŠç»˜åˆ¶çš„è·¯å¾„ï¼Œéƒ½è¢«è®°å½•ä¸º 'R' (è¡¨ç¤ºç”±äººç±»è®¾è®¡çš„è·¯å¾„çº¦æŸ)
+                // ç§»é™¤äº† dangerZoneTiles çš„å¼•ç”¨
                 if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
                     sb.Append('R');
                 }
                 else
                 {
-                    sb.Append('X'); // ÆäËûÇøÓò¼ÇÂ¼ÎªÇ½±Ú£¬ÓÉËã·¨×ÔÓÉ·¢»Ó
+                    sb.Append('X'); // å…¶ä»–åŒºåŸŸè®°å½•ä¸ºå¢™å£ï¼Œç”±ç®—æ³•è‡ªç”±å‘æŒ¥
                 }
             }
-            sb.AppendLine(); // »»ĞĞ
+            sb.AppendLine(); // æ¢è¡Œ
         }
 
-        // 4. ½«×Ö·û´®Ğ´ÈëÓÃ»§Ñ¡ÔñµÄÎÄ¼şÂ·¾¶
+        // 4. å°†å­—ç¬¦ä¸²å†™å…¥ç”¨æˆ·é€‰æ‹©çš„æ–‡ä»¶è·¯å¾„
         try
         {
             File.WriteAllText(path, sb.ToString());
-            Debug.Log($"¹Ø¿¨ÒÑ³É¹¦±£´æµ½: {path}");
+            Debug.Log($"å…³å¡å·²æˆåŠŸä¿å­˜åˆ°: {path}");
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"±£´æ¹Ø¿¨Ê§°Ü: {e.Message}");
+            Debug.LogError($"ä¿å­˜å…³å¡å¤±è´¥: {e.Message}");
         }
     }
 #endif
 
 #if UNITY_EDITOR
     /// <summary>
-    /// (ĞÂ) ´Ó .lvl ÎÄ¼ş¼ÓÔØ¹Ø¿¨µ½±à¼­Æ÷ÖĞ
+    /// (æ–°) ä» .lvl æ–‡ä»¶åŠ è½½å…³å¡åˆ°ç¼–è¾‘å™¨ä¸­
     /// </summary>
     private void LoadLevelFromFile()
     {
-        // 1. µ¯³ö¡°´ò¿ªÎÄ¼ş¡±¶Ô»°¿ò
+        // 1. å¼¹å‡ºâ€œæ‰“å¼€æ–‡ä»¶â€å¯¹è¯æ¡†
         string path = EditorUtility.OpenFilePanel(
-            "¼ÓÔØ¹Ø¿¨ÎÄ¼ş",                                  // ´°¿Ú±êÌâ
-            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // Ä¬ÈÏ´ò¿ªµÄÄ¿Â¼
-            "lvl"                                           // ÎÄ¼şÀ©Õ¹Ãû¹ıÂËÆ÷
+            "åŠ è½½å…³å¡æ–‡ä»¶",                                  // çª—å£æ ‡é¢˜
+            @"C:\GitHub\2D-Grid-Based-Platformer\Level",    // é»˜è®¤æ‰“å¼€çš„ç›®å½•
+            "lvl"                                           // æ–‡ä»¶æ‰©å±•åè¿‡æ»¤å™¨
         );
 
-        // 2. ¼ì²éÓÃ»§ÊÇ·ñµã»÷ÁË¡°È¡Ïû¡±
+        // 2. æ£€æŸ¥ç”¨æˆ·æ˜¯å¦ç‚¹å‡»äº†â€œå–æ¶ˆâ€
         if (string.IsNullOrEmpty(path))
         {
-            Debug.Log("¼ÓÔØÒÑÈ¡Ïû¡£");
-            return; // ÓÃ»§È¡ÏûÁË²Ù×÷£¬º¯ÊıÌáÇ°ÍË³ö
+            Debug.Log("åŠ è½½å·²å–æ¶ˆã€‚");
+            return; // ç”¨æˆ·å–æ¶ˆäº†æ“ä½œï¼Œå‡½æ•°æå‰é€€å‡º
         }
 
-        // 3. ¼ì²éÎÄ¼şÊÇ·ñ´æÔÚ
+        // 3. æ£€æŸ¥æ–‡ä»¶æ˜¯å¦å­˜åœ¨
         if (!File.Exists(path))
         {
-            Debug.LogError($"¼ÓÔØÊ§°Ü: ÎÄ¼şÎ´ÕÒµ½ÓÚ {path}");
+            Debug.LogError($"åŠ è½½å¤±è´¥: æ–‡ä»¶æœªæ‰¾åˆ°äº {path}");
             return;
         }
 
         string[] lines;
         try
         {
-            // 4. ¶ÁÈ¡ÎÄ¼şµÄËùÓĞĞĞ
+            // 4. è¯»å–æ–‡ä»¶çš„æ‰€æœ‰è¡Œ
             lines = File.ReadAllLines(path);
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"¶ÁÈ¡ÎÄ¼şÊ§°Ü: {e.Message}");
+            Debug.LogError($"è¯»å–æ–‡ä»¶å¤±è´¥: {e.Message}");
             return;
         }
 
-        // 5. ¹Ø¼ü£ºµ÷ÓÃ ResetToDrawingMode() À´Çå¿ÕËùÓĞÏÖÓĞÊı¾İ
+        // 5. å…³é”®ï¼šè°ƒç”¨ ResetToDrawingMode() æ¥æ¸…ç©ºæ‰€æœ‰ç°æœ‰æ•°æ®
         ResetToDrawingMode(); //
 
-        // 6. ½âÎöÎÄ¼şÄÚÈİ (´ÓÉÏµ½ÏÂ)
+        // 6. è§£ææ–‡ä»¶å†…å®¹ (ä»ä¸Šåˆ°ä¸‹)
         for (int i = 0; i < lines.Length; i++)
         {
             int mapY = (mHeight - 1) - i; //
@@ -1363,7 +1363,7 @@ public partial class Map : MonoBehaviour
 
                 char tileChar = line[mapX];
 
-                // 7. Ìî³äÊı¾İ (R = Â·¾¶)
+                // 7. å¡«å……æ•°æ® (R = è·¯å¾„)
                 if (tileChar == 'R')
                 {
                     playerSelectedPath.Add(new Vector2i(mapX, mapY)); //
@@ -1371,7 +1371,7 @@ public partial class Map : MonoBehaviour
             }
         }
 
-        // 8. ¸ßĞ§µØ¸üĞÂÊÓ¾õĞ§¹û (½«¼ÓÔØµÄÂ·¾¶¡°Í¿¡±³ÉÂÌÉ«)
+        // 8. é«˜æ•ˆåœ°æ›´æ–°è§†è§‰æ•ˆæœ (å°†åŠ è½½çš„è·¯å¾„â€œæ¶‚â€æˆç»¿è‰²)
         foreach (Vector2i pathTile in playerSelectedPath)
         {
             if (pathTile.x >= 0 && pathTile.x < mWidth && pathTile.y >= 0 && pathTile.y < mHeight)
@@ -1384,13 +1384,13 @@ public partial class Map : MonoBehaviour
             }
         }
 
-        Debug.Log($"¹Ø¿¨ÒÑ³É¹¦´Ó {path} ¼ÓÔØ£¡");
+        Debug.Log($"å…³å¡å·²æˆåŠŸä» {path} åŠ è½½ï¼");
     }
 #endif
 
     /// <summary>
-    /// (ĞÂ) ¶ÁÈ¡ÓÉ Python ½Å±¾Éú³ÉµÄ my-level-output.lvl ÎÄ¼ş£¬
-    /// ½âÎöÆäÄÚÈİÒÔÌî³ä¹Ø¿¨Êı¾İ£¬È»ºóÆô¶¯ÊÔÍæÄ£Ê½¡£
+    /// (æ–°) è¯»å–ç”± Python è„šæœ¬ç”Ÿæˆçš„ my-level-output.lvl æ–‡ä»¶ï¼Œ
+    /// è§£æå…¶å†…å®¹ä»¥å¡«å……å…³å¡æ•°æ®ï¼Œç„¶åå¯åŠ¨è¯•ç©æ¨¡å¼ã€‚
     /// </summary>
     private void LoadGeneratedLevel()
     {
@@ -1398,7 +1398,7 @@ public partial class Map : MonoBehaviour
 
         if (!File.Exists(generatedLevelPath))
         {
-            Debug.LogError($"¼ÓÔØÊ§°Ü: Î´ÕÒµ½ÎÄ¼ş {generatedLevelPath}");
+            Debug.LogError($"åŠ è½½å¤±è´¥: æœªæ‰¾åˆ°æ–‡ä»¶ {generatedLevelPath}");
             return;
         }
 
@@ -1407,7 +1407,7 @@ public partial class Map : MonoBehaviour
         catch (System.Exception e) { Debug.LogError(e.Message); return; }
 
         playerSelectedPath.Clear();
-        // --- ĞŞ¸´£ºÒÆ³ı dangerZoneTiles.Clear() ---
+        // --- ä¿®å¤ï¼šç§»é™¤ dangerZoneTiles.Clear() ---
 
         List<string> levelGridLines = new List<string>();
         foreach (string line in lines)
@@ -1435,7 +1435,7 @@ public partial class Map : MonoBehaviour
             }
         }
 
-        Debug.Log($"ÒÑ³É¹¦½âÎö {playerSelectedPath.Count} ¸ö¿ÉÍ¨ĞĞ¸ñ×Ó¡£");
+        Debug.Log($"å·²æˆåŠŸè§£æ {playerSelectedPath.Count} ä¸ªå¯é€šè¡Œæ ¼å­ã€‚");
         StartTrialMode();
     }
 }
