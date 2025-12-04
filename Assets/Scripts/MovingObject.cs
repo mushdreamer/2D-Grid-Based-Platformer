@@ -497,10 +497,9 @@ public class MovingObject : MonoBehaviour
         // ---------------------------------
     }
 
-    private void CheckForDangerZone()
+    protected virtual void CheckForDangerZone()
     {
         // 1. 获取角色脚下的瓦片坐标
-        // 我们稍微向下偏移一点位置来获取脚踩的格子，这样更准确
         Vector2 feetPosition = mAABB.Center - new Vector2(0, mAABB.HalfSizeY);
         Vector2i tileCoords = mMap.GetMapTileAtPoint(feetPosition);
 
@@ -510,8 +509,8 @@ public class MovingObject : MonoBehaviour
         // 3. 判断瓦片类型是否为 Danger
         if (currentTileType == TileType.Danger)
         {
-            // 4. 如果是，就在控制台持续打印信息
-            Debug.Log("You are in the Dangerous Pool! Your location is: (" + tileCoords.x + ", " + tileCoords.y + ")");
+            // 这里保留 Debug.Log 也没关系，子类会处理具体的死亡逻辑
+            Debug.Log("You are in the Dangerous Pool! Location: " + tileCoords);
         }
     }
 }

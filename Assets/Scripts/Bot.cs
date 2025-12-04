@@ -39,6 +39,12 @@ public class Bot : Character
 
     public void BotInit(bool[] inputs, bool[] prevInputs)
     {
+        // --- 新增：强制重置角色状态 ---
+        mCurrentState = CharacterState.Stand; // 变回站立状态，恢复物理碰撞
+        mSpeed = Vector2.zero;                // 速度清零，防止残留的下落速度
+        mOnGround = false;                    // 重置落地标记
+        // -----------------------------
+
         mWidth = 1;
         mHeight = 1;
         mScale = Vector2.one;

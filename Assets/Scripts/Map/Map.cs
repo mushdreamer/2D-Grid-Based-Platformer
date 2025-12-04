@@ -209,6 +209,13 @@ public partial class Map : MonoBehaviour
         }
     }
 
+    public void GameOver()
+    {
+        Debug.Log("Game Over! Resetting...");
+        // 直接重置回绘制模式，或者你也可以重新开始试玩 (StartTrialMode)
+        ResetToDrawingMode();
+    }
+
     void FixedUpdate()
     {
         if (currentPhase == GamePhase.TrialPlay && player.gameObject.activeInHierarchy)

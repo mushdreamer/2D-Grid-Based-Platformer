@@ -12,6 +12,7 @@ public class Character : MovingObject
         Run,
         Jump,
         GrabLedge,
+        Die
     };
 
     public AudioClip mHitWallSfx;
@@ -174,11 +175,66 @@ public class Character : MovingObject
         if (mInputs[(int)KeyInput.Jump] && (mOnGround || (mSpeed.y < 0.0f && mFramesFromJumpStart < Constants.cJumpFramesThreshold)))
             mSpeed.y = mJumpSpeed;
     }
-    
+
+    protected override void CheckForDangerZone()
+    {
+        // 如果已经死了，就不要再检测了，防止重复触发
+        if (mCurrentState == CharacterState.Die) return;
+
+        // 获取脚下位置
+        Vector2 feetPosition = mAABB.Center - new Vector2(0, mAABB.HalfSizeY);
+        Vector2i tileCoords = mMap.GetMapTileAtPoint(feetPosition);
+        TileType currentTileType = mMap.GetTile(tileCoords.x, tileCoords.y);
+
+        // 如果踩到了 Danger (尖刺)，触发死亡
+        if (currentTileType == TileType.Danger)
+        {
+            Die();
+        }
+    }
+
+    public void Die()
+    {
+        if (mCurrentState == CharacterState.Die) return;
+
+        Debug.Log("Player Died!");
+        mCurrentState = CharacterState.Die;
+
+        // 1. 给一个向上的“反弹”速度 (类似马里奥死亡)
+        mSpeed.x = 0; // 停止横向移动
+        mSpeed.y = 350.0f; // 向上的跳跃力度，你可以调整这个数值
+
+        // 2. 播放跳跃音效或者死亡音效
+        if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
+
+        // 3. 播放跳跃动画 (或者你有专门的死亡动画也可以换成 "Die")
+        mAnimator.Play("Jump");
+    }
+
     public void CharacterUpdate()
     {
         switch (mCurrentState)
         {
+            // --- 新增：死亡状态的更新逻辑 ---
+            case CharacterState.Die:
+                // 1. 应用重力
+                mSpeed.y += Constants.cGravity * Time.deltaTime;
+
+                // 2. 手动更新位置 (不调用 UpdatePhysics，从而穿过墙壁和地板)
+                mPosition += mSpeed * Time.deltaTime;
+                transform.position = new Vector3(Mathf.Round(mPosition.x), Mathf.Round(mPosition.y), mSpriteDepth);
+
+                // 3. 检查是否掉出了地图下边界，如果掉出去了，就通知地图重置
+                if (mPosition.y < mMap.position.y - 100.0f)
+                {
+                    // 调用 Map 中的重置方法 (稍后在 Map.cs 中添加 GameOver)
+                    mMap.GameOver();
+                    gameObject.SetActive(false); // 暂时隐藏自己
+                }
+
+                // 死亡状态下直接返回，不执行后面的 UpdatePhysics
+                return;
+            // -----------------------------
             case CharacterState.Stand:
 
                 mWalkSfxTimer = cWalkSfxTime;
