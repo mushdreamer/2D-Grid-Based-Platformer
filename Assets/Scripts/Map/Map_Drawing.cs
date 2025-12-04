@@ -101,6 +101,14 @@ public partial class Map
         startTile = new Vector2i(-1, -1);
         endTile = new Vector2i(-1, -1);
 
+        // --- 新增：清除所有生成的尖刺对象 ---
+        foreach (var spike in spawnedSpikes)
+        {
+            if (spike != null) Destroy(spike);
+        }
+        spawnedSpikes.Clear();
+        // ------------------------------------
+
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
@@ -122,14 +130,25 @@ public partial class Map
     {
         if (player != null) player.gameObject.SetActive(false);
 
+        // --- 新增：必须在这里也清除生成的尖刺 ---
+        foreach (var spike in spawnedSpikes)
+        {
+            if (spike != null) Destroy(spike);
+        }
+        spawnedSpikes.Clear();
+        // ---------------------------------------
+
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
+
+                // 这里不仅要重置 TileType，还要确保 Grid 数据被还原，否则再次生成时可能会出错
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
 
+                // 恢复之前的视觉状态（起点、终点、路径）
                 if (currentTile == startTile) SetVisual(x, y, Color.cyan);
                 else if (currentTile == endTile) SetVisual(x, y, Color.yellow);
                 else if (playerSelectedPath.Contains(currentTile)) SetVisual(x, y, new Color(0.5f, 1f, 0.5f, 0.5f));
@@ -147,12 +166,15 @@ public partial class Map
     {
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
 
+        // 先把基本地形画好（墙壁 vs 空气）
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
                 tilesSprites[x, y].color = Color.white;
+
+                // 起点、终点、路径设为空气
                 if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
                 {
                     SetTile(x, y, TileType.Empty);
@@ -164,6 +186,10 @@ public partial class Map
             }
         }
 
+        // --- 新增：生成路径下方的尖刺 ---
+        GenerateSpikesUnderPath();
+        // ------------------------------
+
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
         player.gameObject.SetActive(true);
@@ -173,6 +199,53 @@ public partial class Map
         currentPhase = GamePhase.TrialPlay;
         ScanLevelData();
         Debug.Log("Trial Mode Started.");
+    }
+
+    private void GenerateSpikesUnderPath()
+    {
+        if (spikePrefab == null)
+        {
+            Debug.LogWarning("未设置 Spike Prefab，无法生成尖刺！");
+            return;
+        }
+
+        foreach (Vector2i pathPos in playerSelectedPath)
+        {
+            // 目标位置：路径格子的正下方
+            Vector2i targetPos = new Vector2i(pathPos.x, pathPos.y - 1);
+
+            // 1. 边界检查：不能生成在地图外面
+            if (targetPos.y < 0) continue;
+
+            // 2. 逻辑检查：
+            // - 不要在起点或终点位置生成
+            // - 如果下方格子本身就是路径的一部分（比如垂直向下的路径），不要生成刺
+            if (targetPos == startTile || targetPos == endTile) continue;
+            if (playerSelectedPath.Contains(targetPos)) continue;
+
+            // 3. 修改数据：标记为 Danger
+            tiles[targetPos.x, targetPos.y] = TileType.Danger;
+
+            // 危险区域在寻路网格中通常视为可通过（掉进去就死），或者由具体的物理逻辑决定。
+            // 这里我们设为 1 (Empty/Passable)，让角色物理逻辑去检测 Danger 标记。
+            mGrid[targetPos.x, targetPos.y] = 1;
+
+            // 4. 视觉生成：实例化 Prefab
+            // 隐藏原本的方块 Sprite，避免和尖刺重叠太难看
+            tilesSprites[targetPos.x, targetPos.y].enabled = false;
+
+            Vector2 worldPos2D = GetMapTilePosition(targetPos);
+            // 将 Z 轴设为 -1，保证尖刺显示在背景前面
+            Vector3 spawnPos = new Vector3(worldPos2D.x, worldPos2D.y, -1f);
+
+            GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
+            newSpike.transform.parent = transform; // 设为 Map 的子物体，保持整洁
+
+            // 如果你的 Spike 图片比较大，可能需要手动调整 Scale，这里默认保持 Prefab 的设置
+            //newSpike.transform.localScale = Vector3.one; 
+
+            spawnedSpikes.Add(newSpike);
+        }
     }
 
     public void SetTile(int x, int y, TileType type)

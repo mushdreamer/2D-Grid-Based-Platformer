@@ -2867,6 +2867,8 @@ MonoBehaviour:
   manualHeight: 10
   currentBrush: 0
   currentPhase: 0
+  spikePrefab: {fileID: 2370058098865023721, guid: b64545fff281d9145b8bb5f430dbe34e,
+    type: 3}
   mapRoomSimple: {fileID: 0}
   mapRoomOneWay: {fileID: 11400000, guid: 2d6365466254ab14894fd8ce8735f75f, type: 2}
   gameCamera: {fileID: 1799959646}

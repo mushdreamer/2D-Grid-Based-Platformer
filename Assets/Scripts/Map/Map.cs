@@ -56,6 +56,10 @@ public partial class Map : MonoBehaviour
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
 
+    [Header("Game Elements")]
+    public GameObject spikePrefab; // 在 Inspector 中拖入你的 Spike Prefab
+    private List<GameObject> spawnedSpikes = new List<GameObject>(); // 用于记录生成的尖刺，方便清除
+
     // 线程通信标志
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
