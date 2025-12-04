@@ -166,85 +166,152 @@ public partial class Map
     {
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
 
-        // 先把基本地形画好（墙壁 vs 空气）
+        // 1. 先将整个地图填充为实心墙壁 (Block)
+        // 这样未绘制的区域就自然变成了墙壁
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
-                Vector2i currentTile = new Vector2i(x, y);
-                tilesSprites[x, y].color = Color.white;
-
-                // 起点、终点、路径设为空气
-                if (currentTile == startTile || currentTile == endTile || playerSelectedPath.Contains(currentTile))
-                {
-                    SetTile(x, y, TileType.Empty);
-                }
-                else
-                {
-                    SetTile(x, y, TileType.Block);
-                }
+                SetTile(x, y, TileType.Block);
+                tilesSprites[x, y].color = Color.white; // 重置颜色
             }
         }
 
-        // --- 新增：生成路径下方的尖刺 ---
-        GenerateSpikesUnderPath();
-        // ------------------------------
+        // 2. 根据绘制的“容错空间”雕刻关卡，并生成尖刺
+        GenerateLevelFromTolerance();
 
+        // 3. 确保起点和终点位置是空的，且没有尖刺
+        SetTile(startTile.x, startTile.y, TileType.Empty);
+        SetTile(endTile.x, endTile.y, TileType.Empty);
+        RemoveSpikeAt(startTile.x, startTile.y - 1); // 确保起点脚下安全
+        RemoveSpikeAt(endTile.x, endTile.y - 1);     // 确保终点脚下安全
+
+        // 4. 进入试玩状态
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
+        // 让玩家出生在起点位置
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
         ScanLevelData();
         Debug.Log("Trial Mode Started.");
     }
 
-    private void GenerateSpikesUnderPath()
+    private void GenerateLevelFromTolerance()
     {
-        if (spikePrefab == null)
+        if (spikePrefab == null) Debug.LogWarning("未设置 Spike Prefab！");
+
+        // 阈值：如果这一列的“空气高度”超过 3 格，我们认为空间足够大，可以放置尖刺
+        int spikeHeightThreshold = 3;
+
+        // 遍历所有横坐标 (列)
+        for (int x = 0; x < mWidth; x++)
         {
-            Debug.LogWarning("未设置 Spike Prefab，无法生成尖刺！");
-            return;
+            // 这一列是否包含任何绘制的路径？
+            bool hasPathInColumn = false;
+            int lowestPathY = mHeight;  // 这一列路径的最低点
+            int highestPathY = -1;      // 这一列路径的最高点
+
+            // 1. 扫描这一列的路径信息
+            for (int y = 0; y < mHeight; y++)
+            {
+                Vector2i pos = new Vector2i(x, y);
+                // 如果这个格子被玩家画过了 (属于容错空间)
+                if (playerSelectedPath.Contains(pos) || pos == startTile || pos == endTile)
+                {
+                    hasPathInColumn = true;
+                    // 将其挖空 (变成空气)
+                    SetTile(x, y, TileType.Empty);
+
+                    if (y < lowestPathY) lowestPathY = y;
+                    if (y > highestPathY) highestPathY = y;
+                }
+            }
+
+            // 2. 智能生成尖刺逻辑
+            if (hasPathInColumn)
+            {
+                // 计算这一列的“容错高度” (空气有多高)
+                int clearance = highestPathY - lowestPathY + 1;
+
+                // 地板的位置就在路径最低点的下方
+                int floorY = lowestPathY - 1;
+
+                // 边界检查
+                if (floorY >= 0)
+                {
+                    // 逻辑判定：
+                    // 如果空间很高 (clearance > 3) -> 说明是跳跃区 -> 地板生成尖刺
+                    // 如果空间很窄 (clearance <= 3) -> 说明是走廊 -> 地板保持安全 (Block)
+                    if (clearance > spikeHeightThreshold)
+                    {
+                        SpawnSpikeAt(x, floorY);
+                    }
+                    else
+                    {
+                        // 这是一个安全的地板，确保它是 Block (虽然初始化已经是Block，但为了保险)
+                        if (GetTile(x, floorY) != TileType.Block)
+                        {
+                            SetTile(x, floorY, TileType.Block);
+                        }
+                    }
+                }
+            }
         }
+    }
 
-        foreach (Vector2i pathPos in playerSelectedPath)
+    private void SpawnSpikeAt(int x, int y)
+    {
+        if (spikePrefab == null) return;
+
+        // 1. 修改数据为 Danger
+        SetTile(x, y, TileType.Danger);
+
+        // 2. 视觉处理：隐藏原来的方块
+        tilesSprites[x, y].enabled = false;
+
+        // 3. 生成 Prefab
+        Vector2 worldPos = GetMapTilePosition(x, y);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -1f);
+
+        GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
+        newSpike.transform.parent = transform;
+        newSpike.transform.localScale = Vector3.one; // 既然你已经修好了PPU，这里用1倍缩放即可
+
+        spawnedSpikes.Add(newSpike);
+    }
+
+    private void RemoveSpikeAt(int x, int y)
+    {
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+
+        // 如果这里被标记为 Danger，把它变回安全的 Block
+        if (GetTile(x, y) == TileType.Danger)
         {
-            // 目标位置：路径格子的正下方
-            Vector2i targetPos = new Vector2i(pathPos.x, pathPos.y - 1);
+            SetTile(x, y, TileType.Block);
+            tilesSprites[x, y].enabled = true; // 重新显示墙壁 Sprite
+            tilesSprites[x, y].color = Color.white;
+            tilesSprites[x, y].sprite = mDirtSprites[0]; // 恢复成默认土块或其他样式
 
-            // 1. 边界检查：不能生成在地图外面
-            if (targetPos.y < 0) continue;
+            // 从场景中找到并删除对应的 Spike GameObject
+            // (这里做一个简单的距离查找，为了性能优化，也可以遍历 spawnedSpikes)
+            GameObject spikeToRemove = null;
+            foreach (var spike in spawnedSpikes)
+            {
+                if (Vector2.Distance(spike.transform.position, GetMapTilePosition(x, y)) < 0.1f)
+                {
+                    spikeToRemove = spike;
+                    break;
+                }
+            }
 
-            // 2. 逻辑检查：
-            // - 不要在起点或终点位置生成
-            // - 如果下方格子本身就是路径的一部分（比如垂直向下的路径），不要生成刺
-            if (targetPos == startTile || targetPos == endTile) continue;
-            if (playerSelectedPath.Contains(targetPos)) continue;
-
-            // 3. 修改数据：标记为 Danger
-            tiles[targetPos.x, targetPos.y] = TileType.Danger;
-
-            // 危险区域在寻路网格中通常视为可通过（掉进去就死），或者由具体的物理逻辑决定。
-            // 这里我们设为 1 (Empty/Passable)，让角色物理逻辑去检测 Danger 标记。
-            mGrid[targetPos.x, targetPos.y] = 1;
-
-            // 4. 视觉生成：实例化 Prefab
-            // 隐藏原本的方块 Sprite，避免和尖刺重叠太难看
-            tilesSprites[targetPos.x, targetPos.y].enabled = false;
-
-            Vector2 worldPos2D = GetMapTilePosition(targetPos);
-            // 将 Z 轴设为 -1，保证尖刺显示在背景前面
-            Vector3 spawnPos = new Vector3(worldPos2D.x, worldPos2D.y, -1f);
-
-            GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
-            newSpike.transform.parent = transform; // 设为 Map 的子物体，保持整洁
-
-            // 如果你的 Spike 图片比较大，可能需要手动调整 Scale，这里默认保持 Prefab 的设置
-            //newSpike.transform.localScale = Vector3.one; 
-
-            spawnedSpikes.Add(newSpike);
+            if (spikeToRemove != null)
+            {
+                spawnedSpikes.Remove(spikeToRemove);
+                Destroy(spikeToRemove);
+            }
         }
     }
 
