@@ -22,52 +22,35 @@ public class Character : MovingObject
 
     public float mWalkSfxTimer = 0.0f;
     public const float cWalkSfxTime = 0.25f;
-    /// <summary>
-    /// The current state.
-    /// </summary>
+
     [HideInInspector]
     public CharacterState mCurrentState = CharacterState.Stand;
 
     public Animator mAnimator;
-
-    /// <summary>
-    /// The number of frames passed from changing the state to jump.
-    /// </summary>
     protected int mFramesFromJumpStart = 0;
-
     protected bool[] mInputs;
     protected bool[] mPrevInputs;
 
-    /// <summary>
-    /// The hero's vertical speed when he starts a jump
-    /// </summary>
     public float mJumpSpeed;
-
-    /// <summary>
-    /// The walk speed constant in pixels/second.
-    /// </summary>
     public float mWalkSpeed;
 
     public List<Vector2i> mPath = new List<Vector2i>();
-
     public bool isSimulation = false;
+    public LineRenderer lineRenderer;
 
-    /// <summary>
-    /// Raises the draw gizmos event.
-    /// </summary>
+    // --- 新增：二段跳相关变量 ---
+    protected int mJumpCount = 0;
+    protected const int cMaxJumps = 2; // 最大跳跃次数 (1 = 单跳, 2 = 二段跳)
+    // -------------------------
+
     void OnDrawGizmos()
     {
         DrawMovingObjectGizmos();
-
-        //draw the path
-
         if (mPath != null && mPath.Count > 0)
         {
             var start = mPath[0];
-
             Gizmos.color = Color.blue;
             Gizmos.DrawSphere(mMap.transform.position + new Vector3(start.x * Map.cTileSize, start.y * Map.cTileSize, -5.0f), 5.0f);
-
             for (var i = 1; i < mPath.Count; ++i)
             {
                 var end = mPath[i];
@@ -81,31 +64,18 @@ public class Character : MovingObject
         }
     }
 
-    public LineRenderer lineRenderer;
-
     protected void DrawPathLines()
     {
         if (mPath != null && mPath.Count > 0)
         {
             lineRenderer.enabled = true;
-            // --- FIX STARTS HERE ---
-            // Old: lineRenderer.SetVertexCount(mPath.Count);
             lineRenderer.positionCount = mPath.Count;
-
-            // Old: lineRenderer.SetWidth(4.0f, 4.0f);
             lineRenderer.startWidth = 4.0f;
             lineRenderer.endWidth = 4.0f;
-            // --- FIX ENDS HERE ---
-
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
             for (var i = 0; i < mPath.Count; ++i)
             {
-                // --- FIX STARTS HERE ---
-                // Old: lineRenderer.SetColors(Color.red, Color.red);
-                // Note: It's more efficient to set colors outside the loop
-                // but for this fix, we'll keep the structure.
-                lineRenderer.startColor = Color.red;
-                lineRenderer.endColor = Color.red;
-                // --- FIX ENDS HERE ---
                 lineRenderer.SetPosition(i, mMap.transform.position + new Vector3(mPath[i].x * Map.cTileSize, mPath[i].y * Map.cTileSize, -5.0f));
             }
         }
@@ -116,79 +86,192 @@ public class Character : MovingObject
     public void UpdatePrevInputs()
     {
         var count = (byte)KeyInput.Count;
-
         for (byte i = 0; i < count; ++i)
             mPrevInputs[i] = mInputs[i];
     }
 
+    // --- 修改：HandleJumping 支持二段跳 ---
     private void HandleJumping()
     {
-        //increase the number of frames that we've been in the jump state
-        ++mFramesFromJumpStart;
+        mFramesFromJumpStart++;
+        if (mAtCeiling) mFramesFromJumpStart = 100;
 
-        //if we hit the ceiling, we don't want to compensate pro jumping, we can prevent by faking a huge mFramesFromJumpStart
-        if (mAtCeiling)
-            mFramesFromJumpStart = 100;
-
-        //if we're jumping/falling then apply the gravity
-        //this should be applied at the beginning of the jump routine
-        //because this way we can assure that when we hit the ground 
-        //the speed.y will not change after we zero it
         mSpeed.y += Constants.cGravity * Time.deltaTime;
-
         mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
 
-        if (!mInputs[(int)KeyInput.Jump] && mSpeed.y > 0.0f)
+        // 检测跳跃键刚刚按下 (Fresh Press)
+        bool jumpPressed = mInputs[(int)KeyInput.Jump] && !mPrevInputs[(int)KeyInput.Jump];
+        // 检测是否按住 (Holding)
+        bool jumpHeld = mInputs[(int)KeyInput.Jump];
+
+        // 1. 处理起跳逻辑
+        if (jumpPressed)
+        {
+            // 情况A: 地面起跳 (或者土狼时间)
+            if (mOnGround || (mSpeed.y < 0.0f && mFramesFromJumpStart < Constants.cJumpFramesThreshold))
+            {
+                mSpeed.y = mJumpSpeed;
+                mJumpCount = 1; // 消耗第一次跳跃
+                if (!isSimulation && mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
+            }
+            // 情况B: 空中二段跳
+            else if (mJumpCount < cMaxJumps)
+            {
+                mSpeed.y = mJumpSpeed; // 二段跳通常也是满力跳
+                mJumpCount++; // 消耗跳跃次数
+                mFramesFromJumpStart = 0; // 重置跳跃帧，允许长按
+                if (!isSimulation && mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
+
+                // 可选: 这里可以加一个二段跳的特效或不同的声音
+            }
+        }
+
+        // 2. 处理长按跳得更高 (Variable Jump Height)
+        // 只有在上升阶段松开按键，才会截断跳跃高度
+        if (!jumpHeld && mSpeed.y > 0.0f)
+        {
+            mSpeed.y = Mathf.Min(mSpeed.y, 200.0f);
+            mFramesFromJumpStart = 100; // 结束长按判定
+        }
+
+        // 空中左右移动逻辑
+        if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+        {
+            mSpeed.x = 0.0f;
+        }
+        else if (mInputs[(int)KeyInput.GoRight])
+        {
+            transform.localScale = new Vector3(-mScale.x, mScale.y, 1.0f);
+            mSpeed.x = mWalkSpeed;
+            if (mPushedRightWall && !mPushesRightWall) mPosition.x += 1.0f;
+        }
+        else if (mInputs[(int)KeyInput.GoLeft])
+        {
+            transform.localScale = new Vector3(mScale.x, mScale.y, 1.0f);
+            mSpeed.x = -mWalkSpeed;
+            if (mPushedLeftWall && !mPushesLeftWall) mPosition.x -= 1.0f;
+        }
+    }
+
+    // --- 修改：SimulationUpdate 也要同步支持二段跳 ---
+    // (为了保持一致，这里其实可以直接复用 HandleJumping 的逻辑，但为了不破坏你现有的结构，我手动同步一下)
+    private void HandleJumpingSimulation(float timeStep)
+    {
+        mFramesFromJumpStart++;
+        if (mAtCeiling) mFramesFromJumpStart = 100;
+
+        mSpeed.y += Constants.cGravity * timeStep;
+        mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
+
+        // 模拟环境下的输入检测
+        bool jumpPressed = mInputs[(int)KeyInput.Jump] && !mPrevInputs[(int)KeyInput.Jump];
+        bool jumpHeld = mInputs[(int)KeyInput.Jump];
+
+        if (jumpPressed)
+        {
+            if (mOnGround || (mSpeed.y < 0.0f && mFramesFromJumpStart < Constants.cJumpFramesThreshold))
+            {
+                mSpeed.y = mJumpSpeed;
+                mJumpCount = 1;
+            }
+            else if (mJumpCount < cMaxJumps)
+            {
+                mSpeed.y = mJumpSpeed;
+                mJumpCount++;
+                mFramesFromJumpStart = 0;
+            }
+        }
+
+        if (!jumpHeld && mSpeed.y > 0.0f)
         {
             mSpeed.y = Mathf.Min(mSpeed.y, 200.0f);
             mFramesFromJumpStart = 100;
         }
 
-        //in air movement
-        //if both or none horizontal movement keys are pressed
-        if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
-        {
-            mSpeed.x = 0.0f;
-        }
-        else if (mInputs[(int)KeyInput.GoRight])	//if right key is pressed then accelerate right
-        {
-            transform.localScale = new Vector3(-mScale.x, mScale.y, 1.0f);
-            mSpeed.x = mWalkSpeed;
+        if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft]) mSpeed.x = 0.0f;
+        else if (mInputs[(int)KeyInput.GoRight]) mSpeed.x = mWalkSpeed;
+        else if (mInputs[(int)KeyInput.GoLeft]) mSpeed.x = -mWalkSpeed;
+    }
 
-            //..W
-            //.H.     <- to not get stuck in these kind of situations we beed to advance
-            //..W			the hero forward if he doesn't push a wall anymore
-            if (mPushedRightWall && !mPushesRightWall)
-                mPosition.x += 1.0f;
-        }
-        else if (mInputs[(int)KeyInput.GoLeft])	//if left key is pressed then accelerate left
+    public void SimulationUpdate(float timeStep, bool[] mockInputs)
+    {
+        isSimulation = true;
+        mInputs = mockInputs;
+        UpdatePrevInputs();
+
+        switch (mCurrentState)
         {
-            transform.localScale = new Vector3(mScale.x, mScale.y, 1.0f);
-            mSpeed.x = -mWalkSpeed;
+            case CharacterState.Stand:
+                mSpeed = Vector2.zero;
+                mJumpCount = 0; // 模拟开始前重置
+                if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
 
-            //W..
-            //.H.     <- to not get stuck in these kind of situations we need to advance
-            //W..			the hero forward if he doesn't push a wall anymore
-            if (mPushedLeftWall && !mPushesLeftWall)
-                mPosition.x -= 1.0f;
+                if (mInputs[(int)KeyInput.Jump])
+                {
+                    mSpeed.y = mJumpSpeed;
+                    mJumpCount = 1;
+                    mCurrentState = CharacterState.Jump;
+                }
+                else if (mInputs[(int)KeyInput.GoRight] != mInputs[(int)KeyInput.GoLeft])
+                {
+                    mCurrentState = CharacterState.Run;
+                }
+                break;
+
+            case CharacterState.Run:
+                mJumpCount = 0; // 跑动时重置跳跃次数
+                if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+                {
+                    mCurrentState = CharacterState.Stand;
+                    mSpeed = Vector2.zero;
+                }
+                else if (mInputs[(int)KeyInput.GoRight]) mSpeed.x = mWalkSpeed;
+                else if (mInputs[(int)KeyInput.GoLeft]) mSpeed.x = -mWalkSpeed;
+
+                if (mInputs[(int)KeyInput.Jump])
+                {
+                    mSpeed.y = mJumpSpeed;
+                    mJumpCount = 1;
+                    mCurrentState = CharacterState.Jump;
+                }
+                else if (!mOnGround) mCurrentState = CharacterState.Jump;
+                break;
+
+            case CharacterState.Jump:
+                HandleJumpingSimulation(timeStep);
+                if (mOnGround)
+                {
+                    mJumpCount = 0; // 落地重置
+                    if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+                    {
+                        mCurrentState = CharacterState.Stand;
+                        mSpeed = Vector2.zero;
+                    }
+                    else
+                    {
+                        mCurrentState = CharacterState.Run;
+                        mSpeed.y = 0.0f;
+                    }
+                }
+                break;
+            case CharacterState.Die:
+                mSpeed.y += Constants.cGravity * timeStep;
+                mPosition += mSpeed * timeStep;
+                return;
         }
 
-        //if we just started falling and want to jump, then jump anyway
-        if (mInputs[(int)KeyInput.Jump] && (mOnGround || (mSpeed.y < 0.0f && mFramesFromJumpStart < Constants.cJumpFramesThreshold)))
-            mSpeed.y = mJumpSpeed;
+        UpdatePhysics(timeStep);
+        isSimulation = false;
     }
 
     protected override void CheckForDangerZone()
     {
-        // 如果已经死了，就不要再检测了，防止重复触发
         if (mCurrentState == CharacterState.Die) return;
 
-        // 获取脚下位置
         Vector2 feetPosition = mAABB.Center - new Vector2(0, mAABB.HalfSizeY);
         Vector2i tileCoords = mMap.GetMapTileAtPoint(feetPosition);
         TileType currentTileType = mMap.GetTile(tileCoords.x, tileCoords.y);
 
-        // 如果踩到了 Danger (尖刺)，触发死亡
         if (currentTileType == TileType.Danger)
         {
             Die();
@@ -203,144 +286,41 @@ public class Character : MovingObject
         mSpeed.x = 0;
         mSpeed.y = 350.0f;
 
-        if (!isSimulation) // 新增检查
+        if (!isSimulation)
         {
             if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
-            mAnimator.Play("Jump");
+            mAnimator.Play("Jump"); // 通常死亡也是用跳跃帧或专门的死亡帧
         }
-        // Simulation 模式下只需要改变状态，不需要 log 或 audio
     }
-
-    public void SimulationUpdate(float timeStep, bool[] mockInputs)
-    {
-        isSimulation = true; // 标记为模拟中
-        mInputs = mockInputs; // 注入伪造的输入
-        UpdatePrevInputs();   // 更新上一帧输入（用于检测按键按下瞬间）
-
-        // 复制 CharacterUpdate 的核心逻辑，但剥离 View/Audio 部分
-        switch (mCurrentState)
-        {
-            case CharacterState.Stand:
-                mSpeed = Vector2.zero;
-                if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
-
-                if (mInputs[(int)KeyInput.Jump])
-                {
-                    mSpeed.y = mJumpSpeed;
-                    mCurrentState = CharacterState.Jump;
-                }
-                else if (mInputs[(int)KeyInput.GoRight] != mInputs[(int)KeyInput.GoLeft])
-                {
-                    mCurrentState = CharacterState.Run;
-                }
-                break;
-
-            case CharacterState.Run:
-                if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
-                {
-                    mCurrentState = CharacterState.Stand;
-                    mSpeed = Vector2.zero;
-                }
-                else if (mInputs[(int)KeyInput.GoRight]) mSpeed.x = mWalkSpeed;
-                else if (mInputs[(int)KeyInput.GoLeft]) mSpeed.x = -mWalkSpeed;
-
-                if (mInputs[(int)KeyInput.Jump])
-                {
-                    mSpeed.y = mJumpSpeed;
-                    mCurrentState = CharacterState.Jump;
-                }
-                else if (!mOnGround) mCurrentState = CharacterState.Jump;
-                break;
-
-            case CharacterState.Jump:
-                HandleJumpingSimulation(timeStep); // 需要修改 HandleJumping 接受 timeStep
-                if (mOnGround)
-                {
-                    if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
-                    {
-                        mCurrentState = CharacterState.Stand;
-                        mSpeed = Vector2.zero;
-                    }
-                    else
-                    {
-                        mCurrentState = CharacterState.Run;
-                        mSpeed.y = 0.0f;
-                    }
-                }
-                break;
-            case CharacterState.Die:
-                // 模拟模式下如果死了，通常意味着这一条路径废了
-                mSpeed.y += Constants.cGravity * timeStep;
-                mPosition += mSpeed * timeStep;
-                return;
-        }
-
-        UpdatePhysics(timeStep); // 调用基类的修改版
-        isSimulation = false; // 还原
-    }
-
-    private void HandleJumpingSimulation(float timeStep)
-    {
-        ++mFramesFromJumpStart;
-        if (mAtCeiling) mFramesFromJumpStart = 100;
-
-        mSpeed.y += Constants.cGravity * timeStep;
-        mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
-
-        if (!mInputs[(int)KeyInput.Jump] && mSpeed.y > 0.0f)
-        {
-            mSpeed.y = Mathf.Min(mSpeed.y, 200.0f);
-            mFramesFromJumpStart = 100;
-        }
-
-        // Horizontal movement logic
-        if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
-            mSpeed.x = 0.0f;
-        else if (mInputs[(int)KeyInput.GoRight])
-            mSpeed.x = mWalkSpeed;
-        else if (mInputs[(int)KeyInput.GoLeft])
-            mSpeed.x = -mWalkSpeed;
-    }
-    // ---------------------------------------------------------
 
     public void CharacterUpdate()
     {
         switch (mCurrentState)
         {
-            // --- 新增：死亡状态的更新逻辑 ---
             case CharacterState.Die:
                 // 1. 应用重力
                 mSpeed.y += Constants.cGravity * Time.deltaTime;
 
-                // 2. 手动更新位置 (不调用 UpdatePhysics，从而穿过墙壁和地板)
+                // 2. 手动更新位置
                 mPosition += mSpeed * Time.deltaTime;
                 transform.position = new Vector3(Mathf.Round(mPosition.x), Mathf.Round(mPosition.y), mSpriteDepth);
 
-                // 3. 检查是否掉出了地图下边界，如果掉出去了，就通知地图重置
-                if (mPosition.y < mMap.position.y - 100.0f)
+                // 3. 掉出地图检测
+                // 注意：这里删除了 SetActive(false)，保证角色能一直运行到这里触发 GameOver
+                if (mPosition.y < mMap.position.y - 200.0f) // 稍微加大一点距离 (-200) 确保完全出屏
                 {
-                    // 调用 Map 中的重置方法 (稍后在 Map.cs 中添加 GameOver)
                     mMap.GameOver();
-                    gameObject.SetActive(false); // 暂时隐藏自己
                 }
-
-                // 死亡状态下直接返回，不执行后面的 UpdatePhysics
                 return;
-            // -----------------------------
-            case CharacterState.Stand:
 
+            case CharacterState.Stand:
                 mWalkSfxTimer = cWalkSfxTime;
                 mAnimator.Play("Stand");
-
                 mSpeed = Vector2.zero;
+                mJumpCount = 0; // 站立时重置跳跃次数
 
-                if (!mOnGround)
-                {
-                    mCurrentState = CharacterState.Jump;
-                    break;
-                }
+                if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
 
-                //if left or right key is pressed, but not both
                 if (mInputs[(int)KeyInput.GoRight] != mInputs[(int)KeyInput.GoLeft])
                 {
                     mCurrentState = CharacterState.Run;
@@ -348,27 +328,20 @@ public class Character : MovingObject
                 else if (mInputs[(int)KeyInput.Jump])
                 {
                     mSpeed.y = mJumpSpeed;
+                    mJumpCount = 1;
                     mAudioSource.PlayOneShot(mJumpSfx);
                     mCurrentState = CharacterState.Jump;
                 }
-
                 if (mInputs[(int)KeyInput.GoDown] && mOnOneWayPlatform)
                     mPosition -= Vector2.up * cOneWayPlatformThreshold;
-
                 break;
+
             case CharacterState.Run:
-
                 mAnimator.Play("Walk");
-
                 mWalkSfxTimer += Time.deltaTime;
+                if (mWalkSfxTimer > cWalkSfxTime) { mWalkSfxTimer = 0.0f; mAudioSource.PlayOneShot(mWalkSfx); }
 
-                if (mWalkSfxTimer > cWalkSfxTime)
-                {
-                    mWalkSfxTimer = 0.0f;
-                    mAudioSource.PlayOneShot(mWalkSfx);
-                }
-
-                //if both or neither left nor right keys are pressed then stop walking and stand
+                mJumpCount = 0; // 跑动时重置
 
                 if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                 {
@@ -386,47 +359,35 @@ public class Character : MovingObject
                     transform.localScale = new Vector3(mScale.x, mScale.y, 1.0f);
                 }
 
-                //if there's no tile to walk on, fall
                 if (mInputs[(int)KeyInput.Jump])
                 {
-
                     mSpeed.y = mJumpSpeed;
+                    mJumpCount = 1;
                     mAudioSource.PlayOneShot(mJumpSfx, 1.0f);
                     mCurrentState = CharacterState.Jump;
                 }
-                else if (!mOnGround)
-                {
-                    mCurrentState = CharacterState.Jump;
-                    break;
-                }
+                else if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
 
-                //don't move left when pushing left wall
-                if (mPushesLeftWall)
-                    mSpeed.x = Mathf.Max(mSpeed.x, 0.0f);
-                //don't move right when pushing right wall
-                else if (mPushesRightWall)
-                    mSpeed.x = Mathf.Min(mSpeed.x, 0.0f);
-
+                if (mPushesLeftWall) mSpeed.x = Mathf.Max(mSpeed.x, 0.0f);
+                else if (mPushesRightWall) mSpeed.x = Mathf.Min(mSpeed.x, 0.0f);
                 break;
+
             case CharacterState.Jump:
-
                 mWalkSfxTimer = cWalkSfxTime;
-
                 mAnimator.Play("Jump");
 
+                // 跳跃状态下不重置 mJumpCount，只在 HandleJumping 里增加
                 HandleJumping();
 
-
-                //if we hit the ground
                 if (mOnGround)
                 {
-                    //if there's no movement change state to standing
+                    mJumpCount = 0; // 落地重置
                     if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                     {
                         mCurrentState = CharacterState.Stand;
                         mSpeed = Vector2.zero;
                     }
-                    else	//either go right or go left are pressed so we change the state to walk
+                    else
                     {
                         mCurrentState = CharacterState.Run;
                         mSpeed.y = 0.0f;
@@ -435,17 +396,12 @@ public class Character : MovingObject
                 break;
         }
 
-        if ((!mWasOnGround && mOnGround)
-            || (!mWasAtCeiling && mAtCeiling)
-            || (!mPushedLeftWall && mPushesLeftWall)
-            || (!mPushedRightWall && mPushesRightWall))
+        if ((!mWasOnGround && mOnGround) || (!mWasAtCeiling && mAtCeiling) || (!mPushedLeftWall && mPushesLeftWall) || (!mPushedRightWall && mPushesRightWall))
             mAudioSource.PlayOneShot(mHitWallSfx, 0.5f);
 
         UpdatePhysics(Time.deltaTime);
 
-        if (mWasOnGround && !mOnGround)
-            mFramesFromJumpStart = 0;
-
+        if (mWasOnGround && !mOnGround) mFramesFromJumpStart = 0;
         UpdatePrevInputs();
     }
 }

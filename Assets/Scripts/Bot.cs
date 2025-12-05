@@ -46,6 +46,17 @@ public class Bot : Character
     }
     // -------------------------
 
+    public void StopReplay()
+    {
+        if (isReplaying)
+        {
+            isReplaying = false;
+            replayData = null; // 清空录像数据
+            // 清除当前的输入状态，防止残留
+            for (int i = 0; i < mInputs.Length; i++) mInputs[i] = false;
+            Debug.Log(">>> 录像中断！玩家接管控制权。");
+        }
+    }
 
     public void TappedOnTile(Vector2i mapPos)
     {
@@ -318,6 +329,17 @@ public class Bot : Character
 
 	public void BotUpdate()
 	{
+        if (isReplaying)
+        {
+            // 如果玩家按下了任何操作键，立即停止录像
+            if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D) ||
+                Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S) ||
+                Input.GetKeyDown(KeyCode.Space))
+            {
+                StopReplay();
+            }
+        }
+
         if (isReplaying && replayData != null)
         {
             if (replayIndex < replayData.Count)

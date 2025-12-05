@@ -63,6 +63,9 @@ public partial class Map : MonoBehaviour
     [Header("PCG")]
     public LevelGenerator levelGenerator; // 在 Inspector 中拖入 LevelGenerator 组件
 
+    [Header("Visualization")]
+    public LineRenderer guideLineRenderer;
+
     // 线程通信标志
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
@@ -244,7 +247,7 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay)
+    public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints)
     {
         // 0. 清理旧的尖刺
         foreach (var spike in spawnedSpikes)
@@ -253,7 +256,7 @@ public partial class Map : MonoBehaviour
         }
         spawnedSpikes.Clear();
 
-        // 1. 先把世界填满墙
+        // 1. 填满墙
         FillMapWithBlocks();
 
         // 2. 更新路径数据
@@ -267,24 +270,22 @@ public partial class Map : MonoBehaviour
         GenerateLevelFromTolerance();
 
         // 4. 清空起终点
-        if (startTile.x != -1)
-        {
-            SetTile(startTile.x, startTile.y, TileType.Empty);
-            // 确保地板下面是实心的 (使用 Block)
-            SetTile(startTile.x, startTile.y - 1, TileType.Block);
-        }
-        if (endTile.x != -1)
-        {
-            SetTile(endTile.x, endTile.y, TileType.Empty);
-            SetTile(endTile.x, endTile.y - 1, TileType.Block);
-        }
+        if (startTile.x != -1) { SetTile(startTile.x, startTile.y, TileType.Empty); SetTile(startTile.x, startTile.y - 1, TileType.Block); }
+        if (endTile.x != -1) { SetTile(endTile.x, endTile.y, TileType.Empty); SetTile(endTile.x, endTile.y - 1, TileType.Block); }
 
-        Debug.Log(">>> 地图生成完毕，开始自动演示...");
+        Debug.Log(">>> 地图生成完毕。绘制通关路径...");
 
-        // 5. 启动试玩
+        // --- 新增：绘制通关红线 ---
+        if (guideLineRenderer != null && trajectoryPoints != null)
+        {
+            guideLineRenderer.positionCount = trajectoryPoints.Count;
+            guideLineRenderer.SetPositions(trajectoryPoints.ToArray());
+            guideLineRenderer.enabled = true; // 确保它是显示的
+        }
+        // -------------------------
+
         StartTrialMode();
 
-        // 6. --- 关键：将录像注入给 Player ---
         if (player != null)
         {
             player.StartReplay(replay);
@@ -293,9 +294,36 @@ public partial class Map : MonoBehaviour
 
     public void GameOver()
     {
-        Debug.Log("Game Over! Resetting...");
-        // 直接重置回绘制模式，或者你也可以重新开始试玩 (StartTrialMode)
-        ResetToDrawingMode();
+        if (currentPhase == GamePhase.TrialPlay)
+        {
+            Debug.Log(">>> 玩家死亡！正在重置到起点...");
+
+            if (player != null)
+            {
+                // 1. 停止录像，把控制权交给玩家
+                player.StopReplay();
+
+                // 2. 复活到起点
+                if (startTile.x != -1)
+                {
+                    Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
+                    player.mPosition = startPos;
+                    player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
+                }
+
+                // 3. 重置物理状态
+                player.mSpeed = Vector2.zero;
+                player.mCurrentState = Character.CharacterState.Stand;
+                player.mOnGround = true;
+
+                // --- 关键：确保对象是激活的 ---
+                player.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            ResetToDrawingMode();
+        }
     }
 
     void FixedUpdate()

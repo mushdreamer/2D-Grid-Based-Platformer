@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// 定义录像帧结构
+// 保持 ReplayFrame 结构体不变
 public struct ReplayFrame
 {
     public bool[] inputs;
@@ -19,11 +19,12 @@ public class LevelGenerator : MonoBehaviour
 
     private Bot ghostAgent;
     private List<Vector2i> generatedPath = new List<Vector2i>();
-    // --- 新增：录像数据 ---
     public List<ReplayFrame> generatedReplay = new List<ReplayFrame>();
 
-    private const float SIM_STEP = 0.01666f; // 60 FPS 固定步长
+    // --- 新增：记录精确的轨迹坐标点，用于画线 ---
+    private List<Vector3> trajectoryPoints = new List<Vector3>();
 
+    private const float SIM_STEP = 0.01666f;
     private float currentVirtualFloorY;
 
     enum ActionType { MoveRight, JumpRight, LongJumpRight }
@@ -44,10 +45,9 @@ public class LevelGenerator : MonoBehaviour
     {
         Initialize();
         generatedPath.Clear();
-        generatedReplay.Clear(); // 清空旧录像
+        generatedReplay.Clear();
+        trajectoryPoints.Clear(); // 清空旧轨迹
 
-        // 1. 初始化位置
-        // 注意：这里我们让 Ghost 稍微悬空一点点，利用重力自然落地，以消除初始误差
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
@@ -57,16 +57,12 @@ public class LevelGenerator : MonoBehaviour
         ghostAgent.mAABB.Center = startWorldPos + ghostAgent.mAABBOffset;
         ghostAgent.mOnGround = false;
 
-        // 初始地板对齐网格
         currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
 
-        Debug.Log(">>> 开始智能生成路径...");
-
-        // 先让 Ghost 自然下落几帧以吸附到地板
         SimulateFallToFloor();
 
         int safetyCounter = 0;
-        while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 500)
+        while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 1000) // 稍微增加点安全步数
         {
             safetyCounter++;
             float heightDiff = endWorldPos.y - currentVirtualFloorY;
@@ -75,7 +71,6 @@ public class LevelGenerator : MonoBehaviour
             ActionType nextAction = PickAction();
             ExecuteAction(nextAction, bias);
 
-            // 强制拉回逻辑 (同样要对齐网格)
             if (ghostAgent.mPosition.y < map.position.y)
             {
                 ghostAgent.mPosition.y = currentVirtualFloorY + Map.cTileSize * 2;
@@ -83,21 +78,21 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 传递录像数据给 Map
-        map.ApplyGeneratedPath(generatedPath, generatedReplay);
-        Debug.Log($">>> 生成完成! 录像帧数: {generatedReplay.Count}");
+        // --- 修改：将 trajectoryPoints 也传给 Map ---
+        map.ApplyGeneratedPath(generatedPath, generatedReplay, trajectoryPoints);
+        Debug.Log($">>> 生成完成! 轨迹点数: {trajectoryPoints.Count}");
     }
 
-    // 辅助：让 Agent 自然掉落直到碰到 VirtualFloor
     void SimulateFallToFloor()
     {
-        for (int i = 0; i < 60; i++) // 最多模拟 60 帧下落
+        for (int i = 0; i < 60; i++)
         {
-            bool[] inputs = new bool[(int)KeyInput.Count]; // 无输入
+            bool[] inputs = new bool[(int)KeyInput.Count];
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
-
-            // 记录这一帧（哪怕是发呆也要记录，保证时间轴对齐）
             generatedReplay.Add(new ReplayFrame(inputs));
+
+            // 记录点
+            trajectoryPoints.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -1f));
 
             if (CheckVirtualFloorCollision()) break;
         }
@@ -124,27 +119,18 @@ public class LevelGenerator : MonoBehaviour
             case ActionType.LongJumpRight: frames = 45; jump = true; break;
         }
 
-        // --- 关键修正：地板高度必须是 Tile 的整数倍 ---
         if (jump)
         {
             float randomChange = Random.Range(-2.0f, 2.5f);
             randomChange += heightBias * 3.0f;
-
-            // 强制 RoundToInt，保证高度变化是整数个格子
             int tileChange = Mathf.RoundToInt(randomChange);
             float changeAmount = tileChange * Map.cTileSize;
-
             float newFloor = currentVirtualFloorY + changeAmount;
 
-            // 边界限制
             float mapBottom = map.position.y + Map.cTileSize * 2;
             float mapTop = map.position.y + (map.mHeight - 5) * Map.cTileSize;
-
-            // 再次对齐确保万无一失
             newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop));
 
-            // 确保 newFloor 也是网格对齐的
-            // (这里假设 map.position.y 也是对齐的，通常是 0)
             currentVirtualFloorY = newFloor;
         }
 
@@ -155,18 +141,19 @@ public class LevelGenerator : MonoBehaviour
             if (jump && i < 15) inputs[(int)KeyInput.Jump] = true;
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
-
             CheckVirtualFloorCollision();
             RecordTrajectory();
-
-            // --- 录制当前帧 ---
             generatedReplay.Add(new ReplayFrame(inputs));
+
+            // --- 新增：记录每一帧的精确位置 ---
+            // Z轴设为 -8，保证画在所有东西的最前面
+            trajectoryPoints.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
         }
     }
 
+    // CheckVirtualFloorCollision 和 RecordTrajectory 保持不变...
     bool CheckVirtualFloorCollision()
     {
-        // 只有下落时才检测碰撞
         if (ghostAgent.mSpeed.y <= 0 && ghostAgent.mPosition.y <= currentVirtualFloorY)
         {
             ghostAgent.mPosition.y = currentVirtualFloorY;
@@ -183,7 +170,6 @@ public class LevelGenerator : MonoBehaviour
         float padding = 6.0f;
         Vector2 min = box.Center - box.HalfSize - Vector2.one * padding;
         Vector2 max = box.Center + box.HalfSize + Vector2.one * padding;
-
         Vector2i bl = map.GetMapTileAtPoint(min);
         Vector2i tr = map.GetMapTileAtPoint(max);
 
