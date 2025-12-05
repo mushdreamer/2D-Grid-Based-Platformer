@@ -244,9 +244,9 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    public void ApplyGeneratedPath(List<Vector2i> path)
+    public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay)
     {
-        // 0. 清理旧的尖刺 (防止多次生成后尖刺重叠)
+        // 0. 清理旧的尖刺
         foreach (var spike in spawnedSpikes)
         {
             if (spike != null) Destroy(spike);
@@ -263,13 +263,14 @@ public partial class Map : MonoBehaviour
             playerSelectedPath.Add(p);
         }
 
-        // 3. 生成地形和新尖刺
+        // 3. 生成地形
         GenerateLevelFromTolerance();
 
-        // 4. 确保起点终点区域是空的
+        // 4. 清空起终点
         if (startTile.x != -1)
         {
             SetTile(startTile.x, startTile.y, TileType.Empty);
+            // 确保地板下面是实心的 (使用 Block)
             SetTile(startTile.x, startTile.y - 1, TileType.Block);
         }
         if (endTile.x != -1)
@@ -278,10 +279,16 @@ public partial class Map : MonoBehaviour
             SetTile(endTile.x, endTile.y - 1, TileType.Block);
         }
 
-        Debug.Log(">>> 地图生成完毕，自动进入试玩模式...");
+        Debug.Log(">>> 地图生成完毕，开始自动演示...");
 
-        // 5. --- 关键修复：直接自动开始试玩，不用再按空格了 ---
+        // 5. 启动试玩
         StartTrialMode();
+
+        // 6. --- 关键：将录像注入给 Player ---
+        if (player != null)
+        {
+            player.StartReplay(replay);
+        }
     }
 
     public void GameOver()

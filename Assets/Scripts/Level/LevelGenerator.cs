@@ -1,6 +1,17 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+// 定义录像帧结构
+public struct ReplayFrame
+{
+    public bool[] inputs;
+    public ReplayFrame(bool[] src)
+    {
+        inputs = new bool[src.Length];
+        System.Array.Copy(src, inputs, src.Length);
+    }
+}
+
 public class LevelGenerator : MonoBehaviour
 {
     public Map map;
@@ -8,11 +19,13 @@ public class LevelGenerator : MonoBehaviour
 
     private Bot ghostAgent;
     private List<Vector2i> generatedPath = new List<Vector2i>();
-    private const float SIM_STEP = 0.016f;
+    // --- 新增：录像数据 ---
+    public List<ReplayFrame> generatedReplay = new List<ReplayFrame>();
+
+    private const float SIM_STEP = 0.01666f; // 60 FPS 固定步长
 
     private float currentVirtualFloorY;
 
-    // 去掉了 Wait，防止它原地发呆掉坑里
     enum ActionType { MoveRight, JumpRight, LongJumpRight }
 
     public void Initialize()
@@ -23,10 +36,7 @@ public class LevelGenerator : MonoBehaviour
             ghostAgent.gameObject.SetActive(false);
             ghostAgent.name = "GhostAgent";
             ghostAgent.mMap = map;
-
-            bool[] inputs = new bool[(int)KeyInput.Count];
-            bool[] prevInputs = new bool[(int)KeyInput.Count];
-            ghostAgent.BotInit(inputs, prevInputs);
+            ghostAgent.BotInit(new bool[(int)KeyInput.Count], new bool[(int)KeyInput.Count]);
         }
     }
 
@@ -34,37 +44,38 @@ public class LevelGenerator : MonoBehaviour
     {
         Initialize();
         generatedPath.Clear();
+        generatedReplay.Clear(); // 清空旧录像
 
         // 1. 初始化位置
-        Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, ghostAgent.mAABB.HalfSizeY + 0.1f);
+        // 注意：这里我们让 Ghost 稍微悬空一点点，利用重力自然落地，以消除初始误差
+        Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
         ghostAgent.mPosition = startWorldPos;
         ghostAgent.mSpeed = Vector2.zero;
         ghostAgent.mCurrentState = Character.CharacterState.Stand;
         ghostAgent.mAABB.Center = startWorldPos + ghostAgent.mAABBOffset;
-        ghostAgent.mOnGround = true;
+        ghostAgent.mOnGround = false;
 
-        currentVirtualFloorY = startWorldPos.y;
+        // 初始地板对齐网格
+        currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
 
         Debug.Log(">>> 开始智能生成路径...");
-        RecordTrajectory();
+
+        // 先让 Ghost 自然下落几帧以吸附到地板
+        SimulateFallToFloor();
 
         int safetyCounter = 0;
-        // 2. 智能循环：只要没到达终点右侧，就一直生成
         while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 500)
         {
             safetyCounter++;
-
-            // 决策：根据当前高度和终点高度的差值，决定地板走势
-            // 如果比终点低，就大概率往上跳；如果比终点高，就允许往下跳
             float heightDiff = endWorldPos.y - currentVirtualFloorY;
-            float bias = Mathf.Clamp(heightDiff / 100.0f, -0.5f, 0.5f); // 归一化偏差
+            float bias = Mathf.Clamp(heightDiff / 100.0f, -0.5f, 0.5f);
 
             ActionType nextAction = PickAction();
             ExecuteAction(nextAction, bias);
 
-            // 防掉落保险：如果掉出地图太远，强制拉回来 (防止生成无底洞)
+            // 强制拉回逻辑 (同样要对齐网格)
             if (ghostAgent.mPosition.y < map.position.y)
             {
                 ghostAgent.mPosition.y = currentVirtualFloorY + Map.cTileSize * 2;
@@ -72,15 +83,31 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        map.ApplyGeneratedPath(generatedPath);
-        Debug.Log($">>> 生成完成! 步数: {safetyCounter}, 轨迹点: {generatedPath.Count}");
+        // 传递录像数据给 Map
+        map.ApplyGeneratedPath(generatedPath, generatedReplay);
+        Debug.Log($">>> 生成完成! 录像帧数: {generatedReplay.Count}");
+    }
+
+    // 辅助：让 Agent 自然掉落直到碰到 VirtualFloor
+    void SimulateFallToFloor()
+    {
+        for (int i = 0; i < 60; i++) // 最多模拟 60 帧下落
+        {
+            bool[] inputs = new bool[(int)KeyInput.Count]; // 无输入
+            ghostAgent.SimulationUpdate(SIM_STEP, inputs);
+
+            // 记录这一帧（哪怕是发呆也要记录，保证时间轴对齐）
+            generatedReplay.Add(new ReplayFrame(inputs));
+
+            if (CheckVirtualFloorCollision()) break;
+        }
     }
 
     ActionType PickAction()
     {
         float r = Random.value;
-        if (r < 0.4f) return ActionType.MoveRight;
-        if (r < 0.8f) return ActionType.JumpRight;
+        if (r < 0.3f) return ActionType.MoveRight;
+        if (r < 0.7f) return ActionType.JumpRight;
         return ActionType.LongJumpRight;
     }
 
@@ -88,7 +115,7 @@ public class LevelGenerator : MonoBehaviour
     {
         int frames = 0;
         bool jump = false;
-        bool right = true; // 永远向右，保证通关
+        bool right = true;
 
         switch (action)
         {
@@ -97,23 +124,27 @@ public class LevelGenerator : MonoBehaviour
             case ActionType.LongJumpRight: frames = 45; jump = true; break;
         }
 
-        // 智能地板生成
+        // --- 关键修正：地板高度必须是 Tile 的整数倍 ---
         if (jump)
         {
-            // 基础随机范围：-2格 到 +2格
             float randomChange = Random.Range(-2.0f, 2.5f);
-
-            // 加上高度偏差引导 (如果终点在上面，heightBias是正的，地板就会倾向于变高)
             randomChange += heightBias * 3.0f;
 
-            float changeAmount = Mathf.Round(randomChange) * Map.cTileSize;
+            // 强制 RoundToInt，保证高度变化是整数个格子
+            int tileChange = Mathf.RoundToInt(randomChange);
+            float changeAmount = tileChange * Map.cTileSize;
+
             float newFloor = currentVirtualFloorY + changeAmount;
 
-            // 限制地板不能超出地图上下界
+            // 边界限制
             float mapBottom = map.position.y + Map.cTileSize * 2;
             float mapTop = map.position.y + (map.mHeight - 5) * Map.cTileSize;
-            newFloor = Mathf.Clamp(newFloor, mapBottom, mapTop);
 
+            // 再次对齐确保万无一失
+            newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop));
+
+            // 确保 newFloor 也是网格对齐的
+            // (这里假设 map.position.y 也是对齐的，通常是 0)
             currentVirtualFloorY = newFloor;
         }
 
@@ -125,16 +156,25 @@ public class LevelGenerator : MonoBehaviour
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
-            // 虚拟地板吸附逻辑
-            if (ghostAgent.mSpeed.y < 0 && ghostAgent.mPosition.y <= currentVirtualFloorY)
-            {
-                ghostAgent.mPosition.y = currentVirtualFloorY;
-                ghostAgent.mSpeed.y = 0;
-                ghostAgent.mOnGround = true;
-            }
-
+            CheckVirtualFloorCollision();
             RecordTrajectory();
+
+            // --- 录制当前帧 ---
+            generatedReplay.Add(new ReplayFrame(inputs));
         }
+    }
+
+    bool CheckVirtualFloorCollision()
+    {
+        // 只有下落时才检测碰撞
+        if (ghostAgent.mSpeed.y <= 0 && ghostAgent.mPosition.y <= currentVirtualFloorY)
+        {
+            ghostAgent.mPosition.y = currentVirtualFloorY;
+            ghostAgent.mSpeed.y = 0;
+            ghostAgent.mOnGround = true;
+            return true;
+        }
+        return false;
     }
 
     void RecordTrajectory()

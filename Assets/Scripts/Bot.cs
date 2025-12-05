@@ -27,8 +27,26 @@ public class Bot : Character
 	
 	
 	public const int cMaxStuckFrames = 20;
-	
-	
+
+    private List<ReplayFrame> replayData = new List<ReplayFrame>();
+    private int replayIndex = 0;
+    private bool isReplaying = false;
+
+    // 启动回放模式
+    public void StartReplay(List<ReplayFrame> replay)
+    {
+        replayData = replay;
+        replayIndex = 0;
+        isReplaying = true;
+
+        // 禁用普通的 Bot AI
+        mCurrentAction = BotAction.None;
+
+        Debug.Log($"Bot 开始回放！总帧数: {replayData.Count}");
+    }
+    // -------------------------
+
+
     public void TappedOnTile(Vector2i mapPos)
     {
         while (!(mMap.IsGround(mapPos.x, mapPos.y)))
@@ -65,6 +83,9 @@ public class Bot : Character
         mWalkSpeed = Constants.cWalkSpeed;
 
         mAABBOffset.y = mAABB.HalfSizeY;
+
+        isReplaying = false;
+        replayData = null;
         //transform.localScale = new Vector3(mAABB.HalfSizeX / 8.0f, mAABB.HalfSizeY / 8.0f, 1.0f);
     }
 
@@ -297,8 +318,35 @@ public class Bot : Character
 
 	public void BotUpdate()
 	{
-		//get the position of the bottom of the bot's aabb, this will be much more useful than the center of the sprite (mPosition)
-		int tileX, tileY;
+        if (isReplaying && replayData != null)
+        {
+            if (replayIndex < replayData.Count)
+            {
+                // 读取当前帧的录像输入
+                bool[] recordedInputs = replayData[replayIndex].inputs;
+
+                // 覆盖当前的 mInputs
+                for (int i = 0; i < mInputs.Length; i++)
+                    mInputs[i] = recordedInputs[i];
+
+                replayIndex++;
+            }
+            else
+            {
+                // 录像放完了
+                Debug.Log("回放结束。");
+                isReplaying = false;
+                // 停止所有输入
+                for (int i = 0; i < mInputs.Length; i++) mInputs[i] = false;
+            }
+
+            // 在回放模式下，直接调用 CharacterUpdate 并返回，不执行下面的寻路 AI
+            CharacterUpdate();
+            return;
+        }
+
+        //get the position of the bottom of the bot's aabb, this will be much more useful than the center of the sprite (mPosition)
+        int tileX, tileY;
         var position = mAABB.Center;
         position.y -= mAABB.HalfSizeY;
 
