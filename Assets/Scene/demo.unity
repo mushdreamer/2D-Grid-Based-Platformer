@@ -2859,9 +2859,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mPlayerTransform: {fileID: 450605700}
   mPlayer: {fileID: 600731197}
-  mPosition: {x: 0, y: 0, z: 0}
   mMap: {fileID: 2106156355}
-  dampTime: 0.15
 --- !u!124 &2081810912
 Behaviour:
   m_ObjectHideFlags: 0
@@ -2908,11 +2906,11 @@ MonoBehaviour:
   brushSize: 5
   brushPreviewPrefab: {fileID: 1393941975101645099, guid: e6eb37f1bac333d49846fd7fa457cf1e,
     type: 3}
-  mWidth: 120
-  mHeight: 80
-  autoSizeToCamera: 0
-  manualWidth: 50
-  manualHeight: 25
+  mWidth: 80
+  mHeight: 50
+  autoSizeToCamera: 1
+  manualWidth: 80
+  manualHeight: 50
   currentBrush: 0
   currentPhase: 0
   spikePrefab: {fileID: 2370058098865023721, guid: b64545fff281d9145b8bb5f430dbe34e,

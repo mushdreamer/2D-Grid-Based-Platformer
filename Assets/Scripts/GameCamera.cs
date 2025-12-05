@@ -3,73 +3,65 @@ using System.Collections;
 
 public class GameCamera : MonoBehaviour
 {
-
-    /// <summary>
-    /// A reference to the the player.
-    /// </summary>
     public Transform mPlayerTransform;
-
     public Character mPlayer;
-
-    /// <summary>
-    /// The position.
-    /// </summary>
-    public Vector3 mPosition;
-
-    /// <summary>
-    /// The map. Assigned from editor.
-    /// </summary>
     public Map mMap;
 
-    public float dampTime = 0.15f;
-    private Vector3 velocity = Vector3.zero;
-
-    const int cOuterVisibilityX = 0;
-    const int cOuterVisibilityY = 0;
+    // 不需要 dampTime 了，因为是瞬间切屏
+    // public float dampTime = 0.15f; 
 
     void Start()
     {
-        mPosition = transform.position;
+        // 初始化时更新一次
+        UpdateCameraPosition();
     }
 
-    public void FixedUpdate()
+    // 使用 LateUpdate 确保在主角移动后计算
+    public void LateUpdate()
     {
-        if (mPlayerTransform == null)
-            return;
+        UpdateCameraPosition();
+    }
 
-        if (mPlayer == null)
-            mPlayer = mPlayerTransform.GetComponent<Character>();
+    void UpdateCameraPosition()
+    {
+        if (mPlayerTransform == null) return;
+        if (mPlayer == null) mPlayer = mPlayerTransform.GetComponent<Character>();
+        if (mMap == null) return;
 
-        Vector2 targetPos;
+        // 1. 获取摄像机的视口大小 (世界单位)
+        float camHeight = Camera.main.orthographicSize * 2f;
+        float camWidth = camHeight * Camera.main.aspect;
 
-        targetPos = mPlayer.mPosition;
+        // 2. 计算玩家相对于地图起点的偏移量
+        // (假设地图是从左下角开始生成的)
+        float playerRelX = mPlayer.mPosition.x - mMap.position.x;
+        float playerRelY = mPlayer.mPosition.y - mMap.position.y;
 
-        mPosition = new Vector3(targetPos.x, targetPos.y, mPosition.z);
+        // 3. 计算玩家当前处于第几个“屏幕” (Grid Index)
+        // 例如：如果在 0-Width 范围内，screenIndexX 就是 0
+        int screenIndexX = Mathf.FloorToInt(playerRelX / camWidth);
+        int screenIndexY = Mathf.FloorToInt(playerRelY / camHeight);
 
-        var point = GetComponent<Camera>().WorldToViewportPoint(mPosition);
-        var delta = mPosition - GetComponent<Camera>().ViewportToWorldPoint(new Vector3(0.5f, 0.5f, point.z)); //(new Vector3(0.5, 0.5, point.z));
-        var destination = transform.position + delta;
+        // 防止负数索引 (比如玩家稍微跑出左边界)
+        if (screenIndexX < 0) screenIndexX = 0;
+        if (screenIndexY < 0) screenIndexY = 0;
 
-        var cameraPos = Vector3.SmoothDamp(transform.position, destination, ref velocity, dampTime);
-        if (Mathf.Abs(cameraPos.x - targetPos.x) < 2.0f)
-            cameraPos.x = targetPos.x;
-        if (Mathf.Abs(cameraPos.y - targetPos.y) < 2.0f)
-            cameraPos.y = targetPos.y;
+        // 4. 计算该屏幕中心的绝对坐标
+        float targetX = mMap.position.x + (screenIndexX * camWidth) + (camWidth / 2f);
+        float targetY = mMap.position.y + (screenIndexY * camHeight) + (camHeight / 2f);
 
-        //make sure the camera doesn't go outside the map bounds on x axis
-        if (cameraPos.x < mMap.position.x + Camera.main.pixelWidth * 0.5f - Map.cTileSize / 2 + cOuterVisibilityX * Map.cTileSize)
-            cameraPos.x = mMap.position.x + Camera.main.pixelWidth * 0.5f - Map.cTileSize / 2 + cOuterVisibilityX * Map.cTileSize;
-        else if (cameraPos.x > mMap.position.x + mMap.mWidth * Map.cTileSize - Camera.main.pixelWidth * 0.5f - Map.cTileSize / 2 - cOuterVisibilityX * Map.cTileSize)
-            cameraPos.x = mMap.position.x + mMap.mWidth * Map.cTileSize - Camera.main.pixelWidth * 0.5f - Map.cTileSize / 2 - cOuterVisibilityX * Map.cTileSize;
+        // 5. 限制摄像机不要超出地图的最大边界 (可选，防止看到虚空)
+        // 计算地图总宽高的世界单位
+        float mapWorldWidth = mMap.mWidth * Map.cTileSize;
+        float mapWorldHeight = mMap.mHeight * Map.cTileSize;
 
-        //make sure the camera doesn't go outside the map bounds on y axis
-        if (cameraPos.y < mMap.position.y + Camera.main.pixelHeight * 0.5f - Map.cTileSize / 2 + cOuterVisibilityX * Map.cTileSize)
-            cameraPos.y = mMap.position.y + Camera.main.pixelHeight * 0.5f - Map.cTileSize / 2 + cOuterVisibilityX * Map.cTileSize;
-        else if (cameraPos.y > mMap.position.y + mMap.mHeight * Map.cTileSize - Camera.main.pixelHeight * 0.5f - Map.cTileSize / 2 - cOuterVisibilityX * Map.cTileSize)
-            cameraPos.y = mMap.position.y + mMap.mHeight * Map.cTileSize - Camera.main.pixelHeight * 0.5f - Map.cTileSize / 2 - cOuterVisibilityX * Map.cTileSize;
+        // 如果计算出的中心点超出了地图范围，就卡在边界上
+        // (注意：这只在地图尺寸不是屏幕尺寸整数倍时有用)
+        if (targetX - camWidth / 2f > mMap.position.x + mapWorldWidth) targetX = mMap.position.x + mapWorldWidth - camWidth / 2f;
+        if (targetY - camHeight / 2f > mMap.position.y + mapWorldHeight) targetY = mMap.position.y + mapWorldHeight - camHeight / 2f;
 
-
-
-        transform.position = new Vector3(Mathf.Round(cameraPos.x), Mathf.Round(cameraPos.y), cameraPos.z);
+        // 6. 瞬间设置位置 (Snap)
+        // 这种模式下不需要 SmoothDamp，直接赋值最干脆，完全不抖
+        transform.position = new Vector3(targetX, targetY, transform.position.z);
     }
 }
