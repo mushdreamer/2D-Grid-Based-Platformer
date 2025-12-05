@@ -60,6 +60,9 @@ public partial class Map : MonoBehaviour
     public GameObject spikePrefab; // 在 Inspector 中拖入你的 Spike Prefab
     private List<GameObject> spawnedSpikes = new List<GameObject>(); // 用于记录生成的尖刺，方便清除
 
+    [Header("PCG")]
+    public LevelGenerator levelGenerator; // 在 Inspector 中拖入 LevelGenerator 组件
+
     // 线程通信标志
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
@@ -199,7 +202,25 @@ public partial class Map : MonoBehaviour
                     if (startTile.x == -1 || endTile.x == -1) Debug.LogError("无法开始：请先设置 起点(1) 和 终点(3)！");
                     else StartTrialMode();
                 }
-                break;
+
+                // --- 修正：将 G 键逻辑移到 break 之前 ---
+                if (Input.GetKeyDown(KeyCode.G))
+                {
+                    if (levelGenerator == null)
+                    {
+                        Debug.LogError("未绑定 LevelGenerator！请将 LevelGenerator 拖拽到 Map 组件的相应槽位中。");
+                        break;
+                    }
+
+                    if (startTile.x == -1) startTile = new Vector2i(2, 5);
+                    if (endTile.x == -1) endTile = new Vector2i(mWidth - 5, 5);
+
+                    Debug.Log("生成 IWBTG 关卡中...");
+                    ClearMapToEmpty();
+                    levelGenerator.GenerateIWBTGLevel(startTile, endTile);
+                }
+                // ----------------------------------------
+                break; // break 必须在所有 case 逻辑之后
 
             case GamePhase.TrialPlay:
                 HandlePlayingInput();
@@ -207,6 +228,60 @@ public partial class Map : MonoBehaviour
                 else if (Input.GetKeyDown(KeyCode.R)) ResetToDrawingMode();
                 break;
         }
+    }
+
+    public void FillMapWithBlocks()
+    {
+        for (int y = 0; y < mHeight; y++)
+            for (int x = 0; x < mWidth; x++)
+                SetTile(x, y, TileType.Block);
+    }
+
+    public void ClearMapToEmpty()
+    {
+        for (int y = 0; y < mHeight; y++)
+            for (int x = 0; x < mWidth; x++)
+                SetTile(x, y, TileType.Empty);
+    }
+
+    public void ApplyGeneratedPath(List<Vector2i> path)
+    {
+        // 0. 清理旧的尖刺 (防止多次生成后尖刺重叠)
+        foreach (var spike in spawnedSpikes)
+        {
+            if (spike != null) Destroy(spike);
+        }
+        spawnedSpikes.Clear();
+
+        // 1. 先把世界填满墙
+        FillMapWithBlocks();
+
+        // 2. 更新路径数据
+        playerSelectedPath.Clear();
+        foreach (var p in path)
+        {
+            playerSelectedPath.Add(p);
+        }
+
+        // 3. 生成地形和新尖刺
+        GenerateLevelFromTolerance();
+
+        // 4. 确保起点终点区域是空的
+        if (startTile.x != -1)
+        {
+            SetTile(startTile.x, startTile.y, TileType.Empty);
+            SetTile(startTile.x, startTile.y - 1, TileType.Block);
+        }
+        if (endTile.x != -1)
+        {
+            SetTile(endTile.x, endTile.y, TileType.Empty);
+            SetTile(endTile.x, endTile.y - 1, TileType.Block);
+        }
+
+        Debug.Log(">>> 地图生成完毕，自动进入试玩模式...");
+
+        // 5. --- 关键修复：直接自动开始试玩，不用再按空格了 ---
+        StartTrialMode();
     }
 
     public void GameOver()

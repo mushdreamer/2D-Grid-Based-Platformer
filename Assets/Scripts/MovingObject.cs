@@ -376,11 +376,11 @@ public class MovingObject : MonoBehaviour
 		return false;
 	}
 
-	/// <summary>
-	/// Updates the moving object's physics, integrates the movement, updates sensors for terrain collisions.
-	/// </summary>
-	public void UpdatePhysics()
-	{	
+    /// <summary>
+    /// Updates the moving object's physics, integrates the movement, updates sensors for terrain collisions.
+    /// </summary>
+    public virtual void UpdatePhysics(float timeStep)
+    {	
 		//assign the previous state of onGround, atCeiling, pushesRightWall, pushesLeftWall
 		//before those get recalculated for this frame
 		mWasOnGround = mOnGround;
@@ -395,11 +395,11 @@ public class MovingObject : MonoBehaviour
 		
 		//save the position to the oldPosition vector
 		mOldPosition = mPosition;
-		
-		//integrate the movement only if we're not tweening
-		mPosition += mSpeed*Time.deltaTime;
-		
-		var checkAgainLeft = false;
+
+        //integrate the movement only if we're not tweening
+        mPosition += mSpeed * timeStep;
+
+        var checkAgainLeft = false;
 		
 
 		float groundY, ceilingY;

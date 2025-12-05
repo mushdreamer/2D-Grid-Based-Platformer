@@ -50,6 +50,8 @@ public class Character : MovingObject
 
     public List<Vector2i> mPath = new List<Vector2i>();
 
+    public bool isSimulation = false;
+
     /// <summary>
     /// Raises the draw gizmos event.
     /// </summary>
@@ -196,20 +198,110 @@ public class Character : MovingObject
     public void Die()
     {
         if (mCurrentState == CharacterState.Die) return;
-
-        Debug.Log("Player Died!");
         mCurrentState = CharacterState.Die;
 
-        // 1. 给一个向上的“反弹”速度 (类似马里奥死亡)
-        mSpeed.x = 0; // 停止横向移动
-        mSpeed.y = 350.0f; // 向上的跳跃力度，你可以调整这个数值
+        mSpeed.x = 0;
+        mSpeed.y = 350.0f;
 
-        // 2. 播放跳跃音效或者死亡音效
-        if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
-
-        // 3. 播放跳跃动画 (或者你有专门的死亡动画也可以换成 "Die")
-        mAnimator.Play("Jump");
+        if (!isSimulation) // 新增检查
+        {
+            if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
+            mAnimator.Play("Jump");
+        }
+        // Simulation 模式下只需要改变状态，不需要 log 或 audio
     }
+
+    public void SimulationUpdate(float timeStep, bool[] mockInputs)
+    {
+        isSimulation = true; // 标记为模拟中
+        mInputs = mockInputs; // 注入伪造的输入
+        UpdatePrevInputs();   // 更新上一帧输入（用于检测按键按下瞬间）
+
+        // 复制 CharacterUpdate 的核心逻辑，但剥离 View/Audio 部分
+        switch (mCurrentState)
+        {
+            case CharacterState.Stand:
+                mSpeed = Vector2.zero;
+                if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
+
+                if (mInputs[(int)KeyInput.Jump])
+                {
+                    mSpeed.y = mJumpSpeed;
+                    mCurrentState = CharacterState.Jump;
+                }
+                else if (mInputs[(int)KeyInput.GoRight] != mInputs[(int)KeyInput.GoLeft])
+                {
+                    mCurrentState = CharacterState.Run;
+                }
+                break;
+
+            case CharacterState.Run:
+                if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+                {
+                    mCurrentState = CharacterState.Stand;
+                    mSpeed = Vector2.zero;
+                }
+                else if (mInputs[(int)KeyInput.GoRight]) mSpeed.x = mWalkSpeed;
+                else if (mInputs[(int)KeyInput.GoLeft]) mSpeed.x = -mWalkSpeed;
+
+                if (mInputs[(int)KeyInput.Jump])
+                {
+                    mSpeed.y = mJumpSpeed;
+                    mCurrentState = CharacterState.Jump;
+                }
+                else if (!mOnGround) mCurrentState = CharacterState.Jump;
+                break;
+
+            case CharacterState.Jump:
+                HandleJumpingSimulation(timeStep); // 需要修改 HandleJumping 接受 timeStep
+                if (mOnGround)
+                {
+                    if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+                    {
+                        mCurrentState = CharacterState.Stand;
+                        mSpeed = Vector2.zero;
+                    }
+                    else
+                    {
+                        mCurrentState = CharacterState.Run;
+                        mSpeed.y = 0.0f;
+                    }
+                }
+                break;
+            case CharacterState.Die:
+                // 模拟模式下如果死了，通常意味着这一条路径废了
+                mSpeed.y += Constants.cGravity * timeStep;
+                mPosition += mSpeed * timeStep;
+                return;
+        }
+
+        UpdatePhysics(timeStep); // 调用基类的修改版
+        isSimulation = false; // 还原
+    }
+
+    private void HandleJumpingSimulation(float timeStep)
+    {
+        ++mFramesFromJumpStart;
+        if (mAtCeiling) mFramesFromJumpStart = 100;
+
+        mSpeed.y += Constants.cGravity * timeStep;
+        mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
+
+        if (!mInputs[(int)KeyInput.Jump] && mSpeed.y > 0.0f)
+        {
+            mSpeed.y = Mathf.Min(mSpeed.y, 200.0f);
+            mFramesFromJumpStart = 100;
+        }
+
+        // Horizontal movement logic
+        if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
+            mSpeed.x = 0.0f;
+        else if (mInputs[(int)KeyInput.GoRight])
+            mSpeed.x = mWalkSpeed;
+        else if (mInputs[(int)KeyInput.GoLeft])
+            mSpeed.x = -mWalkSpeed;
+    }
+    // ---------------------------------------------------------
 
     public void CharacterUpdate()
     {
@@ -349,7 +441,7 @@ public class Character : MovingObject
             || (!mPushedRightWall && mPushesRightWall))
             mAudioSource.PlayOneShot(mHitWallSfx, 0.5f);
 
-        UpdatePhysics();
+        UpdatePhysics(Time.deltaTime);
 
         if (mWasOnGround && !mOnGround)
             mFramesFromJumpStart = 0;

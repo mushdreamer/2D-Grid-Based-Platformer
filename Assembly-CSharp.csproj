@@ -70,6 +70,7 @@
     <Compile Include="Assets\Scripts\GameCamera.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PathFinderFast.cs" />
     <Compile Include="Assets\Scripts\Map\Map_Drawing.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Vector2i.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />

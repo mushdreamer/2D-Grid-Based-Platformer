@@ -392,6 +392,52 @@ RectTransform:
   m_AnchoredPosition: {x: -5, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &415122241
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 415122242}
+  - component: {fileID: 415122243}
+  m_Layer: 0
+  m_Name: LevelGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &415122242
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415122241}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 738.49493, y: 353.96887, z: -748.09705}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &415122243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415122241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1acce59175248744a665cd3043f5023, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  map: {fileID: 2106156355}
+  characterPrefab: {fileID: 600731197}
 --- !u!1 &448407002
 GameObject:
   m_ObjectHideFlags: 0
@@ -2834,6 +2880,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2106156356}
   - component: {fileID: 2106156355}
+  - component: {fileID: 2106156357}
   m_Layer: 0
   m_Name: Map
   m_TagString: Untagged
@@ -2863,12 +2910,13 @@ MonoBehaviour:
   mWidth: 120
   mHeight: 80
   autoSizeToCamera: 0
-  manualWidth: 29
-  manualHeight: 10
+  manualWidth: 50
+  manualHeight: 25
   currentBrush: 0
   currentPhase: 0
   spikePrefab: {fileID: 2370058098865023721, guid: b64545fff281d9145b8bb5f430dbe34e,
     type: 3}
+  levelGenerator: {fileID: 415122243}
   mapRoomSimple: {fileID: 0}
   mapRoomOneWay: {fileID: 11400000, guid: 2d6365466254ab14894fd8ce8735f75f, type: 2}
   gameCamera: {fileID: 1799959646}
@@ -2921,6 +2969,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2106156357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2106156354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1acce59175248744a665cd3043f5023, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  map: {fileID: 2106156355}
+  characterPrefab: {fileID: 600731197}
 --- !u!1 &2131012844
 GameObject:
   m_ObjectHideFlags: 0
@@ -3017,3 +3079,4 @@ SceneRoots:
   - {fileID: 766887196}
   - {fileID: 1761248366}
   - {fileID: 1476967210}
+  - {fileID: 415122242}
