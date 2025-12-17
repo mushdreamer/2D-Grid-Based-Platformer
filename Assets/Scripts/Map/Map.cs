@@ -243,38 +243,32 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    // --- 修改：增加 safeLandingColumns 参数 ---
+    // 在 Map.cs 中
+
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
-        // 0. 清理旧的尖刺
-        foreach (var spike in spawnedSpikes)
-        {
-            if (spike != null) Destroy(spike);
-        }
+        // 0. 清理旧物体
+        foreach (var spike in spawnedSpikes) if (spike != null) Destroy(spike);
         spawnedSpikes.Clear();
 
-        // 保存安全列数据
+        // 1. 保存安全列数据并清空地图（这是关键，确保地图是从空开始构建）
         this.safeLandingColumns = new HashSet<int>(safeColumns);
-
-        // 1. 填满墙
-        FillMapWithBlocks();
+        ClearMapToEmpty();
 
         // 2. 更新路径数据
         playerSelectedPath.Clear();
-        foreach (var p in path)
-        {
-            playerSelectedPath.Add(p);
-        }
+        foreach (var p in path) playerSelectedPath.Add(p);
 
-        // 3. 生成地形 (现在会检查 safeLandingColumns)
-        GenerateLevelFromTolerance();
+        // 3. 调用新的“浮岛”生成逻辑
+        GenerateIslandsFromPath(trajectoryPoints);
 
-        // 4. 清空起终点
-        if (startTile.x != -1) { SetTile(startTile.x, startTile.y, TileType.Empty); SetTile(startTile.x, startTile.y - 1, TileType.Block); }
-        if (endTile.x != -1) { SetTile(endTile.x, endTile.y, TileType.Empty); SetTile(endTile.x, endTile.y - 1, TileType.Block); }
+        // 4. 设置起点终点平台
+        if (startTile.x != -1) BuildPlatformAt(startTile.x, startTile.y - 1, 3);
+        if (endTile.x != -1) BuildPlatformAt(endTile.x, endTile.y - 1, 3);
 
         Debug.Log(">>> 地图生成完毕。绘制通关路径...");
 
+        // 5. 绘制红线
         if (guideLineRenderer != null && trajectoryPoints != null)
         {
             guideLineRenderer.positionCount = trajectoryPoints.Count;
@@ -282,11 +276,110 @@ public partial class Map : MonoBehaviour
             guideLineRenderer.enabled = true;
         }
 
-        StartTrialMode();
+        // =========================================================
+        // [修正]：不要调用 StartTrialMode()，因为它会重置地图！
+        // 我们手动执行进入游戏模式所需的初始化步骤：
+        // =========================================================
 
-        if (player != null)
+        // A. 隐藏笔刷预览
+        if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
+        Cursor.visible = true;
+
+        // B. 激活玩家并初始化
+        player.gameObject.SetActive(true);
+        player.BotInit(inputs, prevInputs);
+        player.mMap = this;
+
+        // C. 设置玩家位置到起点
+        if (startTile.x != -1)
         {
-            player.StartReplay(replay);
+            // 确保出生点上方没有方块卡住
+            SetTile(startTile.x, startTile.y, TileType.Empty);
+            SetTile(startTile.x, startTile.y + 1, TileType.Empty);
+
+            Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
+            player.mPosition = startPos;
+            // 同步 Transform，防止画面闪烁
+            player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
+        }
+
+        // D. 切换状态
+        currentPhase = GamePhase.TrialPlay;
+
+        // E. 启动回放 (Ghost 演示)
+        if (player != null) player.StartReplay(replay);
+
+        Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG 风格)");
+    }
+
+    // [新增方法]：根据轨迹生成浮空岛和尖刺
+    private void GenerateIslandsFromPath(List<Vector3> trajectory)
+    {
+        if (trajectory == null || trajectory.Count == 0) return;
+
+        // 1. 识别落脚点
+        // 我们遍历轨迹，找到 Y 轴速度为 0 或者 轨迹最低点 的位置，视为潜在的平台位置
+        // 但更简单的方法是利用 LevelGenerator 传来的 safeLandingColumns
+        // 不过为了视觉效果更好，我们结合 trajectory 的 Y 值来确定平台的高度
+
+        // 简单的采样：每隔一段 X 距离，检查轨迹下方的空间
+        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
+
+        foreach (var point in trajectory)
+        {
+            int x = Mathf.RoundToInt((point.x - position.x) / cTileSize);
+            int y = Mathf.RoundToInt((point.y - position.y) / cTileSize);
+
+            // 记录这一列轨迹的最低点，作为潜在的“脚下位置”
+            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
+            else if (y < columnFloorY[x]) columnFloorY[x] = y;
+        }
+
+        // 2. 生成平台
+        foreach (int x in safeLandingColumns)
+        {
+            if (columnFloorY.ContainsKey(x))
+            {
+                int footY = columnFloorY[x];
+                // 在脚下生成一个平台 (脚下是 footY，所以方块在 footY - 1)
+                // 平台宽度随机 2-4
+                BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
+            }
+        }
+
+        // 3. 生成空域尖刺 (IWBTG 特色)
+        // 在非安全列的路径下方生成尖刺
+        for (int x = 0; x < mWidth; x++)
+        {
+            // 如果这列不是落脚点，且上方有轨迹经过
+            if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
+            {
+                int trajY = columnFloorY[x];
+                // 在轨迹下方一定距离生成尖刺或者悬浮块
+                if (Random.value < 0.3f)
+                {
+                    // 确保尖刺不会直接插在路线上，留出缓冲
+                    int spikeY = trajY - Random.Range(4, 8);
+                    if (spikeY > 0)
+                    {
+                        SetTile(x, spikeY, TileType.Block); // 悬浮块
+                        SpawnSpikeAt(x, spikeY + 1);        // 块上面的刺
+                    }
+                }
+            }
+        }
+    }
+
+    // [辅助方法]：在指定位置生成一个小平台
+    private void BuildPlatformAt(int centerX, int y, int width)
+    {
+        int halfW = width / 2;
+        for (int x = centerX - halfW; x <= centerX + halfW; x++)
+        {
+            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+            {
+                SetTile(x, y, TileType.Block);
+            }
         }
     }
 

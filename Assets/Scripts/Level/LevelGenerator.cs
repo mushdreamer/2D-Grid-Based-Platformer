@@ -206,9 +206,10 @@ public class LevelGenerator : MonoBehaviour
     ActionType PickAction()
     {
         float r = Random.value;
-        if (r < 0.3f) return ActionType.MoveRight;
-        if (r < 0.7f) return ActionType.JumpRight;
-        return ActionType.LongJumpRight;
+        // 增加大跳的概率
+        if (r < 0.2f) return ActionType.MoveRight; // 减少平走
+        if (r < 0.5f) return ActionType.JumpRight;
+        return ActionType.LongJumpRight; // 50% 概率大跳
     }
 
     void ExecuteAction(ActionType action, float heightBias)
@@ -226,16 +227,39 @@ public class LevelGenerator : MonoBehaviour
 
         if (jump)
         {
-            float randomChange = Random.Range(-2.0f, 2.5f);
-            randomChange += heightBias * 3.0f;
-            int tileChange = Mathf.RoundToInt(randomChange);
-            float changeAmount = tileChange * Map.cTileSize;
+            // --- 新的 IWBTG 风格逻辑 ---
+            // 1. 允许更大的高度差 (IWBTG 经常有很高的跳跃或很深的下落)
+            float heightChangeTiles = 0;
+
+            float r = Random.value;
+            if (r < 0.4f)
+            {
+                // 向上跳台阶 (1-4格)
+                heightChangeTiles = Random.Range(1.0f, 4.0f);
+            }
+            else if (r < 0.7f)
+            {
+                // 向下跳深坑 (2-6格)
+                heightChangeTiles = Random.Range(-6.0f, -2.0f);
+            }
+            else
+            {
+                // 平地
+                heightChangeTiles = 0;
+            }
+
+            // 加上之前计算的 bias (引导去终点)
+            heightChangeTiles += heightBias * 5.0f;
+
+            float changeAmount = heightChangeTiles * Map.cTileSize;
             float newFloor = currentVirtualFloorY + changeAmount;
 
+            // 边界限制
             float mapBottom = map.position.y + Map.cTileSize * 2;
-            float mapTop = map.position.y + (map.mHeight - 5) * Map.cTileSize;
-            newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop)); // 边界保护
+            float mapTop = map.position.y + (map.mHeight - 8) * Map.cTileSize; // 留出头顶空间
+            newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop));
 
+            // [关键]：直接改变虚拟地板高度，形成断层
             currentVirtualFloorY = newFloor;
         }
 
