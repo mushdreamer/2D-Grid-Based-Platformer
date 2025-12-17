@@ -59,6 +59,8 @@ public partial class Map : MonoBehaviour
     [Header("Visualization")]
     public LineRenderer guideLineRenderer;
 
+    public AdversarialDirector director;
+
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
 
@@ -210,9 +212,12 @@ public partial class Map : MonoBehaviour
                     if (startTile.x == -1) startTile = new Vector2i(2, 5);
                     if (endTile.x == -1) endTile = new Vector2i(mWidth - 5, 5);
 
-                    Debug.Log("生成 IWBTG 关卡中...");
+                    Debug.Log("生成 MAP-Elites 关卡库中...");
                     ClearMapToEmpty();
-                    levelGenerator.GenerateIWBTGLevel(startTile, endTile);
+
+                    // --- 修改点：调用新的 MAP-Elites 入口方法 ---
+                    // 参数 50 是迭代次数，可以根据需要调整
+                    levelGenerator.GenerateMapElitesLibrary(startTile, endTile, 50);
                 }
                 break;
 
@@ -287,6 +292,8 @@ public partial class Map : MonoBehaviour
 
     public void GameOver()
     {
+        if (director != null) director.ClearTraps();
+
         if (currentPhase == GamePhase.TrialPlay)
         {
             Debug.Log(">>> 玩家死亡！正在重置到起点...");
