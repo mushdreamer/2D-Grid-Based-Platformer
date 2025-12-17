@@ -101,13 +101,11 @@ public partial class Map
         startTile = new Vector2i(-1, -1);
         endTile = new Vector2i(-1, -1);
 
-        // --- 新增：清除所有生成的尖刺对象 ---
         foreach (var spike in spawnedSpikes)
         {
             if (spike != null) Destroy(spike);
         }
         spawnedSpikes.Clear();
-        // ------------------------------------
 
         for (int y = 0; y < mHeight; y++)
         {
@@ -130,13 +128,11 @@ public partial class Map
     {
         if (player != null) player.gameObject.SetActive(false);
 
-        // --- 新增：必须在这里也清除生成的尖刺 ---
         foreach (var spike in spawnedSpikes)
         {
             if (spike != null) Destroy(spike);
         }
         spawnedSpikes.Clear();
-        // ---------------------------------------
 
         for (int y = 0; y < mHeight; y++)
         {
@@ -144,11 +140,9 @@ public partial class Map
             {
                 Vector2i currentTile = new Vector2i(x, y);
 
-                // 这里不仅要重置 TileType，还要确保 Grid 数据被还原，否则再次生成时可能会出错
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
 
-                // 恢复之前的视觉状态（起点、终点、路径）
                 if (currentTile == startTile) SetVisual(x, y, Color.cyan);
                 else if (currentTile == endTile) SetVisual(x, y, Color.yellow);
                 else if (playerSelectedPath.Contains(currentTile)) SetVisual(x, y, new Color(0.5f, 1f, 0.5f, 0.5f));
@@ -166,33 +160,27 @@ public partial class Map
     {
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
 
-        // 1. 先将整个地图填充为实心墙壁 (Block)
-        // 这样未绘制的区域就自然变成了墙壁
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 SetTile(x, y, TileType.Block);
-                tilesSprites[x, y].color = Color.white; // 重置颜色
+                tilesSprites[x, y].color = Color.white;
             }
         }
 
-        // 2. 根据绘制的“容错空间”雕刻关卡，并生成尖刺
         GenerateLevelFromTolerance();
 
-        // 3. 确保起点和终点位置是空的，且没有尖刺
         SetTile(startTile.x, startTile.y, TileType.Empty);
         SetTile(endTile.x, endTile.y, TileType.Empty);
-        RemoveSpikeAt(startTile.x, startTile.y - 1); // 确保起点脚下安全
-        RemoveSpikeAt(endTile.x, endTile.y - 1);     // 确保终点脚下安全
+        RemoveSpikeAt(startTile.x, startTile.y - 1);
+        RemoveSpikeAt(endTile.x, endTile.y - 1);
 
-        // 4. 进入试玩状态
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
-        // 让玩家出生在起点位置
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
         ScanLevelData();
@@ -203,26 +191,20 @@ public partial class Map
     {
         if (spikePrefab == null) Debug.LogWarning("未设置 Spike Prefab！");
 
-        // 阈值：如果这一列的“空气高度”超过 3 格，我们认为空间足够大，可以放置尖刺
         int spikeHeightThreshold = 3;
 
-        // 遍历所有横坐标 (列)
         for (int x = 0; x < mWidth; x++)
         {
-            // 这一列是否包含任何绘制的路径？
             bool hasPathInColumn = false;
-            int lowestPathY = mHeight;  // 这一列路径的最低点
-            int highestPathY = -1;      // 这一列路径的最高点
+            int lowestPathY = mHeight;
+            int highestPathY = -1;
 
-            // 1. 扫描这一列的路径信息
             for (int y = 0; y < mHeight; y++)
             {
                 Vector2i pos = new Vector2i(x, y);
-                // 如果这个格子被玩家画过了 (属于容错空间)
                 if (playerSelectedPath.Contains(pos) || pos == startTile || pos == endTile)
                 {
                     hasPathInColumn = true;
-                    // 将其挖空 (变成空气)
                     SetTile(x, y, TileType.Empty);
 
                     if (y < lowestPathY) lowestPathY = y;
@@ -230,28 +212,23 @@ public partial class Map
                 }
             }
 
-            // 2. 智能生成尖刺逻辑
             if (hasPathInColumn)
             {
-                // 计算这一列的“容错高度” (空气有多高)
                 int clearance = highestPathY - lowestPathY + 1;
-
-                // 地板的位置就在路径最低点的下方
                 int floorY = lowestPathY - 1;
 
-                // 边界检查
                 if (floorY >= 0)
                 {
-                    // 逻辑判定：
-                    // 如果空间很高 (clearance > 3) -> 说明是跳跃区 -> 地板生成尖刺
-                    // 如果空间很窄 (clearance <= 3) -> 说明是走廊 -> 地板保持安全 (Block)
-                    if (clearance > spikeHeightThreshold)
+                    // --- 修改：增加安全检查 ---
+                    // 只有在 clearance 足够大，并且该列不是 AI 落地的地方时，才允许生成尖刺
+                    bool isSafeLandingSpot = safeLandingColumns != null && safeLandingColumns.Contains(x);
+
+                    if (clearance > spikeHeightThreshold && !isSafeLandingSpot)
                     {
                         SpawnSpikeAt(x, floorY);
                     }
                     else
                     {
-                        // 这是一个安全的地板，确保它是 Block (虽然初始化已经是Block，但为了保险)
                         if (GetTile(x, floorY) != TileType.Block)
                         {
                             SetTile(x, floorY, TileType.Block);
@@ -266,19 +243,15 @@ public partial class Map
     {
         if (spikePrefab == null) return;
 
-        // 1. 修改数据为 Danger
         SetTile(x, y, TileType.Danger);
-
-        // 2. 视觉处理：隐藏原来的方块
         tilesSprites[x, y].enabled = false;
 
-        // 3. 生成 Prefab
         Vector2 worldPos = GetMapTilePosition(x, y);
         Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -1f);
 
         GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
         newSpike.transform.parent = transform;
-        newSpike.transform.localScale = Vector3.one; // 既然你已经修好了PPU，这里用1倍缩放即可
+        newSpike.transform.localScale = Vector3.one;
 
         spawnedSpikes.Add(newSpike);
     }
@@ -287,16 +260,13 @@ public partial class Map
     {
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
 
-        // 如果这里被标记为 Danger，把它变回安全的 Block
         if (GetTile(x, y) == TileType.Danger)
         {
             SetTile(x, y, TileType.Block);
-            tilesSprites[x, y].enabled = true; // 重新显示墙壁 Sprite
+            tilesSprites[x, y].enabled = true;
             tilesSprites[x, y].color = Color.white;
-            tilesSprites[x, y].sprite = mDirtSprites[0]; // 恢复成默认土块或其他样式
+            tilesSprites[x, y].sprite = mDirtSprites[0];
 
-            // 从场景中找到并删除对应的 Spike GameObject
-            // (这里做一个简单的距离查找，为了性能优化，也可以遍历 spawnedSpikes)
             GameObject spikeToRemove = null;
             foreach (var spike in spawnedSpikes)
             {
@@ -440,32 +410,6 @@ public partial class Map
 
     private void ScanLevelData()
     {
-        Debug.Log(">>> ----------------------------------- <<<");
-        Debug.Log(">>> 关卡扫描器启动：正在生成约束图... <<<");
-        StringBuilder report = new StringBuilder();
-        int immutableCount = 0;
-        int modifiableCount = 0;
-
-        for (int y = 0; y < mHeight; y++)
-        {
-            for (int x = 0; x < mWidth; x++)
-            {
-                Vector2i currentPos = new Vector2i(x, y);
-                string tileTypeStr;
-                string modifyPermission;
-
-                if (currentPos == startTile) { tileTypeStr = "【起点 Start】"; modifyPermission = "不可修改 (Immutable)"; immutableCount++; }
-                else if (currentPos == endTile) { tileTypeStr = "【终点 End】"; modifyPermission = "不可修改 (Immutable)"; immutableCount++; }
-                else if (playerSelectedPath.Contains(currentPos)) { tileTypeStr = "【路径 Path】"; modifyPermission = "不可修改 (Immutable)"; immutableCount++; }
-                else { tileTypeStr = "【墙壁 Wall】"; modifyPermission = "可修改 (Modifiable)"; modifiableCount++; }
-
-                string info = $"Pos: ({x}, {y}) \t| Type: {tileTypeStr} \t| {modifyPermission}";
-                report.AppendLine(info);
-            }
-        }
-        Debug.Log(report.ToString());
-        Debug.Log($">>> 扫描完成 <<<");
-        Debug.Log($">>> 约束统计: 不可修改(约束)格子: {immutableCount} 个 | 可修改(自由)格子: {modifiableCount} 个");
-        Debug.Log(">>> ----------------------------------- <<<");
+        Debug.Log(">>> 关卡扫描完成 <<<");
     }
 }

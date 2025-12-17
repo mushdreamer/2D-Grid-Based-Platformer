@@ -21,10 +21,16 @@ public class LevelGenerator : MonoBehaviour
     private List<Vector2i> generatedPath = new List<Vector2i>();
     public List<ReplayFrame> generatedReplay = new List<ReplayFrame>();
 
-    // --- 新增：记录精确的轨迹坐标点，用于画线 ---
+    // 记录精确的轨迹坐标点
     private List<Vector3> trajectoryPoints = new List<Vector3>();
 
-    private const float SIM_STEP = 0.01666f;
+    // --- 修改 1: 记录安全落地列 (防止在落地点生成尖刺) ---
+    private HashSet<int> safeLandingColumns = new HashSet<int>();
+
+    // --- 修改 2: 物理步长锁定为 0.02f (Unity默认FixedUpdate频率) ---
+    // 必须与 Project Settings -> Time -> Fixed Timestep 保持一致
+    private const float SIM_STEP = 0.02f;
+
     private float currentVirtualFloorY;
 
     enum ActionType { MoveRight, JumpRight, LongJumpRight }
@@ -46,7 +52,8 @@ public class LevelGenerator : MonoBehaviour
         Initialize();
         generatedPath.Clear();
         generatedReplay.Clear();
-        trajectoryPoints.Clear(); // 清空旧轨迹
+        trajectoryPoints.Clear();
+        safeLandingColumns.Clear(); // 清空安全列记录
 
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
@@ -62,15 +69,41 @@ public class LevelGenerator : MonoBehaviour
         SimulateFallToFloor();
 
         int safetyCounter = 0;
-        while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 1000) // 稍微增加点安全步数
+
+        // --- 修改 3: 增加进度检测，防止无限垂直堆叠 ---
+        float lastXProgress = ghostAgent.mPosition.x;
+        int stagnationCount = 0;
+
+        while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 2000)
         {
             safetyCounter++;
             float heightDiff = endWorldPos.y - currentVirtualFloorY;
             float bias = Mathf.Clamp(heightDiff / 100.0f, -0.5f, 0.5f);
 
-            ActionType nextAction = PickAction();
+            // 检测是否卡住不前
+            if (ghostAgent.mPosition.x - lastXProgress < 1.0f)
+                stagnationCount++;
+            else
+                stagnationCount = 0;
+
+            lastXProgress = ghostAgent.mPosition.x;
+
+            ActionType nextAction;
+
+            // 如果卡住超过 3 次，强制大跳以打破循环
+            if (stagnationCount > 3)
+            {
+                nextAction = ActionType.LongJumpRight;
+                stagnationCount = 0; // 重置计数
+            }
+            else
+            {
+                nextAction = PickAction();
+            }
+
             ExecuteAction(nextAction, bias);
 
+            // 掉落保护：如果掉出地图下界，强制拉回当前虚拟地板上方
             if (ghostAgent.mPosition.y < map.position.y)
             {
                 ghostAgent.mPosition.y = currentVirtualFloorY + Map.cTileSize * 2;
@@ -78,9 +111,9 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // --- 修改：将 trajectoryPoints 也传给 Map ---
-        map.ApplyGeneratedPath(generatedPath, generatedReplay, trajectoryPoints);
-        Debug.Log($">>> 生成完成! 轨迹点数: {trajectoryPoints.Count}");
+        // --- 修改 4: 将 safeLandingColumns 传递给 Map ---
+        map.ApplyGeneratedPath(generatedPath, generatedReplay, trajectoryPoints, safeLandingColumns);
+        Debug.Log($">>> 生成完成! 轨迹点数: {trajectoryPoints.Count}, 步数: {safetyCounter}");
     }
 
     void SimulateFallToFloor()
@@ -141,24 +174,38 @@ public class LevelGenerator : MonoBehaviour
             if (jump && i < 15) inputs[(int)KeyInput.Jump] = true;
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
-            CheckVirtualFloorCollision();
+
+            // 每次物理更新后都要记录轨迹
             RecordTrajectory();
             generatedReplay.Add(new ReplayFrame(inputs));
 
-            // --- 新增：记录每一帧的精确位置 ---
-            // Z轴设为 -8，保证画在所有东西的最前面
             trajectoryPoints.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
+
+            // 如果这一帧撞地了，就不需要继续模拟剩下的帧了（特别是跳跃落地后）
+            if (CheckVirtualFloorCollision())
+            {
+                // 可选：落地后可以额外增加几帧滑行，这里暂时直接截断
+                // break; 
+            }
         }
     }
 
-    // CheckVirtualFloorCollision 和 RecordTrajectory 保持不变...
     bool CheckVirtualFloorCollision()
     {
+        // 简单的落地检测：速度向下 且 位置低于虚拟地板
         if (ghostAgent.mSpeed.y <= 0 && ghostAgent.mPosition.y <= currentVirtualFloorY)
         {
             ghostAgent.mPosition.y = currentVirtualFloorY;
             ghostAgent.mSpeed.y = 0;
             ghostAgent.mOnGround = true;
+
+            // --- 修改 5: 记录落地的列坐标 ---
+            int landingCol = Mathf.RoundToInt((ghostAgent.mPosition.x - map.position.x) / Map.cTileSize);
+            safeLandingColumns.Add(landingCol);
+            safeLandingColumns.Add(landingCol + 1); // 稍微放宽一点范围
+            safeLandingColumns.Add(landingCol - 1);
+            // -----------------------------
+
             return true;
         }
         return false;

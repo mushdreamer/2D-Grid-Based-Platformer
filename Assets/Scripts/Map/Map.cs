@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Algorithms;
 
-// --- 修复关键点：必须将 TileType 定义在 Map 类之外 ---
-// 这样 MapRoomData.cs 才能直接访问到它，而不需要写成 Map.TileType
 [System.Serializable]
 public enum TileType
 {
@@ -13,18 +11,13 @@ public enum TileType
     OneWay,
     Danger
 }
-// ----------------------------------------------------
 
-// 保持类名不变，添加 partial 关键字
 [System.Serializable]
 public partial class Map : MonoBehaviour
 {
-    // --- 内部枚举定义 (这些原本就在内部，保持不变) ---
     public enum GamePhase { Drawing, TrialPlay }
-
     public enum BrushType { StartPoint, Path, EndPoint }
 
-    // --- 变量定义 (全部保留在主文件) ---
     public Vector3 position;
     public SpriteRenderer tilePrefab;
     public PathFinderFast mPathFinder;
@@ -57,20 +50,22 @@ public partial class Map : MonoBehaviour
     public GamePhase currentPhase = GamePhase.Drawing;
 
     [Header("Game Elements")]
-    public GameObject spikePrefab; // 在 Inspector 中拖入你的 Spike Prefab
-    private List<GameObject> spawnedSpikes = new List<GameObject>(); // 用于记录生成的尖刺，方便清除
+    public GameObject spikePrefab;
+    private List<GameObject> spawnedSpikes = new List<GameObject>();
 
     [Header("PCG")]
-    public LevelGenerator levelGenerator; // 在 Inspector 中拖入 LevelGenerator 组件
+    public LevelGenerator levelGenerator;
 
     [Header("Visualization")]
     public LineRenderer guideLineRenderer;
 
-    // 线程通信标志
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
 
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
+
+    // --- 新增：用于存储生成器传来的安全落地列 ---
+    public HashSet<int> safeLandingColumns = new HashSet<int>();
 
     public MapRoomData mapRoomSimple;
     public MapRoomData mapRoomOneWay;
@@ -89,8 +84,6 @@ public partial class Map : MonoBehaviour
 
     public List<Sprite> mDirtSprites;
     System.Random mRandomNumber;
-
-    // --- 生命周期方法 ---
 
     public void Start()
     {
@@ -206,7 +199,6 @@ public partial class Map : MonoBehaviour
                     else StartTrialMode();
                 }
 
-                // --- 修正：将 G 键逻辑移到 break 之前 ---
                 if (Input.GetKeyDown(KeyCode.G))
                 {
                     if (levelGenerator == null)
@@ -222,8 +214,7 @@ public partial class Map : MonoBehaviour
                     ClearMapToEmpty();
                     levelGenerator.GenerateIWBTGLevel(startTile, endTile);
                 }
-                // ----------------------------------------
-                break; // break 必须在所有 case 逻辑之后
+                break;
 
             case GamePhase.TrialPlay:
                 HandlePlayingInput();
@@ -247,7 +238,8 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints)
+    // --- 修改：增加 safeLandingColumns 参数 ---
+    public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
         // 0. 清理旧的尖刺
         foreach (var spike in spawnedSpikes)
@@ -255,6 +247,9 @@ public partial class Map : MonoBehaviour
             if (spike != null) Destroy(spike);
         }
         spawnedSpikes.Clear();
+
+        // 保存安全列数据
+        this.safeLandingColumns = new HashSet<int>(safeColumns);
 
         // 1. 填满墙
         FillMapWithBlocks();
@@ -266,7 +261,7 @@ public partial class Map : MonoBehaviour
             playerSelectedPath.Add(p);
         }
 
-        // 3. 生成地形
+        // 3. 生成地形 (现在会检查 safeLandingColumns)
         GenerateLevelFromTolerance();
 
         // 4. 清空起终点
@@ -275,14 +270,12 @@ public partial class Map : MonoBehaviour
 
         Debug.Log(">>> 地图生成完毕。绘制通关路径...");
 
-        // --- 新增：绘制通关红线 ---
         if (guideLineRenderer != null && trajectoryPoints != null)
         {
             guideLineRenderer.positionCount = trajectoryPoints.Count;
             guideLineRenderer.SetPositions(trajectoryPoints.ToArray());
-            guideLineRenderer.enabled = true; // 确保它是显示的
+            guideLineRenderer.enabled = true;
         }
-        // -------------------------
 
         StartTrialMode();
 
@@ -300,10 +293,8 @@ public partial class Map : MonoBehaviour
 
             if (player != null)
             {
-                // 1. 停止录像，把控制权交给玩家
                 player.StopReplay();
 
-                // 2. 复活到起点
                 if (startTile.x != -1)
                 {
                     Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
@@ -311,12 +302,9 @@ public partial class Map : MonoBehaviour
                     player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
                 }
 
-                // 3. 重置物理状态
                 player.mSpeed = Vector2.zero;
                 player.mCurrentState = Character.CharacterState.Stand;
                 player.mOnGround = true;
-
-                // --- 关键：确保对象是激活的 ---
                 player.gameObject.SetActive(true);
             }
         }
