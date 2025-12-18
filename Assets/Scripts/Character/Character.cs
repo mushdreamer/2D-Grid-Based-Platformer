@@ -57,13 +57,10 @@ public class Character : MovingObject
         if (mSpriteRenderer != null)
         {
             mSpriteRenderer.sprite = skin;
-            // 如果你有动画，这里可能需要重写 Animator Controller 或者禁用 Animator 使用纯图片切换
-            // IWBTG 的角色通常只有两帧动画 (跑/跳)，如果你的 Asset 只是单张静态图，建议禁用 Animator
             if (mAnimator != null) mAnimator.enabled = false;
         }
     }
 
-    // ... (保留原有的 OnDrawGizmos, DrawPathLines, UpdatePrevInputs) ...
     void OnDrawGizmos()
     {
         DrawMovingObjectGizmos();
@@ -111,7 +108,6 @@ public class Character : MovingObject
             mPrevInputs[i] = mInputs[i];
     }
 
-    // ... (保留 HandleJumping, HandleJumpingSimulation, SimulationUpdate) ...
     private void HandleJumping()
     {
         mFramesFromJumpStart++;
@@ -297,12 +293,10 @@ public class Character : MovingObject
         if (!isSimulation)
         {
             if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
-            // 如果只有静态图片，可以不做动画播放，或者做一个简单的颜色闪烁
             if (mAnimator != null && mAnimator.enabled) mAnimator.Play("Jump");
         }
     }
 
-    // ... (保留 CharacterUpdate) ...
     public void CharacterUpdate()
     {
         switch (mCurrentState)
@@ -405,7 +399,62 @@ public class Character : MovingObject
 
         UpdatePhysics(Time.deltaTime);
 
+        // --- 新增：检查屏幕边界（地图边界）逻辑 ---
+        CheckScreenBounds();
+        // ----------------------------------------
+
         if (mWasOnGround && !mOnGround) mFramesFromJumpStart = 0;
         UpdatePrevInputs();
+    }
+
+    // --- 新增方法：强制屏幕边界限制 ---
+    private void CheckScreenBounds()
+    {
+        // 1. 如果已经死了，就不再限制边界，允许自由坠落
+        if (mCurrentState == CharacterState.Die) return;
+
+        // 2. 获取主摄像机的边界
+        if (Camera.main == null) return;
+        Camera cam = Camera.main;
+
+        float camHeight = 2f * cam.orthographicSize;
+        float camWidth = camHeight * cam.aspect;
+        Vector3 camPos = cam.transform.position;
+
+        float minX = camPos.x - camWidth / 2f;
+        float maxX = camPos.x + camWidth / 2f;
+        float minY = camPos.y - camHeight / 2f;
+        float maxY = camPos.y + camHeight / 2f;
+
+        // 3. 掉出地图判定 (掉出下边界)
+        // 使用角色的脚底位置判断：mPosition 通常是脚底位置（依赖于 mAABBOffset.y 设置，通常为 HalfSizeY）
+        // 如果脚底低于屏幕下边界，判定死亡
+        if (mPosition.y < minY)
+        {
+            Die();
+            return; // 死亡后直接返回，不需要执行后续的钳制逻辑
+        }
+
+        // 4. 限制左右上边界 (防止走出屏幕)
+        // 左边界限制
+        if (mPosition.x - mAABB.HalfSizeX < minX)
+        {
+            mPosition.x = minX + mAABB.HalfSizeX;
+            if (mSpeed.x < 0) mSpeed.x = 0;
+        }
+        // 右边界限制
+        else if (mPosition.x + mAABB.HalfSizeX > maxX)
+        {
+            mPosition.x = maxX - mAABB.HalfSizeX;
+            if (mSpeed.x > 0) mSpeed.x = 0;
+        }
+
+        // 上边界限制 (防止跳出屏幕上方)
+        // 注意：这里使用的是 mPosition.y + 2 * HalfSizeY (即头顶位置)
+        if (mPosition.y + 2 * mAABB.HalfSizeY > maxY)
+        {
+            mPosition.y = maxY - 2 * mAABB.HalfSizeY;
+            if (mSpeed.y > 0) mSpeed.y = 0; // 撞到天花板，垂直速度归零
+        }
     }
 }
