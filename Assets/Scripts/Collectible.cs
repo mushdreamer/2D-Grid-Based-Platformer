@@ -35,9 +35,7 @@ public class Collectible : MonoBehaviour
         float newY = startPos.y + Mathf.Sin(Time.time * floatSpeed) * floatAmount;
         transform.position = new Vector3(transform.position.x, newY, transform.position.z);
 
-        // --- 新增：手动碰撞检测 ---
-        // 这是一道保险，确保即使 BoxCollider2D 没有正确触发 (例如角色没有 Rigidbody2D)，
-        // 也能通过距离判断触发收集。
+        // --- 手动碰撞检测 ---
         if (cachedPlayer != null && cachedPlayer.gameObject.activeInHierarchy)
         {
             CheckManualCollision(cachedPlayer);
@@ -57,15 +55,12 @@ public class Collectible : MonoBehaviour
     // 手动检测逻辑
     void CheckManualCollision(Character player)
     {
-        // 获取物品的碰撞盒半径，如果没有则默认半个格子
         float radius = Map.cTileSize * 0.5f;
         Collider2D col = GetComponent<Collider2D>();
         if (col != null) radius = col.bounds.extents.x;
 
-        // 计算距离
         float dist = Vector2.Distance(transform.position, player.mAABB.Center);
 
-        // 如果距离小于 (物品半径 + 玩家半宽)，认为接触
         if (dist < (radius + player.mAABB.HalfSizeX))
         {
             OnCollect(player);
@@ -74,7 +69,6 @@ public class Collectible : MonoBehaviour
 
     void OnCollect(Character player)
     {
-        // 防止已收集的物品被重复触发
         if (!this.enabled) return;
 
         switch (type)
@@ -92,7 +86,6 @@ public class Collectible : MonoBehaviour
                     player.mMap.SetCheckpoint(player.mMap.GetMapTileAtPoint(transform.position));
                 }
                 PlaySfx();
-                // 变色表示激活，并禁用脚本防止重复触发
                 GetComponent<SpriteRenderer>().color = Color.green;
                 DisableItem();
                 break;
@@ -104,7 +97,6 @@ public class Collectible : MonoBehaviour
                 {
                     player.mMap.LevelComplete();
                 }
-                // 销毁或禁用
                 Destroy(gameObject);
                 break;
 

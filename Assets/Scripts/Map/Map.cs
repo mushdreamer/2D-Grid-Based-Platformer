@@ -48,14 +48,18 @@ public partial class Map : MonoBehaviour
 
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
+    private bool isLevelComplete = false; // 新增：记录是否通关
 
     [Header("Game Elements")]
     public GameObject spikePrefab;
-    public GameObject itemPrefab;    // 通用物品 Prefab
+    public GameObject itemPrefab;
 
-    // --- 新增：特定功能的 Prefab ---
-    public GameObject checkpointPrefab; // 请拖入起点 Checkpoint Prefab
-    public GameObject finishPrefab;     // 请拖入终点 胜利 Prefab
+    // --- 新增：特殊 Prefab 设置 ---
+    public GameObject checkpointPrefab;
+    public Vector2i checkpointSize = new Vector2i(1, 1); // Checkpoint 占地大小 (宽, 高)
+
+    public GameObject finishPrefab;
+    public Vector2i finishSize = new Vector2i(2, 2);     // 终点 占地大小
     // ----------------------------
 
     private List<GameObject> spawnedObjects = new List<GameObject>();
@@ -113,6 +117,10 @@ public partial class Map : MonoBehaviour
         inputs = new bool[(int)KeyInput.Count];
         prevInputs = new bool[(int)KeyInput.Count];
         position = transform.position;
+
+        // 确保游戏开始时时间是流动的
+        Time.timeScale = 1.0f;
+        isLevelComplete = false;
 
         Random.InitState((int)System.DateTime.Now.Ticks);
 
@@ -220,10 +228,13 @@ public partial class Map : MonoBehaviour
         Debug.Log("Checkpoint Updated to: " + startTile);
     }
 
-    // --- 新增：胜利逻辑 ---
+    // --- 胜利逻辑 ---
     public void LevelComplete()
     {
+        if (isLevelComplete) return;
+
         Debug.Log("<color=yellow>VICTORY! Level Finished.</color>");
+        isLevelComplete = true;
 
         // 胜利后停止角色
         if (player != null)
@@ -236,8 +247,31 @@ public partial class Map : MonoBehaviour
         // 禁用对抗导演
         if (director != null) director.enabled = false;
 
-        // 这里可以扩展：弹出胜利UI，或重置关卡
-        // Invoke("ResetToDrawingMode", 2.0f); // 例如 2秒后重置
+        // 暂停游戏
+        Time.timeScale = 0f;
+    }
+
+    // --- 使用 OnGUI 绘制简单的胜利文字 (在屏幕中心) ---
+    void OnGUI()
+    {
+        if (isLevelComplete)
+        {
+            GUIStyle style = new GUIStyle();
+            style.fontSize = 60;
+            style.alignment = TextAnchor.MiddleCenter;
+            style.normal.textColor = Color.yellow;
+            // 绘制阴影
+            GUI.color = Color.black;
+            GUI.Label(new Rect(2, 2, Screen.width, Screen.height), "VICTORY!", style);
+            // 绘制正文
+            GUI.color = Color.yellow;
+            GUI.Label(new Rect(0, 0, Screen.width, Screen.height), "VICTORY!", style);
+
+            // 提示按 R 重置
+            style.fontSize = 20;
+            style.normal.textColor = Color.white;
+            GUI.Label(new Rect(0, 50, Screen.width, Screen.height), "Press 'R' to Restart", style);
+        }
     }
 
     void Update()
@@ -300,7 +334,6 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    // --- Modified ApplyGeneratedPath ---
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
@@ -315,19 +348,17 @@ public partial class Map : MonoBehaviour
 
         GenerateIslandsFromPath(trajectoryPoints);
 
-        // 4. 设置起点终点平台，并生成对应的 Checkpoint/Finish Prefab
+        // 4. 生成起点和终点，并根据大小占用网格
         if (startTile.x != -1)
         {
             BuildPlatformAt(startTile.x, startTile.y - 1, 3);
-            // 生成起点 Checkpoint
-            SpawnSpecialItemAt(startTile.x, startTile.y, Collectible.ItemType.Checkpoint);
+            SpawnSpecialItemAt(startTile.x, startTile.y, Collectible.ItemType.Checkpoint, checkpointSize);
         }
 
         if (endTile.x != -1)
         {
             BuildPlatformAt(endTile.x, endTile.y - 1, 3);
-            // 生成终点 Victory/Finish Checkpoint
-            SpawnSpecialItemAt(endTile.x, endTile.y, Collectible.ItemType.Finish);
+            SpawnSpecialItemAt(endTile.x, endTile.y, Collectible.ItemType.Finish, finishSize);
         }
 
         Debug.Log(">>> 地图生成完毕。");
@@ -346,9 +377,13 @@ public partial class Map : MonoBehaviour
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
 
+        // 恢复时间流速（如果之前胜利了）
+        Time.timeScale = 1.0f;
+        isLevelComplete = false;
+
         if (startTile.x != -1)
         {
-            SetTile(startTile.x, startTile.y, TileType.Empty);
+            SetTile(startTile.x, startTile.y, TileType.Empty); // 起点脚下也要清空
             SetTile(startTile.x, startTile.y + 1, TileType.Empty);
             Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
             player.mPosition = startPos;
@@ -362,29 +397,215 @@ public partial class Map : MonoBehaviour
         Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
     }
 
-    // --- 新增：专门用于生成特殊 Prefab 的辅助方法 ---
-    private void SpawnSpecialItemAt(int x, int y, Collectible.ItemType type)
+    private void GenerateIslandsFromPath(List<Vector3> trajectory)
+    {
+        if (trajectory == null || trajectory.Count == 0) return;
+
+        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
+        foreach (var point in trajectory)
+        {
+            int x = Mathf.RoundToInt((point.x - position.x) / cTileSize);
+            int y = Mathf.RoundToInt((point.y - position.y) / cTileSize);
+            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
+            else if (y < columnFloorY[x]) columnFloorY[x] = y;
+        }
+
+        // 1. 生成落脚点平台
+        foreach (int x in safeLandingColumns)
+        {
+            if (columnFloorY.ContainsKey(x))
+            {
+                int footY = columnFloorY[x];
+                BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
+
+                // [IWBTG元素] 20% 概率在平台上生成水果
+                if (Random.value < 0.2f)
+                {
+                    SpawnItemAt(x, footY, Collectible.ItemType.Fruit);
+                }
+            }
+        }
+
+        // 2. 生成空域障碍 (悬浮块 + 随机陷阱)
+        for (int x = 0; x < mWidth; x++)
+        {
+            if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
+            {
+                int trajY = columnFloorY[x];
+                if (Random.value < 0.35f)
+                {
+                    int obstacleY = trajY - Random.Range(4, 9);
+                    if (obstacleY > 0)
+                    {
+                        // 随机决定是向上刺还是向下刺，或者纯砖块
+                        float r = Random.value;
+                        if (r < 0.4f)
+                        {
+                            SetTile(x, obstacleY, TileType.Block);
+                            SpawnSpikeAt(x, obstacleY + 1); // 朝上的刺
+                        }
+                        else if (r < 0.7f)
+                        {
+                            SetTile(x, obstacleY, TileType.Block);
+                            SpawnSpikeAt(x, obstacleY - 1, true); // 朝下的刺 (flip)
+                        }
+                        else
+                        {
+                            SetTile(x, obstacleY, TileType.Block); // 纯砖块干扰
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void SpawnSpikeAt(int x, int y, bool flipped = false)
+    {
+        if (spikePrefab == null) return;
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+
+        SetTile(x, y, TileType.Danger);
+        tilesSprites[x, y].enabled = false;
+
+        Vector2 worldPos = GetMapTilePosition(x, y);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -2f);
+
+        GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
+        newSpike.transform.parent = transform;
+
+        SpriteRenderer sr = newSpike.GetComponent<SpriteRenderer>();
+        if (sr != null && trapSprites != null && trapSprites.Count > 0)
+        {
+            int index = Mathf.Clamp(currentThemeTrapIndex, 0, trapSprites.Count - 1);
+            sr.sprite = trapSprites[index];
+        }
+
+        if (flipped)
+        {
+            newSpike.transform.localScale = new Vector3(1, -1, 1);
+        }
+
+        spawnedObjects.Add(newSpike);
+    }
+
+    private void SpawnItemAt(int x, int y, Collectible.ItemType type)
+    {
+        if (itemPrefab == null) return;
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+        if (tiles[x, y] != TileType.Empty) return;
+
+        Vector2 worldPos = GetMapTilePosition(x, y);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
+
+        GameObject newItem = Instantiate(itemPrefab, spawnPos, Quaternion.identity);
+        newItem.transform.parent = transform;
+
+        Collectible col = newItem.GetComponent<Collectible>();
+        col.type = type;
+
+        SpriteRenderer sr = newItem.GetComponent<SpriteRenderer>();
+        if (type == Collectible.ItemType.Fruit && fruitSprites != null && fruitSprites.Count > 0)
+        {
+            sr.sprite = fruitSprites[Random.Range(0, fruitSprites.Count)];
+        }
+        else if (type == Collectible.ItemType.Checkpoint && checkpointSprites != null && checkpointSprites.Count > 0)
+        {
+            sr.sprite = checkpointSprites[0];
+        }
+
+        spawnedObjects.Add(newItem);
+    }
+
+    // --- 新增：支持多尺寸占位的生成方法 ---
+    private void SpawnSpecialItemAt(int centerX, int centerY, Collectible.ItemType type, Vector2i size)
     {
         GameObject prefabToSpawn = null;
         if (type == Collectible.ItemType.Checkpoint) prefabToSpawn = checkpointPrefab;
         else if (type == Collectible.ItemType.Finish) prefabToSpawn = finishPrefab;
 
-        // 如果没有指定特殊 Prefab，回退到通用 itemPrefab
         if (prefabToSpawn == null) prefabToSpawn = itemPrefab;
         if (prefabToSpawn == null) return;
 
-        Vector2 worldPos = GetMapTilePosition(x, y);
-        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
+        int width = size.x;
+        int height = size.y;
+
+        int startX = centerX;
+        int startY = centerY;
+
+        // 清理占用区域的网格 (Set Empty)
+        for (int x = startX; x < startX + width; x++)
+        {
+            for (int y = startY; y < startY + height; y++)
+            {
+                SetTile(x, y, TileType.Empty);
+            }
+        }
+
+        // 计算物体的世界坐标中心
+        Vector2 minPos = GetMapTilePosition(startX, startY);
+        Vector2 maxPos = GetMapTilePosition(startX + width - 1, startY + height - 1);
+
+        Vector2 worldCenter = (minPos + maxPos) / 2.0f;
+        Vector3 spawnPos = new Vector3(worldCenter.x, worldCenter.y, -3f);
 
         GameObject obj = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
         obj.transform.parent = transform;
 
-        // 确保它有 Collectible 组件并设置正确的类型
         Collectible col = obj.GetComponent<Collectible>();
         if (col == null) col = obj.AddComponent<Collectible>();
         col.type = type;
 
         spawnedObjects.Add(obj);
+    }
+
+    private void BuildPlatformAt(int centerX, int y, int width)
+    {
+        int halfW = width / 2;
+        for (int x = centerX - halfW; x <= centerX + halfW; x++)
+        {
+            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+            {
+                SetTile(x, y, TileType.Block);
+            }
+        }
+    }
+
+    public void SetTile(int x, int y, TileType type)
+    {
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+
+        tiles[x, y] = type;
+        SpriteRenderer sr = tilesSprites[x, y];
+
+        if (type == TileType.Block)
+        {
+            mGrid[x, y] = 0;
+            sr.enabled = true;
+            sr.transform.localScale = Vector3.one;
+            sr.transform.eulerAngles = Vector3.zero;
+            sr.color = Color.white;
+
+            if (terrainSprites != null && terrainSprites.Count > 0)
+            {
+                int index = Mathf.Clamp(currentThemeTerrainIndex, 0, terrainSprites.Count - 1);
+                sr.sprite = terrainSprites[index];
+            }
+            else
+            {
+                sr.sprite = mDirtSprites[1];
+            }
+        }
+        else if (type == TileType.Danger)
+        {
+            mGrid[x, y] = 1;
+            sr.enabled = false;
+        }
+        else if (type == TileType.Empty)
+        {
+            mGrid[x, y] = 1;
+            sr.enabled = false;
+        }
+        // OneWay 逻辑保持不变...
     }
 
     public void GameOver()

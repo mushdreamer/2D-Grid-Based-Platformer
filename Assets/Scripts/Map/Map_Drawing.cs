@@ -1,13 +1,13 @@
 using UnityEngine;
 using System.Text;
 using System.Collections.Generic;
-using UnityEngine.EventSystems; // 新增：引入事件系统命名空间
+using UnityEngine.EventSystems;
 
 public partial class Map
 {
     private void HandleDrawingInput()
     {
-        // 1. 防止 UI 穿透：如果鼠标悬停在 UI 上，直接不处理绘图逻辑
+        // 1. 防止 UI 穿透
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
@@ -64,7 +64,6 @@ public partial class Map
 
         if (Input.GetKey(KeyCode.Mouse1))
         {
-            // 右键清除逻辑... (保持不变)
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
                 for (int yOffset = 0; yOffset < brushSize; yOffset++)
@@ -90,13 +89,12 @@ public partial class Map
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            // 2. 防止 UI 穿透：如果在 UI 上点击，不执行瞬移逻辑
+            // 2. 防止 UI 穿透
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 return;
             }
 
-            // Tap teleport logic...
             Vector2 mousePos = Input.mousePosition;
             Vector2 cameraPos = Camera.main.transform.position;
             var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
@@ -108,15 +106,17 @@ public partial class Map
 
     private void ResetToDrawingMode()
     {
+        // 核心修复：确保重置时取消暂停，并重置胜利状态
+        Time.timeScale = 1.0f;
+        isLevelComplete = false;
+
         playerSelectedPath.Clear();
         startTile = new Vector2i(-1, -1);
         endTile = new Vector2i(-1, -1);
 
-        // 清除所有生成的物体 (尖刺 + 道具)
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        // 清理对抗导演的陷阱
         if (director != null) director.ClearTraps();
 
         ClearMapToEmpty();
@@ -133,12 +133,15 @@ public partial class Map
 
     private void ReturnToDrawingMode()
     {
+        // 核心修复：确保返回时取消暂停，并重置胜利状态
+        Time.timeScale = 1.0f;
+        isLevelComplete = false;
+
         if (player != null) player.gameObject.SetActive(false);
 
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        // 清理对抗导演的陷阱
         if (director != null) director.ClearTraps();
 
         for (int y = 0; y < mHeight; y++)
@@ -162,7 +165,7 @@ public partial class Map
     private void StartTrialMode()
     {
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
-        // 简易填充
+
         FillMapWithBlocks();
         SetTile(startTile.x, startTile.y, TileType.Empty);
         SetTile(endTile.x, endTile.y, TileType.Empty);
@@ -175,184 +178,7 @@ public partial class Map
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
 
-        // 试玩模式开启导演
         if (director != null) director.enabled = true;
-    }
-
-    // --- 核心生成逻辑 ---
-
-    private void GenerateIslandsFromPath(List<Vector3> trajectory)
-    {
-        if (trajectory == null || trajectory.Count == 0) return;
-
-        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
-        foreach (var point in trajectory)
-        {
-            int x = Mathf.RoundToInt((point.x - position.x) / cTileSize);
-            int y = Mathf.RoundToInt((point.y - position.y) / cTileSize);
-            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
-            else if (y < columnFloorY[x]) columnFloorY[x] = y;
-        }
-
-        // 1. 生成落脚点平台
-        foreach (int x in safeLandingColumns)
-        {
-            if (columnFloorY.ContainsKey(x))
-            {
-                int footY = columnFloorY[x];
-                BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
-
-                // [IWBTG元素] 20% 概率在平台上生成水果
-                if (Random.value < 0.2f)
-                {
-                    SpawnItemAt(x, footY, Collectible.ItemType.Fruit);
-                }
-            }
-        }
-
-        // 2. 生成空域障碍 (悬浮块 + 随机陷阱)
-        for (int x = 0; x < mWidth; x++)
-        {
-            if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
-            {
-                int trajY = columnFloorY[x];
-                if (Random.value < 0.35f)
-                {
-                    int obstacleY = trajY - Random.Range(4, 9);
-                    if (obstacleY > 0)
-                    {
-                        // 随机决定是向上刺还是向下刺，或者纯砖块
-                        float r = Random.value;
-                        if (r < 0.4f)
-                        {
-                            SetTile(x, obstacleY, TileType.Block);
-                            SpawnSpikeAt(x, obstacleY + 1); // 朝上的刺
-                        }
-                        else if (r < 0.7f)
-                        {
-                            SetTile(x, obstacleY, TileType.Block);
-                            SpawnSpikeAt(x, obstacleY - 1, true); // 朝下的刺 (flip)
-                        }
-                        else
-                        {
-                            SetTile(x, obstacleY, TileType.Block); // 纯砖块干扰
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void SpawnSpikeAt(int x, int y, bool flipped = false)
-    {
-        if (spikePrefab == null) return;
-        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
-
-        SetTile(x, y, TileType.Danger);
-        tilesSprites[x, y].enabled = false; // 隐藏格子本身的Sprite
-
-        Vector2 worldPos = GetMapTilePosition(x, y);
-        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -2f);
-
-        GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
-        newSpike.transform.parent = transform;
-
-        // --- 视觉升级：应用随机陷阱皮肤 ---
-        SpriteRenderer sr = newSpike.GetComponent<SpriteRenderer>();
-        if (sr != null && trapSprites != null && trapSprites.Count > 0)
-        {
-            // 使用当前主题的 Trap 索引
-            int index = Mathf.Clamp(currentThemeTrapIndex, 0, trapSprites.Count - 1);
-            sr.sprite = trapSprites[index];
-        }
-
-        // 旋转
-        if (flipped)
-        {
-            newSpike.transform.localScale = new Vector3(1, -1, 1);
-        }
-
-        spawnedObjects.Add(newSpike);
-    }
-
-    private void SpawnItemAt(int x, int y, Collectible.ItemType type)
-    {
-        if (itemPrefab == null) return;
-        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
-        if (tiles[x, y] != TileType.Empty) return; // 别生成在墙里
-
-        Vector2 worldPos = GetMapTilePosition(x, y);
-        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
-
-        GameObject newItem = Instantiate(itemPrefab, spawnPos, Quaternion.identity);
-        newItem.transform.parent = transform;
-
-        Collectible col = newItem.GetComponent<Collectible>();
-        col.type = type;
-
-        // 设置图片
-        SpriteRenderer sr = newItem.GetComponent<SpriteRenderer>();
-        if (type == Collectible.ItemType.Fruit && fruitSprites != null && fruitSprites.Count > 0)
-        {
-            sr.sprite = fruitSprites[Random.Range(0, fruitSprites.Count)];
-        }
-        else if (type == Collectible.ItemType.Checkpoint && checkpointSprites != null && checkpointSprites.Count > 0)
-        {
-            sr.sprite = checkpointSprites[0];
-        }
-
-        spawnedObjects.Add(newItem);
-    }
-
-    private void BuildPlatformAt(int centerX, int y, int width)
-    {
-        int halfW = width / 2;
-        for (int x = centerX - halfW; x <= centerX + halfW; x++)
-        {
-            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
-            {
-                SetTile(x, y, TileType.Block);
-            }
-        }
-    }
-
-    public void SetTile(int x, int y, TileType type)
-    {
-        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
-
-        tiles[x, y] = type;
-        SpriteRenderer sr = tilesSprites[x, y];
-
-        if (type == TileType.Block)
-        {
-            mGrid[x, y] = 0; // 物理阻挡
-            sr.enabled = true;
-            sr.transform.localScale = Vector3.one;
-            sr.transform.eulerAngles = Vector3.zero;
-            sr.color = Color.white;
-
-            // --- 视觉升级：应用地形皮肤 ---
-            if (terrainSprites != null && terrainSprites.Count > 0)
-            {
-                int index = Mathf.Clamp(currentThemeTerrainIndex, 0, terrainSprites.Count - 1);
-                sr.sprite = terrainSprites[index];
-            }
-            else
-            {
-                sr.sprite = mDirtSprites[1]; // Fallback
-            }
-        }
-        else if (type == TileType.Danger)
-        {
-            mGrid[x, y] = 1; // 物理不阻挡 (角色进入重叠触发死亡)
-            sr.enabled = false; // 隐藏底图，使用生成的 Prefab
-        }
-        else if (type == TileType.Empty)
-        {
-            mGrid[x, y] = 1;
-            sr.enabled = false;
-        }
-        // OneWay 逻辑保持不变...
     }
 
     private void UpdateBrushPreview(int mouseTileX, int mouseTileY)
@@ -382,7 +208,6 @@ public partial class Map
     private void SetVisual(int x, int y, Color color)
     {
         tilesSprites[x, y].enabled = true;
-        // 编辑模式下用一个简单的方块图即可
         tilesSprites[x, y].sprite = (mDirtSprites != null && mDirtSprites.Count > 0) ? mDirtSprites[0] : null;
         tilesSprites[x, y].color = color;
         tilesSprites[x, y].transform.localScale = Vector3.one;
