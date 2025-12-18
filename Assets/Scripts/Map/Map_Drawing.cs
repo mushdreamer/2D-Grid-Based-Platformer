@@ -1,11 +1,18 @@
 using UnityEngine;
 using System.Text;
 using System.Collections.Generic;
+using UnityEngine.EventSystems; // 新增：引入事件系统命名空间
 
 public partial class Map
 {
     private void HandleDrawingInput()
     {
+        // 1. 防止 UI 穿透：如果鼠标悬停在 UI 上，直接不处理绘图逻辑
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
         if (scrollInput != 0f)
         {
@@ -57,7 +64,7 @@ public partial class Map
 
         if (Input.GetKey(KeyCode.Mouse1))
         {
-            // 右键清除逻辑... (保持不变，省略)
+            // 右键清除逻辑... (保持不变)
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
                 for (int yOffset = 0; yOffset < brushSize; yOffset++)
@@ -83,6 +90,12 @@ public partial class Map
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
+            // 2. 防止 UI 穿透：如果在 UI 上点击，不执行瞬移逻辑
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
             // Tap teleport logic...
             Vector2 mousePos = Input.mousePosition;
             Vector2 cameraPos = Camera.main.transform.position;
@@ -103,7 +116,7 @@ public partial class Map
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        // --- 新增：清理对抗导演的陷阱 ---
+        // 清理对抗导演的陷阱
         if (director != null) director.ClearTraps();
 
         ClearMapToEmpty();
@@ -125,7 +138,7 @@ public partial class Map
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        // --- 新增：清理对抗导演的陷阱 ---
+        // 清理对抗导演的陷阱
         if (director != null) director.ClearTraps();
 
         for (int y = 0; y < mHeight; y++)
