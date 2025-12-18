@@ -12,6 +12,13 @@ public class GameCamera : MonoBehaviour
 
     void Start()
     {
+        // 自动查找玩家，防止 Inspector 丢失引用
+        if (mPlayerTransform == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null) mPlayerTransform = playerObj.transform;
+        }
+
         UpdateCameraPosition();
     }
 
@@ -36,6 +43,7 @@ public class GameCamera : MonoBehaviour
         float playerRelX = mPlayer.mPosition.x - mMap.position.x;
         float playerRelY = mPlayer.mPosition.y - mMap.position.y;
 
+        // 计算当前处于第几屏 (Screen Snapping)
         int screenIndexX = Mathf.FloorToInt(playerRelX / camWidth);
         int screenIndexY = Mathf.FloorToInt(playerRelY / camHeight);
 
@@ -48,8 +56,19 @@ public class GameCamera : MonoBehaviour
         // 限制边界 (可选)
         float mapWorldWidth = mMap.mWidth * Map.cTileSize;
         float mapWorldHeight = mMap.mHeight * Map.cTileSize;
-        if (targetX - camWidth / 2f > mMap.position.x + mapWorldWidth) targetX = mMap.position.x + mapWorldWidth - camWidth / 2f;
-        if (targetY - camHeight / 2f > mMap.position.y + mapWorldHeight) targetY = mMap.position.y + mapWorldHeight - camHeight / 2f;
+
+        // 只有当地图尺寸大于屏幕时才限制，防止小地图抖动
+        if (mapWorldWidth > camWidth)
+        {
+            if (targetX - camWidth / 2f > mMap.position.x + mapWorldWidth)
+                targetX = mMap.position.x + mapWorldWidth - camWidth / 2f;
+        }
+
+        if (mapWorldHeight > camHeight)
+        {
+            if (targetY - camHeight / 2f > mMap.position.y + mapWorldHeight)
+                targetY = mMap.position.y + mapWorldHeight - camHeight / 2f;
+        }
 
         transform.position = new Vector3(targetX, targetY, transform.position.z);
     }
@@ -59,9 +78,11 @@ public class GameCamera : MonoBehaviour
     {
         if (backgroundRenderer == null || backgroundRenderer.sprite == null) return;
 
-        // A. 强制复位：确保背景就在摄像机正中心 (本地坐标归零)
-        // 既然它是子物体，localPosition (0,0,20) 就是相对于摄像机的中心
-        backgroundRenderer.transform.localPosition = new Vector3(0, 0, 20f);
+        // A. 强制复位：确保背景就在摄像机正中心
+        // 修正：Map.cs 中 Tiles 生成在 Z=10。
+        // 如果摄像机在 Z=-10，localPosition.z = 20 会导致 World Z = 10，产生 Z-Fighting。
+        // 我们将其设为 40 (World Z = 30)，确保背景在 Tiles 后面。
+        backgroundRenderer.transform.localPosition = new Vector3(0, 0, 40f);
         backgroundRenderer.transform.localRotation = Quaternion.identity;
 
         // B. 强制拉伸：计算屏幕长宽比，修改 Scale

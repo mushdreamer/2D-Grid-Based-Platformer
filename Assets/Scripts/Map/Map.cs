@@ -119,10 +119,17 @@ public partial class Map : MonoBehaviour
             RandomizeTheme();
         }
 
+        // --- 确保对抗导演已初始化 ---
+        if (director != null)
+        {
+            director.map = this;
+            director.targetPlayer = player;
+            director.enabled = false; // 默认关闭，试玩时开启
+        }
+
         if (currentPhase == GamePhase.TrialPlay)
         {
-            // TrialPlay 初始化逻辑 (保持不变，省略以节省空间，直接用你原有的即可)
-            // ... (如果需要完整请告诉我，通常这段未变动)
+            // TrialPlay 初始化逻辑
             Debug.Log("Starting directly in PLAYING mode.");
             var mapRoom = mapRoomOneWay;
             mWidth = mapRoom.width;
@@ -285,12 +292,13 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    // --- 以下是原有的 ApplyGeneratedPath 等方法 ---
+    // --- ApplyGeneratedPath ---
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
-        // 0. 清理旧物体 (尖刺 + 道具)
+        // 0. 清理旧物体 (尖刺 + 道具) & 清理导演的陷阱
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
+        if (director != null) director.ClearTraps();
 
         // 1. 保存安全列并清空
         this.safeLandingColumns = new HashSet<int>(safeColumns);
@@ -337,7 +345,15 @@ public partial class Map : MonoBehaviour
         }
 
         currentPhase = GamePhase.TrialPlay;
-        if (player != null) player.StartReplay(replay);
+
+        // --- 录像回放与对抗导演逻辑 ---
+        if (player != null)
+        {
+            player.StartReplay(replay);
+            // 录像回放期间，禁用导演，以免陷阱干扰演示
+            if (director != null) director.enabled = false;
+        }
+
         Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
     }
 
@@ -362,6 +378,9 @@ public partial class Map : MonoBehaviour
                 player.mCurrentState = Character.CharacterState.Stand;
                 player.mOnGround = true;
                 player.gameObject.SetActive(true);
+
+                // 玩家复活后，启用对抗导演
+                if (director != null) director.enabled = true;
             }
         }
         else
@@ -375,6 +394,15 @@ public partial class Map : MonoBehaviour
         if (currentPhase == GamePhase.TrialPlay && player.gameObject.activeInHierarchy)
         {
             player.BotUpdate();
+
+            // 如果录像被玩家中断了，启用对抗导演
+            // (注意：AdversarialDirector 只有在玩家全速奔跑时才工作，所以开启它很安全)
+            if (director != null && !director.enabled && player.mCurrentAction == Bot.BotAction.None) // None means player control in this context
+            {
+                // 检查 Bot 内部状态，如果是 isReplaying=false，则开启导演
+                // 这里通过反射或公开属性检查最好，这里假设玩家控制时 director 应开启
+                director.enabled = true;
+            }
         }
     }
 }

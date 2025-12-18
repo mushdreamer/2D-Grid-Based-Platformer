@@ -8,15 +8,15 @@ using System.Collections.Generic;
 [System.Serializable]
 public struct Vector2i : IEquatable<Vector2i>
 {
-	public int x, y;
-	
-	public Vector2i(int _x, int _y)
-	{
-		x = _x;
-		y = _y;
-	}
+    public int x, y;
 
-    public static implicit operator Vector2 (Vector2i v)
+    public Vector2i(int _x, int _y)
+    {
+        x = _x;
+        y = _y;
+    }
+
+    public static implicit operator Vector2(Vector2i v)
     {
         return new Vector2(v.x, v.y);
     }
@@ -41,7 +41,6 @@ public struct Vector2i : IEquatable<Vector2i>
         return x == other.x && y == other.y;
     }
 
-    // --- FIX STARTS HERE ---
     public override bool Equals(object obj)
     {
         if (obj is Vector2i)
@@ -51,25 +50,32 @@ public struct Vector2i : IEquatable<Vector2i>
         return false;
     }
 
+    // --- 性能优化 ---
+    // 使用质数乘法减少哈希冲突，这对 PathFinder 和 MAP-Elites 的 Set 性能至关重要
     public override int GetHashCode()
     {
-        // A common way to generate a hash code for a 2D vector
-        return x.GetHashCode() ^ (y.GetHashCode() << 2);
+        unchecked // 允许溢出
+        {
+            int hash = 17;
+            hash = hash * 23 + x;
+            hash = hash * 23 + y;
+            return hash;
+        }
     }
-    // --- FIX ENDS HERE ---
 }
 
 class Vector2iEqualityComparer : IEqualityComparer<Vector2i>
 {
-	public bool Equals(Vector2i v1, Vector2i v2)
-	{
-		return (v1.x == v2.x && v1.y == v2.y);
-	}
-	
-	public int GetHashCode(Vector2i v)
-	{
-		return v.x*7 + v.y*13;
-	}
+    public bool Equals(Vector2i v1, Vector2i v2)
+    {
+        return (v1.x == v2.x && v1.y == v2.y);
+    }
+
+    public int GetHashCode(Vector2i v)
+    {
+        // 保持一致的哈希策略
+        return v.x * 23 + v.y * 17;
+    }
 }
 
 #endregion

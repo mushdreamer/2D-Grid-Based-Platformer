@@ -103,6 +103,9 @@ public partial class Map
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
+        // --- 新增：清理对抗导演的陷阱 ---
+        if (director != null) director.ClearTraps();
+
         ClearMapToEmpty();
         for (int y = 0; y < mHeight; y++)
             for (int x = 0; x < mWidth; x++)
@@ -121,6 +124,9 @@ public partial class Map
 
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
+
+        // --- 新增：清理对抗导演的陷阱 ---
+        if (director != null) director.ClearTraps();
 
         for (int y = 0; y < mHeight; y++)
         {
@@ -142,9 +148,6 @@ public partial class Map
 
     private void StartTrialMode()
     {
-        // ... 原有的手动 TrialMode 代码，这里为了与 ApplyGeneratedPath 统一，
-        // 建议主要使用 ApplyGeneratedPath 进入游戏。
-        // 如果你需要手绘关卡的试玩，逻辑同上。
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
         // 简易填充
         FillMapWithBlocks();
@@ -158,6 +161,9 @@ public partial class Map
         player.mMap = this;
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
+
+        // 试玩模式开启导演
+        if (director != null) director.enabled = true;
     }
 
     // --- 核心生成逻辑 ---
