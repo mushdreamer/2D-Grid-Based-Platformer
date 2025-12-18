@@ -40,6 +40,9 @@ public class LevelGenerator : MonoBehaviour
 
     // 临时存储单次生成的数据
     private List<Vector2i> tempPath = new List<Vector2i>();
+    // 新增：HashSet 用于快速查找，解决 contains 性能问题
+    private HashSet<Vector2i> tempPathSet = new HashSet<Vector2i>();
+
     private List<ReplayFrame> tempReplay = new List<ReplayFrame>();
     private List<Vector3> tempTrajectory = new List<Vector3>();
     private HashSet<int> tempSafeColumns = new HashSet<int>();
@@ -147,6 +150,7 @@ public class LevelGenerator : MonoBehaviour
     {
         // 清理临时数据
         tempPath.Clear();
+        tempPathSet.Clear(); // 必须清理 Set
         tempReplay.Clear();
         tempTrajectory.Clear();
         tempSafeColumns.Clear();
@@ -198,11 +202,6 @@ public class LevelGenerator : MonoBehaviour
         return (ghostAgent.mPosition.x >= endWorldPos.x);
     }
 
-    // --- 原有辅助函数保持不变 (PickAction, ExecuteAction, CheckVirtualFloorCollision, RecordTrajectory) ---
-    // 只是把它们向 generatedPath 等变量的写入 改为向 tempPath 等变量写入
-    // 为了节省篇幅，这里简写，请务必把原文件里的这些函数复制过来，
-    // 并将 generatedPath -> tempPath, generatedReplay -> tempReplay 等替换掉。
-
     ActionType PickAction()
     {
         float r = Random.value;
@@ -228,7 +227,6 @@ public class LevelGenerator : MonoBehaviour
         if (jump)
         {
             // --- 新的 IWBTG 风格逻辑 ---
-            // 1. 允许更大的高度差 (IWBTG 经常有很高的跳跃或很深的下落)
             float heightChangeTiles = 0;
 
             float r = Random.value;
@@ -265,6 +263,7 @@ public class LevelGenerator : MonoBehaviour
 
         for (int i = 0; i < frames; i++)
         {
+            // 优化建议：这里可以用对象池优化，但考虑到 Struct 复制特性，目前保留
             bool[] inputs = new bool[(int)KeyInput.Count];
             inputs[(int)KeyInput.GoRight] = right;
             if (jump && i < 15) inputs[(int)KeyInput.Jump] = true;
@@ -312,7 +311,13 @@ public class LevelGenerator : MonoBehaviour
                 if (x >= 0 && x < map.mWidth && y >= 0 && y < map.mHeight)
                 {
                     Vector2i pos = new Vector2i(x, y);
-                    if (!tempPath.Contains(pos)) tempPath.Add(pos);
+
+                    // 优化：使用 HashSet 进行 O(1) 查找，而不是 List 的 O(N)
+                    if (!tempPathSet.Contains(pos))
+                    {
+                        tempPathSet.Add(pos);
+                        tempPath.Add(pos);
+                    }
                 }
             }
         }

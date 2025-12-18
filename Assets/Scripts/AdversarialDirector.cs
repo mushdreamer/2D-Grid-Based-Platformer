@@ -11,9 +11,11 @@ public class AdversarialDirector : MonoBehaviour
     public float observationWindow = 1.0f;
     public float predictionHorizon = 0.4f; // 预测未来 0.4 秒
     public float cooldown = 3.0f; // 陷阱冷却时间
+    public float trapLifetime = 5.0f; // 新增：陷阱存在时间，防止无限堆积
 
     private float lastTrapTime = 0f;
     private List<GameObject> activeTraps = new List<GameObject>();
+    private List<float> trapSpawnTimes = new List<float>(); // 记录生成时间用于清理
     private Queue<Vector2> velocityHistory = new Queue<Vector2>();
 
     void Update()
@@ -23,11 +25,14 @@ public class AdversarialDirector : MonoBehaviour
         // 1. 简单的碰撞检测 (代替 OnTriggerEnter)
         CheckTrapCollision();
 
-        // 2. 收集数据 (Feature Extraction)
+        // 2. 清理超时陷阱 (新增逻辑)
+        CleanupOldTraps();
+
+        // 3. 收集数据 (Feature Extraction)
         velocityHistory.Enqueue(targetPlayer.mSpeed);
         if (velocityHistory.Count > 60) velocityHistory.Dequeue();
 
-        // 3. 决策逻辑 (Inference)
+        // 4. 决策逻辑 (Inference)
         if (Time.time > lastTrapTime + cooldown)
         {
             // 只有当玩家在全速移动时才预判 (防止坑杀挂机玩家)
@@ -74,6 +79,8 @@ public class AdversarialDirector : MonoBehaviour
 
     void SpawnTrap(Vector2 pos)
     {
+        if (map == null) return;
+
         Vector2i tile = map.GetMapTileAtPoint(pos);
 
         // 只有目标点是空气时才生成
@@ -86,7 +93,9 @@ public class AdversarialDirector : MonoBehaviour
             // 确保生成在 Z=-5，显示在角色前面
             GameObject trap = Instantiate(trapPrefab, new Vector3(worldPos.x, worldPos.y, -5f), Quaternion.identity);
             trap.transform.localScale = Vector3.one * 0.8f; // 稍微小一点
+
             activeTraps.Add(trap);
+            trapSpawnTimes.Add(Time.time); // 记录生成时间
 
             Debug.Log($"<color=red>Director: Predicted you at {tile}. Trap set!</color>");
         }
@@ -97,7 +106,12 @@ public class AdversarialDirector : MonoBehaviour
         // 遍历所有陷阱，检查是否碰到玩家 (简单的距离检测)
         for (int i = activeTraps.Count - 1; i >= 0; i--)
         {
-            if (activeTraps[i] == null) { activeTraps.RemoveAt(i); continue; }
+            if (activeTraps[i] == null)
+            {
+                activeTraps.RemoveAt(i);
+                trapSpawnTimes.RemoveAt(i);
+                continue;
+            }
 
             float dist = Vector2.Distance(targetPlayer.mPosition, activeTraps[i].transform.position);
             // 简单的距离判定：如果距离小于半个格子
@@ -114,6 +128,19 @@ public class AdversarialDirector : MonoBehaviour
         }
     }
 
+    void CleanupOldTraps()
+    {
+        for (int i = activeTraps.Count - 1; i >= 0; i--)
+        {
+            if (Time.time > trapSpawnTimes[i] + trapLifetime)
+            {
+                if (activeTraps[i] != null) Destroy(activeTraps[i]);
+                activeTraps.RemoveAt(i);
+                trapSpawnTimes.RemoveAt(i);
+            }
+        }
+    }
+
     public void ClearTraps()
     {
         foreach (var t in activeTraps)
@@ -121,5 +148,6 @@ public class AdversarialDirector : MonoBehaviour
             if (t != null) Destroy(t);
         }
         activeTraps.Clear();
+        trapSpawnTimes.Clear();
     }
 }
