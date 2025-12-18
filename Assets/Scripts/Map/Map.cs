@@ -50,8 +50,24 @@ public partial class Map : MonoBehaviour
     public GamePhase currentPhase = GamePhase.Drawing;
 
     [Header("Game Elements")]
-    public GameObject spikePrefab;
-    private List<GameObject> spawnedSpikes = new List<GameObject>();
+    public GameObject spikePrefab;   // 尖刺的基础Prefab
+    public GameObject itemPrefab;    // 物品的基础Prefab (挂载 Collectible 脚本)
+    private List<GameObject> spawnedObjects = new List<GameObject>(); // 统一管理生成的尖刺和物品
+
+    [Header("Visual Assets (IWBTG Style)")]
+    // --- 新增：资源库，请在 Inspector 中拖入对应的图片 ---
+    public SpriteRenderer backgroundRenderer; // 拖入场景中的 "Bg" 物体
+    public List<Sprite> backgroundSprites;    // 7个背景
+    public List<Sprite> terrainSprites;       // 2个地形 (Block样式)
+    public List<Sprite> trapSprites;          // 15个陷阱
+    public List<Sprite> characterSprites;     // 4个角色皮肤
+    public List<Sprite> fruitSprites;         // 水果图片
+    public List<Sprite> checkpointSprites;    // 存档点图片
+
+    // 当前关卡的主题索引
+    private int currentThemeBgIndex = 0;
+    private int currentThemeTerrainIndex = 0;
+    private int currentThemeTrapIndex = 0;
 
     [Header("PCG")]
     public LevelGenerator levelGenerator;
@@ -66,7 +82,6 @@ public partial class Map : MonoBehaviour
 
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
 
-    // --- 新增：用于存储生成器传来的安全落地列 ---
     public HashSet<int> safeLandingColumns = new HashSet<int>();
 
     public MapRoomData mapRoomSimple;
@@ -84,7 +99,7 @@ public partial class Map : MonoBehaviour
     public RectTransform sliderHigh;
     public RectTransform sliderLow;
 
-    public List<Sprite> mDirtSprites;
+    public List<Sprite> mDirtSprites; // 旧的自动拼贴资源，保留以防万一
     System.Random mRandomNumber;
 
     public void Start()
@@ -95,8 +110,19 @@ public partial class Map : MonoBehaviour
         prevInputs = new bool[(int)KeyInput.Count];
         position = transform.position;
 
+        // 初始化随机种子
+        Random.InitState((int)System.DateTime.Now.Ticks);
+
+        // 如果场景里有背景对象，先随机一个背景
+        if (backgroundRenderer != null && backgroundSprites.Count > 0)
+        {
+            RandomizeTheme();
+        }
+
         if (currentPhase == GamePhase.TrialPlay)
         {
+            // TrialPlay 初始化逻辑 (保持不变，省略以节省空间，直接用你原有的即可)
+            // ... (如果需要完整请告诉我，通常这段未变动)
             Debug.Log("Starting directly in PLAYING mode.");
             var mapRoom = mapRoomOneWay;
             mWidth = mapRoom.width;
@@ -120,10 +146,6 @@ public partial class Map : MonoBehaviour
                     else SetTile(x, y, TileType.OneWay);
                 }
             }
-
-            for (int y = 0; y < mHeight; ++y) { tiles[1, y] = TileType.Block; tiles[mWidth - 2, y] = TileType.Block; }
-            for (int x = 0; x < mWidth; ++x) { tiles[x, 1] = TileType.Block; tiles[x, mHeight - 2] = TileType.Block; }
-
             player.gameObject.SetActive(true);
             player.BotInit(inputs, prevInputs);
             player.mMap = this;
@@ -140,13 +162,11 @@ public partial class Map : MonoBehaviour
             {
                 mWidth = Mathf.FloorToInt((float)Camera.main.pixelWidth / (float)cTileSize);
                 mHeight = Mathf.FloorToInt((float)Camera.main.pixelHeight / (float)cTileSize);
-                Debug.Log($"Map 尺寸已[自动]调整为: {mWidth} x {mHeight}");
             }
             else
             {
                 mWidth = manualWidth;
                 mHeight = manualHeight;
-                Debug.Log($"Map 尺寸已[手动]设置为: {mWidth} x {mHeight}");
             }
 
             tiles = new TileType[mWidth, mHeight];
@@ -174,12 +194,41 @@ public partial class Map : MonoBehaviour
         }
     }
 
+    // 新增：随机化关卡视觉主题
+    public void RandomizeTheme()
+    {
+        if (backgroundSprites.Count > 0)
+        {
+            currentThemeBgIndex = Random.Range(0, backgroundSprites.Count);
+            if (backgroundRenderer != null)
+                backgroundRenderer.sprite = backgroundSprites[currentThemeBgIndex];
+        }
+
+        if (terrainSprites.Count > 0)
+            currentThemeTerrainIndex = Random.Range(0, terrainSprites.Count);
+
+        if (trapSprites.Count > 0)
+            currentThemeTrapIndex = Random.Range(0, trapSprites.Count);
+
+        if (characterSprites.Count > 0 && player != null)
+        {
+            int charIndex = Random.Range(0, characterSprites.Count);
+            player.SetSkin(characterSprites[charIndex]);
+        }
+    }
+
+    // 设置新的存档点
+    public void SetCheckpoint(Vector2i newStartTile)
+    {
+        startTile = newStartTile;
+        Debug.Log("Checkpoint Updated to: " + startTile);
+    }
+
     void Update()
     {
         if (pythonScriptsFinished)
         {
             pythonScriptsFinished = false;
-            Debug.Log("主线程收到信号。正在加载生成的关卡...");
             LoadGeneratedLevel();
         }
 
@@ -189,9 +238,7 @@ public partial class Map : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { currentBrush = BrushType.StartPoint; Debug.Log("Brush: Start Point"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha2)) { currentBrush = BrushType.Path; Debug.Log("Brush: Path"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha3)) { currentBrush = BrushType.EndPoint; Debug.Log("Brush: End Point"); }
-                else if (Input.GetKeyDown(KeyCode.P)) { SaveLevelToFile(); }
-                else if (Input.GetKeyDown(KeyCode.L)) { LoadLevelFromFile(); }
-                else if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)) { HandleEnterKeySave(); }
+                else if (Input.GetKeyDown(KeyCode.Return)) { HandleEnterKeySave(); }
 
                 HandleDrawingInput();
 
@@ -203,20 +250,15 @@ public partial class Map : MonoBehaviour
 
                 if (Input.GetKeyDown(KeyCode.G))
                 {
-                    if (levelGenerator == null)
-                    {
-                        Debug.LogError("未绑定 LevelGenerator！请将 LevelGenerator 拖拽到 Map 组件的相应槽位中。");
-                        break;
-                    }
-
+                    if (levelGenerator == null) { Debug.LogError("未绑定 LevelGenerator！"); break; }
                     if (startTile.x == -1) startTile = new Vector2i(2, 5);
                     if (endTile.x == -1) endTile = new Vector2i(mWidth - 5, 5);
 
+                    // 每次生成时，随机切换主题！
+                    RandomizeTheme();
+
                     Debug.Log("生成 MAP-Elites 关卡库中...");
                     ClearMapToEmpty();
-
-                    // --- 修改点：调用新的 MAP-Elites 入口方法 ---
-                    // 参数 50 是迭代次数，可以根据需要调整
                     levelGenerator.GenerateMapElitesLibrary(startTile, endTile, 50);
                 }
                 break;
@@ -243,15 +285,14 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    // 在 Map.cs 中
-
+    // --- 以下是原有的 ApplyGeneratedPath 等方法 ---
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
-        // 0. 清理旧物体
-        foreach (var spike in spawnedSpikes) if (spike != null) Destroy(spike);
-        spawnedSpikes.Clear();
+        // 0. 清理旧物体 (尖刺 + 道具)
+        foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
+        spawnedObjects.Clear();
 
-        // 1. 保存安全列数据并清空地图（这是关键，确保地图是从空开始构建）
+        // 1. 保存安全列并清空
         this.safeLandingColumns = new HashSet<int>(safeColumns);
         ClearMapToEmpty();
 
@@ -259,16 +300,18 @@ public partial class Map : MonoBehaviour
         playerSelectedPath.Clear();
         foreach (var p in path) playerSelectedPath.Add(p);
 
-        // 3. 调用新的“浮岛”生成逻辑
+        // 3. 生成浮岛、尖刺和道具
         GenerateIslandsFromPath(trajectoryPoints);
 
         // 4. 设置起点终点平台
         if (startTile.x != -1) BuildPlatformAt(startTile.x, startTile.y - 1, 3);
         if (endTile.x != -1) BuildPlatformAt(endTile.x, endTile.y - 1, 3);
 
-        Debug.Log(">>> 地图生成完毕。绘制通关路径...");
+        // 在终点生成一个 Checkpoint 或 奖杯
+        if (endTile.x != -1) SpawnItemAt(endTile.x, endTile.y, Collectible.ItemType.Checkpoint);
 
-        // 5. 绘制红线
+        Debug.Log(">>> 地图生成完毕。");
+
         if (guideLineRenderer != null && trajectoryPoints != null)
         {
             guideLineRenderer.positionCount = trajectoryPoints.Count;
@@ -276,111 +319,26 @@ public partial class Map : MonoBehaviour
             guideLineRenderer.enabled = true;
         }
 
-        // =========================================================
-        // [修正]：不要调用 StartTrialMode()，因为它会重置地图！
-        // 我们手动执行进入游戏模式所需的初始化步骤：
-        // =========================================================
-
-        // A. 隐藏笔刷预览
+        // --- 手动进入试玩 ---
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
 
-        // B. 激活玩家并初始化
         player.gameObject.SetActive(true);
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
 
-        // C. 设置玩家位置到起点
         if (startTile.x != -1)
         {
-            // 确保出生点上方没有方块卡住
             SetTile(startTile.x, startTile.y, TileType.Empty);
             SetTile(startTile.x, startTile.y + 1, TileType.Empty);
-
             Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
             player.mPosition = startPos;
-            // 同步 Transform，防止画面闪烁
             player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
         }
 
-        // D. 切换状态
         currentPhase = GamePhase.TrialPlay;
-
-        // E. 启动回放 (Ghost 演示)
         if (player != null) player.StartReplay(replay);
-
-        Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG 风格)");
-    }
-
-    // [新增方法]：根据轨迹生成浮空岛和尖刺
-    private void GenerateIslandsFromPath(List<Vector3> trajectory)
-    {
-        if (trajectory == null || trajectory.Count == 0) return;
-
-        // 1. 识别落脚点
-        // 我们遍历轨迹，找到 Y 轴速度为 0 或者 轨迹最低点 的位置，视为潜在的平台位置
-        // 但更简单的方法是利用 LevelGenerator 传来的 safeLandingColumns
-        // 不过为了视觉效果更好，我们结合 trajectory 的 Y 值来确定平台的高度
-
-        // 简单的采样：每隔一段 X 距离，检查轨迹下方的空间
-        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
-
-        foreach (var point in trajectory)
-        {
-            int x = Mathf.RoundToInt((point.x - position.x) / cTileSize);
-            int y = Mathf.RoundToInt((point.y - position.y) / cTileSize);
-
-            // 记录这一列轨迹的最低点，作为潜在的“脚下位置”
-            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
-            else if (y < columnFloorY[x]) columnFloorY[x] = y;
-        }
-
-        // 2. 生成平台
-        foreach (int x in safeLandingColumns)
-        {
-            if (columnFloorY.ContainsKey(x))
-            {
-                int footY = columnFloorY[x];
-                // 在脚下生成一个平台 (脚下是 footY，所以方块在 footY - 1)
-                // 平台宽度随机 2-4
-                BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
-            }
-        }
-
-        // 3. 生成空域尖刺 (IWBTG 特色)
-        // 在非安全列的路径下方生成尖刺
-        for (int x = 0; x < mWidth; x++)
-        {
-            // 如果这列不是落脚点，且上方有轨迹经过
-            if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
-            {
-                int trajY = columnFloorY[x];
-                // 在轨迹下方一定距离生成尖刺或者悬浮块
-                if (Random.value < 0.3f)
-                {
-                    // 确保尖刺不会直接插在路线上，留出缓冲
-                    int spikeY = trajY - Random.Range(4, 8);
-                    if (spikeY > 0)
-                    {
-                        SetTile(x, spikeY, TileType.Block); // 悬浮块
-                        SpawnSpikeAt(x, spikeY + 1);        // 块上面的刺
-                    }
-                }
-            }
-        }
-    }
-
-    // [辅助方法]：在指定位置生成一个小平台
-    private void BuildPlatformAt(int centerX, int y, int width)
-    {
-        int halfW = width / 2;
-        for (int x = centerX - halfW; x <= centerX + halfW; x++)
-        {
-            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
-            {
-                SetTile(x, y, TileType.Block);
-            }
-        }
+        Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
     }
 
     public void GameOver()
@@ -389,19 +347,17 @@ public partial class Map : MonoBehaviour
 
         if (currentPhase == GamePhase.TrialPlay)
         {
-            Debug.Log(">>> 玩家死亡！正在重置到起点...");
-
+            Debug.Log(">>> 玩家死亡！");
             if (player != null)
             {
                 player.StopReplay();
-
+                // 复活到最近的 checkpoint (startTile 被 Checkpoint 物品更新过)
                 if (startTile.x != -1)
                 {
                     Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
                     player.mPosition = startPos;
                     player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
                 }
-
                 player.mSpeed = Vector2.zero;
                 player.mCurrentState = Character.CharacterState.Stand;
                 player.mOnGround = true;

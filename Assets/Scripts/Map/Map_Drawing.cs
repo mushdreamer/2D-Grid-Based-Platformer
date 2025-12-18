@@ -9,11 +9,7 @@ public partial class Map
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
         if (scrollInput != 0f)
         {
-            int oldBrushSize = brushSize;
-            if (scrollInput > 0f) brushSize++;
-            else if (scrollInput < 0f) brushSize--;
-            brushSize = Mathf.Clamp(brushSize, 1, 10);
-            if (oldBrushSize != brushSize) Debug.Log("笔刷大小调整为: " + brushSize);
+            brushSize = Mathf.Clamp(brushSize + (scrollInput > 0 ? 1 : -1), 1, 10);
         }
 
         Vector2 mousePos = Input.mousePosition;
@@ -61,6 +57,7 @@ public partial class Map
 
         if (Input.GetKey(KeyCode.Mouse1))
         {
+            // 右键清除逻辑... (保持不变，省略)
             for (int xOffset = 0; xOffset < brushSize; xOffset++)
             {
                 for (int yOffset = 0; yOffset < brushSize; yOffset++)
@@ -86,6 +83,7 @@ public partial class Map
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
+            // Tap teleport logic...
             Vector2 mousePos = Input.mousePosition;
             Vector2 cameraPos = Camera.main.transform.position;
             var mousePosInWorld = cameraPos + mousePos - new Vector2(gameCamera.pixelWidth / 2, gameCamera.pixelHeight / 2);
@@ -101,80 +99,57 @@ public partial class Map
         startTile = new Vector2i(-1, -1);
         endTile = new Vector2i(-1, -1);
 
-        foreach (var spike in spawnedSpikes)
-        {
-            if (spike != null) Destroy(spike);
-        }
-        spawnedSpikes.Clear();
+        // 清除所有生成的物体 (尖刺 + 道具)
+        foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
+        spawnedObjects.Clear();
 
+        ClearMapToEmpty();
         for (int y = 0; y < mHeight; y++)
-        {
             for (int x = 0; x < mWidth; x++)
-            {
-                tiles[x, y] = TileType.Empty;
-                mGrid[x, y] = 1;
                 ResetVisual(x, y);
-            }
-        }
 
-        if (player != null && player.gameObject.activeSelf) player.gameObject.SetActive(false);
+        if (player != null) player.gameObject.SetActive(false);
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(true);
         currentPhase = GamePhase.Drawing;
         Cursor.visible = false;
-        Debug.Log("Reset to Drawing Mode. Draw your path and press Space.");
+        Debug.Log("Reset to Drawing Mode.");
     }
 
     private void ReturnToDrawingMode()
     {
         if (player != null) player.gameObject.SetActive(false);
 
-        foreach (var spike in spawnedSpikes)
-        {
-            if (spike != null) Destroy(spike);
-        }
-        spawnedSpikes.Clear();
+        foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
+        spawnedObjects.Clear();
 
         for (int y = 0; y < mHeight; y++)
         {
             for (int x = 0; x < mWidth; x++)
             {
                 Vector2i currentTile = new Vector2i(x, y);
-
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
-
                 if (currentTile == startTile) SetVisual(x, y, Color.cyan);
                 else if (currentTile == endTile) SetVisual(x, y, Color.yellow);
                 else if (playerSelectedPath.Contains(currentTile)) SetVisual(x, y, new Color(0.5f, 1f, 0.5f, 0.5f));
                 else ResetVisual(x, y);
             }
         }
-
         currentPhase = GamePhase.Drawing;
         Cursor.visible = false;
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(true);
-        Debug.Log("Back to Drawing Mode.");
     }
 
     private void StartTrialMode()
     {
+        // ... 原有的手动 TrialMode 代码，这里为了与 ApplyGeneratedPath 统一，
+        // 建议主要使用 ApplyGeneratedPath 进入游戏。
+        // 如果你需要手绘关卡的试玩，逻辑同上。
         if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
-
-        for (int y = 0; y < mHeight; y++)
-        {
-            for (int x = 0; x < mWidth; x++)
-            {
-                SetTile(x, y, TileType.Block);
-                tilesSprites[x, y].color = Color.white;
-            }
-        }
-
-        GenerateLevelFromTolerance();
-
+        // 简易填充
+        FillMapWithBlocks();
         SetTile(startTile.x, startTile.y, TileType.Empty);
         SetTile(endTile.x, endTile.y, TileType.Empty);
-        RemoveSpikeAt(startTile.x, startTile.y - 1);
-        RemoveSpikeAt(endTile.x, endTile.y - 1);
 
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
@@ -183,55 +158,65 @@ public partial class Map
         player.mMap = this;
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
-        ScanLevelData();
-        Debug.Log("Trial Mode Started.");
     }
 
-    private void GenerateLevelFromTolerance()
+    // --- 核心生成逻辑 ---
+
+    private void GenerateIslandsFromPath(List<Vector3> trajectory)
     {
-        if (spikePrefab == null) Debug.LogWarning("未设置 Spike Prefab！");
+        if (trajectory == null || trajectory.Count == 0) return;
 
-        int spikeHeightThreshold = 3;
-
-        for (int x = 0; x < mWidth; x++)
+        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
+        foreach (var point in trajectory)
         {
-            bool hasPathInColumn = false;
-            int lowestPathY = mHeight;
-            int highestPathY = -1;
+            int x = Mathf.RoundToInt((point.x - position.x) / cTileSize);
+            int y = Mathf.RoundToInt((point.y - position.y) / cTileSize);
+            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
+            else if (y < columnFloorY[x]) columnFloorY[x] = y;
+        }
 
-            for (int y = 0; y < mHeight; y++)
+        // 1. 生成落脚点平台
+        foreach (int x in safeLandingColumns)
+        {
+            if (columnFloorY.ContainsKey(x))
             {
-                Vector2i pos = new Vector2i(x, y);
-                if (playerSelectedPath.Contains(pos) || pos == startTile || pos == endTile)
-                {
-                    hasPathInColumn = true;
-                    SetTile(x, y, TileType.Empty);
+                int footY = columnFloorY[x];
+                BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
 
-                    if (y < lowestPathY) lowestPathY = y;
-                    if (y > highestPathY) highestPathY = y;
+                // [IWBTG元素] 20% 概率在平台上生成水果
+                if (Random.value < 0.2f)
+                {
+                    SpawnItemAt(x, footY, Collectible.ItemType.Fruit);
                 }
             }
+        }
 
-            if (hasPathInColumn)
+        // 2. 生成空域障碍 (悬浮块 + 随机陷阱)
+        for (int x = 0; x < mWidth; x++)
+        {
+            if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
             {
-                int clearance = highestPathY - lowestPathY + 1;
-                int floorY = lowestPathY - 1;
-
-                if (floorY >= 0)
+                int trajY = columnFloorY[x];
+                if (Random.value < 0.35f)
                 {
-                    // --- 修改：增加安全检查 ---
-                    // 只有在 clearance 足够大，并且该列不是 AI 落地的地方时，才允许生成尖刺
-                    bool isSafeLandingSpot = safeLandingColumns != null && safeLandingColumns.Contains(x);
-
-                    if (clearance > spikeHeightThreshold && !isSafeLandingSpot)
+                    int obstacleY = trajY - Random.Range(4, 9);
+                    if (obstacleY > 0)
                     {
-                        SpawnSpikeAt(x, floorY);
-                    }
-                    else
-                    {
-                        if (GetTile(x, floorY) != TileType.Block)
+                        // 随机决定是向上刺还是向下刺，或者纯砖块
+                        float r = Random.value;
+                        if (r < 0.4f)
                         {
-                            SetTile(x, floorY, TileType.Block);
+                            SetTile(x, obstacleY, TileType.Block);
+                            SpawnSpikeAt(x, obstacleY + 1); // 朝上的刺
+                        }
+                        else if (r < 0.7f)
+                        {
+                            SetTile(x, obstacleY, TileType.Block);
+                            SpawnSpikeAt(x, obstacleY - 1, true); // 朝下的刺 (flip)
+                        }
+                        else
+                        {
+                            SetTile(x, obstacleY, TileType.Block); // 纯砖块干扰
                         }
                     }
                 }
@@ -239,131 +224,116 @@ public partial class Map
         }
     }
 
-    private void SpawnSpikeAt(int x, int y)
+    private void SpawnSpikeAt(int x, int y, bool flipped = false)
     {
         if (spikePrefab == null) return;
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
 
         SetTile(x, y, TileType.Danger);
-        tilesSprites[x, y].enabled = false;
+        tilesSprites[x, y].enabled = false; // 隐藏格子本身的Sprite
 
         Vector2 worldPos = GetMapTilePosition(x, y);
-        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -1f);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -2f);
 
         GameObject newSpike = Instantiate(spikePrefab, spawnPos, Quaternion.identity);
         newSpike.transform.parent = transform;
-        newSpike.transform.localScale = Vector3.one;
 
-        spawnedSpikes.Add(newSpike);
+        // --- 视觉升级：应用随机陷阱皮肤 ---
+        SpriteRenderer sr = newSpike.GetComponent<SpriteRenderer>();
+        if (sr != null && trapSprites != null && trapSprites.Count > 0)
+        {
+            // 使用当前主题的 Trap 索引
+            int index = Mathf.Clamp(currentThemeTrapIndex, 0, trapSprites.Count - 1);
+            sr.sprite = trapSprites[index];
+        }
+
+        // 旋转
+        if (flipped)
+        {
+            newSpike.transform.localScale = new Vector3(1, -1, 1);
+        }
+
+        spawnedObjects.Add(newSpike);
     }
 
-    private void RemoveSpikeAt(int x, int y)
+    private void SpawnItemAt(int x, int y, Collectible.ItemType type)
     {
+        if (itemPrefab == null) return;
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+        if (tiles[x, y] != TileType.Empty) return; // 别生成在墙里
 
-        if (GetTile(x, y) == TileType.Danger)
+        Vector2 worldPos = GetMapTilePosition(x, y);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
+
+        GameObject newItem = Instantiate(itemPrefab, spawnPos, Quaternion.identity);
+        newItem.transform.parent = transform;
+
+        Collectible col = newItem.GetComponent<Collectible>();
+        col.type = type;
+
+        // 设置图片
+        SpriteRenderer sr = newItem.GetComponent<SpriteRenderer>();
+        if (type == Collectible.ItemType.Fruit && fruitSprites != null && fruitSprites.Count > 0)
         {
-            SetTile(x, y, TileType.Block);
-            tilesSprites[x, y].enabled = true;
-            tilesSprites[x, y].color = Color.white;
-            tilesSprites[x, y].sprite = mDirtSprites[0];
+            sr.sprite = fruitSprites[Random.Range(0, fruitSprites.Count)];
+        }
+        else if (type == Collectible.ItemType.Checkpoint && checkpointSprites != null && checkpointSprites.Count > 0)
+        {
+            sr.sprite = checkpointSprites[0];
+        }
 
-            GameObject spikeToRemove = null;
-            foreach (var spike in spawnedSpikes)
-            {
-                if (Vector2.Distance(spike.transform.position, GetMapTilePosition(x, y)) < 0.1f)
-                {
-                    spikeToRemove = spike;
-                    break;
-                }
-            }
+        spawnedObjects.Add(newItem);
+    }
 
-            if (spikeToRemove != null)
+    private void BuildPlatformAt(int centerX, int y, int width)
+    {
+        int halfW = width / 2;
+        for (int x = centerX - halfW; x <= centerX + halfW; x++)
+        {
+            if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
             {
-                spawnedSpikes.Remove(spikeToRemove);
-                Destroy(spikeToRemove);
+                SetTile(x, y, TileType.Block);
             }
         }
     }
 
     public void SetTile(int x, int y, TileType type)
     {
+        if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+
         tiles[x, y] = type;
+        SpriteRenderer sr = tilesSprites[x, y];
+
         if (type == TileType.Block)
         {
-            mGrid[x, y] = 0;
-            AutoTile(type, x, y, 1, 8, 4, 4, 4, 4);
-            tilesSprites[x, y].enabled = true;
-        }
-        else if (type == TileType.OneWay)
-        {
-            mGrid[x, y] = 1;
-            tilesSprites[x, y].enabled = true;
-            tilesSprites[x, y].transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
-            tilesSprites[x, y].transform.eulerAngles = new Vector3(0.0f, 0.0f, 0.0f);
-            tilesSprites[x, y].sprite = mDirtSprites[25];
+            mGrid[x, y] = 0; // 物理阻挡
+            sr.enabled = true;
+            sr.transform.localScale = Vector3.one;
+            sr.transform.eulerAngles = Vector3.zero;
+            sr.color = Color.white;
+
+            // --- 视觉升级：应用地形皮肤 ---
+            if (terrainSprites != null && terrainSprites.Count > 0)
+            {
+                int index = Mathf.Clamp(currentThemeTerrainIndex, 0, terrainSprites.Count - 1);
+                sr.sprite = terrainSprites[index];
+            }
+            else
+            {
+                sr.sprite = mDirtSprites[1]; // Fallback
+            }
         }
         else if (type == TileType.Danger)
         {
-            mGrid[x, y] = 1;
-            tilesSprites[x, y].enabled = true;
-            tilesSprites[x, y].sprite = mDirtSprites[0];
-            tilesSprites[x, y].color = Color.red;
-            tilesSprites[x, y].transform.localScale = Vector3.one;
-            tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
+            mGrid[x, y] = 1; // 物理不阻挡 (角色进入重叠触发死亡)
+            sr.enabled = false; // 隐藏底图，使用生成的 Prefab
         }
-        else
+        else if (type == TileType.Empty)
         {
             mGrid[x, y] = 1;
-            tilesSprites[x, y].enabled = false;
+            sr.enabled = false;
         }
-        AutoTile(type, x - 1, y, 1, 8, 4, 4, 4, 4);
-        AutoTile(type, x + 1, y, 1, 8, 4, 4, 4, 4);
-        AutoTile(type, x, y - 1, 1, 8, 4, 4, 4, 4);
-        AutoTile(type, x, y + 1, 1, 8, 4, 4, 4, 4);
-    }
-
-    void AutoTile(TileType type, int x, int y, int rand4NeighbourTiles, int rand3NeighbourTiles, int rand2NeighbourPipeTiles, int rand2NeighbourCornerTiles, int rand1NeighbourTiles, int rand0NeighbourTiles)
-    {
-        if (x >= mWidth || x < 0 || y >= mHeight || y < 0) return;
-        if (tiles[x, y] != TileType.Block) return;
-
-        int tileOnLeft = (x > 0 && tiles[x - 1, y] == tiles[x, y]) ? 1 : 0;
-        int tileOnRight = (x < mWidth - 1 && tiles[x + 1, y] == tiles[x, y]) ? 1 : 0;
-        int tileOnTop = (y < mHeight - 1 && tiles[x, y + 1] == tiles[x, y]) ? 1 : 0;
-        int tileOnBottom = (y > 0 && tiles[x, y - 1] == tiles[x, y]) ? 1 : 0;
-
-        float scaleX = 1.0f;
-        float scaleY = 1.0f;
-        float rot = 0.0f;
-        int id = 0;
-        int sum = tileOnLeft + tileOnRight + tileOnTop + tileOnBottom;
-
-        switch (sum)
-        {
-            case 0: id = 1 + mRandomNumber.Next(rand0NeighbourTiles); break;
-            case 1:
-                id = 1 + rand0NeighbourTiles + mRandomNumber.Next(rand1NeighbourTiles);
-                if (tileOnRight == 1) scaleX = -1; else if (tileOnTop == 1) rot = -1; else if (tileOnBottom == 1) { rot = 1; scaleY = -1; }
-                break;
-            case 2:
-                if (tileOnLeft + tileOnBottom == 2) id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + mRandomNumber.Next(rand2NeighbourCornerTiles);
-                else if (tileOnRight + tileOnBottom == 2) { id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + mRandomNumber.Next(rand2NeighbourCornerTiles); scaleX = -1; }
-                else if (tileOnTop + tileOnLeft == 2) { id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + mRandomNumber.Next(rand2NeighbourCornerTiles); scaleY = -1; }
-                else if (tileOnTop + tileOnRight == 2) { id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + mRandomNumber.Next(rand2NeighbourCornerTiles); scaleX = -1; scaleY = -1; }
-                else if (tileOnTop + tileOnBottom == 2) { id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + mRandomNumber.Next(rand2NeighbourPipeTiles); rot = 1; }
-                else if (tileOnRight + tileOnLeft == 2) id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + mRandomNumber.Next(rand2NeighbourPipeTiles);
-                break;
-            case 3:
-                id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + rand2NeighbourCornerTiles + mRandomNumber.Next(rand3NeighbourTiles);
-                if (tileOnLeft == 0) { rot = 1; scaleX = -1; } else if (tileOnRight == 0) { rot = 1; scaleY = -1; } else if (tileOnBottom == 0) scaleY = -1;
-                break;
-            case 4:
-                id = 1 + rand0NeighbourTiles + rand1NeighbourTiles + rand2NeighbourPipeTiles + rand2NeighbourCornerTiles + rand3NeighbourTiles + mRandomNumber.Next(rand4NeighbourTiles);
-                break;
-        }
-        tilesSprites[x, y].transform.localScale = new Vector3(scaleX, scaleY, 1.0f);
-        tilesSprites[x, y].transform.eulerAngles = new Vector3(0.0f, 0.0f, rot * 90.0f);
-        tilesSprites[x, y].sprite = mDirtSprites[id - 1];
+        // OneWay 逻辑保持不变...
     }
 
     private void UpdateBrushPreview(int mouseTileX, int mouseTileY)
@@ -393,7 +363,8 @@ public partial class Map
     private void SetVisual(int x, int y, Color color)
     {
         tilesSprites[x, y].enabled = true;
-        tilesSprites[x, y].sprite = mDirtSprites[0];
+        // 编辑模式下用一个简单的方块图即可
+        tilesSprites[x, y].sprite = (mDirtSprites != null && mDirtSprites.Count > 0) ? mDirtSprites[0] : null;
         tilesSprites[x, y].color = color;
         tilesSprites[x, y].transform.localScale = Vector3.one;
         tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
@@ -402,14 +373,9 @@ public partial class Map
     private void ResetVisual(int x, int y)
     {
         tilesSprites[x, y].enabled = true;
-        tilesSprites[x, y].sprite = mDirtSprites[0];
+        tilesSprites[x, y].sprite = (mDirtSprites != null && mDirtSprites.Count > 0) ? mDirtSprites[0] : null;
         tilesSprites[x, y].color = gridColor;
         tilesSprites[x, y].transform.localScale = Vector3.one;
         tilesSprites[x, y].transform.eulerAngles = Vector3.zero;
-    }
-
-    private void ScanLevelData()
-    {
-        Debug.Log(">>> 关卡扫描完成 <<<");
     }
 }

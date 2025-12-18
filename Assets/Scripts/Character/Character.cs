@@ -5,6 +5,7 @@ using Algorithms;
 
 public class Character : MovingObject
 {
+    // ... (保留你原有的 Enum 和 变量) ...
     [System.Serializable]
     public enum CharacterState
     {
@@ -27,6 +28,9 @@ public class Character : MovingObject
     public CharacterState mCurrentState = CharacterState.Stand;
 
     public Animator mAnimator;
+    // --- 新增：SpriteRenderer 引用 ---
+    public SpriteRenderer mSpriteRenderer;
+
     protected int mFramesFromJumpStart = 0;
     protected bool[] mInputs;
     protected bool[] mPrevInputs;
@@ -38,11 +42,28 @@ public class Character : MovingObject
     public bool isSimulation = false;
     public LineRenderer lineRenderer;
 
-    // --- 新增：二段跳相关变量 ---
     protected int mJumpCount = 0;
-    protected const int cMaxJumps = 2; // 最大跳跃次数 (1 = 单跳, 2 = 二段跳)
-    // -------------------------
+    protected const int cMaxJumps = 2;
 
+    void Awake()
+    {
+        // 自动获取 SpriteRenderer
+        if (mSpriteRenderer == null) mSpriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    // --- 新增：设置皮肤 ---
+    public void SetSkin(Sprite skin)
+    {
+        if (mSpriteRenderer != null)
+        {
+            mSpriteRenderer.sprite = skin;
+            // 如果你有动画，这里可能需要重写 Animator Controller 或者禁用 Animator 使用纯图片切换
+            // IWBTG 的角色通常只有两帧动画 (跑/跳)，如果你的 Asset 只是单张静态图，建议禁用 Animator
+            if (mAnimator != null) mAnimator.enabled = false;
+        }
+    }
+
+    // ... (保留原有的 OnDrawGizmos, DrawPathLines, UpdatePrevInputs) ...
     void OnDrawGizmos()
     {
         DrawMovingObjectGizmos();
@@ -90,7 +111,7 @@ public class Character : MovingObject
             mPrevInputs[i] = mInputs[i];
     }
 
-    // --- 修改：HandleJumping 支持二段跳 ---
+    // ... (保留 HandleJumping, HandleJumpingSimulation, SimulationUpdate) ...
     private void HandleJumping()
     {
         mFramesFromJumpStart++;
@@ -99,42 +120,32 @@ public class Character : MovingObject
         mSpeed.y += Constants.cGravity * Time.deltaTime;
         mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
 
-        // 检测跳跃键刚刚按下 (Fresh Press)
         bool jumpPressed = mInputs[(int)KeyInput.Jump] && !mPrevInputs[(int)KeyInput.Jump];
-        // 检测是否按住 (Holding)
         bool jumpHeld = mInputs[(int)KeyInput.Jump];
 
-        // 1. 处理起跳逻辑
         if (jumpPressed)
         {
-            // 情况A: 地面起跳 (或者土狼时间)
             if (mOnGround || (mSpeed.y < 0.0f && mFramesFromJumpStart < Constants.cJumpFramesThreshold))
             {
                 mSpeed.y = mJumpSpeed;
-                mJumpCount = 1; // 消耗第一次跳跃
+                mJumpCount = 1;
                 if (!isSimulation && mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
             }
-            // 情况B: 空中二段跳
             else if (mJumpCount < cMaxJumps)
             {
-                mSpeed.y = mJumpSpeed; // 二段跳通常也是满力跳
-                mJumpCount++; // 消耗跳跃次数
-                mFramesFromJumpStart = 0; // 重置跳跃帧，允许长按
+                mSpeed.y = mJumpSpeed;
+                mJumpCount++;
+                mFramesFromJumpStart = 0;
                 if (!isSimulation && mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
-
-                // 可选: 这里可以加一个二段跳的特效或不同的声音
             }
         }
 
-        // 2. 处理长按跳得更高 (Variable Jump Height)
-        // 只有在上升阶段松开按键，才会截断跳跃高度
         if (!jumpHeld && mSpeed.y > 0.0f)
         {
             mSpeed.y = Mathf.Min(mSpeed.y, 200.0f);
-            mFramesFromJumpStart = 100; // 结束长按判定
+            mFramesFromJumpStart = 100;
         }
 
-        // 空中左右移动逻辑
         if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
         {
             mSpeed.x = 0.0f;
@@ -153,8 +164,6 @@ public class Character : MovingObject
         }
     }
 
-    // --- 修改：SimulationUpdate 也要同步支持二段跳 ---
-    // (为了保持一致，这里其实可以直接复用 HandleJumping 的逻辑，但为了不破坏你现有的结构，我手动同步一下)
     private void HandleJumpingSimulation(float timeStep)
     {
         mFramesFromJumpStart++;
@@ -163,7 +172,6 @@ public class Character : MovingObject
         mSpeed.y += Constants.cGravity * timeStep;
         mSpeed.y = Mathf.Max(mSpeed.y, Constants.cMaxFallingSpeed);
 
-        // 模拟环境下的输入检测
         bool jumpPressed = mInputs[(int)KeyInput.Jump] && !mPrevInputs[(int)KeyInput.Jump];
         bool jumpHeld = mInputs[(int)KeyInput.Jump];
 
@@ -203,7 +211,7 @@ public class Character : MovingObject
         {
             case CharacterState.Stand:
                 mSpeed = Vector2.zero;
-                mJumpCount = 0; // 模拟开始前重置
+                mJumpCount = 0;
                 if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
 
                 if (mInputs[(int)KeyInput.Jump])
@@ -219,7 +227,7 @@ public class Character : MovingObject
                 break;
 
             case CharacterState.Run:
-                mJumpCount = 0; // 跑动时重置跳跃次数
+                mJumpCount = 0;
                 if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                 {
                     mCurrentState = CharacterState.Stand;
@@ -241,7 +249,7 @@ public class Character : MovingObject
                 HandleJumpingSimulation(timeStep);
                 if (mOnGround)
                 {
-                    mJumpCount = 0; // 落地重置
+                    mJumpCount = 0;
                     if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                     {
                         mCurrentState = CharacterState.Stand;
@@ -289,25 +297,22 @@ public class Character : MovingObject
         if (!isSimulation)
         {
             if (mJumpSfx != null) mAudioSource.PlayOneShot(mJumpSfx);
-            mAnimator.Play("Jump"); // 通常死亡也是用跳跃帧或专门的死亡帧
+            // 如果只有静态图片，可以不做动画播放，或者做一个简单的颜色闪烁
+            if (mAnimator != null && mAnimator.enabled) mAnimator.Play("Jump");
         }
     }
 
+    // ... (保留 CharacterUpdate) ...
     public void CharacterUpdate()
     {
         switch (mCurrentState)
         {
             case CharacterState.Die:
-                // 1. 应用重力
                 mSpeed.y += Constants.cGravity * Time.deltaTime;
-
-                // 2. 手动更新位置
                 mPosition += mSpeed * Time.deltaTime;
                 transform.position = new Vector3(Mathf.Round(mPosition.x), Mathf.Round(mPosition.y), mSpriteDepth);
 
-                // 3. 掉出地图检测
-                // 注意：这里删除了 SetActive(false)，保证角色能一直运行到这里触发 GameOver
-                if (mPosition.y < mMap.position.y - 200.0f) // 稍微加大一点距离 (-200) 确保完全出屏
+                if (mPosition.y < mMap.position.y - 200.0f)
                 {
                     mMap.GameOver();
                 }
@@ -315,9 +320,9 @@ public class Character : MovingObject
 
             case CharacterState.Stand:
                 mWalkSfxTimer = cWalkSfxTime;
-                mAnimator.Play("Stand");
+                if (mAnimator != null && mAnimator.enabled) mAnimator.Play("Stand");
                 mSpeed = Vector2.zero;
-                mJumpCount = 0; // 站立时重置跳跃次数
+                mJumpCount = 0;
 
                 if (!mOnGround) { mCurrentState = CharacterState.Jump; break; }
 
@@ -337,11 +342,11 @@ public class Character : MovingObject
                 break;
 
             case CharacterState.Run:
-                mAnimator.Play("Walk");
+                if (mAnimator != null && mAnimator.enabled) mAnimator.Play("Walk");
                 mWalkSfxTimer += Time.deltaTime;
                 if (mWalkSfxTimer > cWalkSfxTime) { mWalkSfxTimer = 0.0f; mAudioSource.PlayOneShot(mWalkSfx); }
 
-                mJumpCount = 0; // 跑动时重置
+                mJumpCount = 0;
 
                 if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                 {
@@ -374,14 +379,13 @@ public class Character : MovingObject
 
             case CharacterState.Jump:
                 mWalkSfxTimer = cWalkSfxTime;
-                mAnimator.Play("Jump");
+                if (mAnimator != null && mAnimator.enabled) mAnimator.Play("Jump");
 
-                // 跳跃状态下不重置 mJumpCount，只在 HandleJumping 里增加
                 HandleJumping();
 
                 if (mOnGround)
                 {
-                    mJumpCount = 0; // 落地重置
+                    mJumpCount = 0;
                     if (mInputs[(int)KeyInput.GoRight] == mInputs[(int)KeyInput.GoLeft])
                     {
                         mCurrentState = CharacterState.Stand;

@@ -370,6 +370,7 @@
 "Assets/Scripts/Character/Bot.cs"
 "Assets/Scripts/Character/Character.cs"
 "Assets/Scripts/Character/KeyInput.cs"
+"Assets/Scripts/Collectible.cs"
 "Assets/Scripts/KillerObject.cs"
 "Assets/Scripts/Level/LevelGenerator.cs"
 "Assets/Scripts/LevelMetrics.cs"

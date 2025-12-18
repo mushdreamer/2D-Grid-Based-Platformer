@@ -84,6 +84,7 @@
     <Compile Include="Assets\Scripts\Character\KeyInput.cs" />
     <Compile Include="Assets\Scripts\Setting\Constants.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerDeathState.cs" />
+    <Compile Include="Assets\Scripts\Collectible.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerController.cs" />
   </ItemGroup>
   <ItemGroup>
