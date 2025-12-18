@@ -522,6 +522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
+  director: {fileID: 0}
 --- !u!1 &448407002
 GameObject:
   m_ObjectHideFlags: 0
@@ -2835,7 +2836,6 @@ MonoBehaviour:
   observationWindow: 1
   predictionHorizon: 0.4
   cooldown: 2
-  trapLifetime: 5
 --- !u!4 &1973834182
 Transform:
   m_ObjectHideFlags: 0
@@ -3201,8 +3201,14 @@ MonoBehaviour:
   itemPrefab: {fileID: 992918854}
   checkpointPrefab: {fileID: 7613058760506492704, guid: dda4e12ba883054428661848e2a28f96,
     type: 3}
+  checkpointSize:
+    x: 1
+    y: 1
   finishPrefab: {fileID: 1736170228504680222, guid: 9eb69e3b59b02fe4b8c43928e2e83eb2,
     type: 3}
+  finishSize:
+    x: 2
+    y: 2
   backgroundRenderer: {fileID: 156268445}
   backgroundSprites:
   - {fileID: 21300000, guid: 8049ea91a9d5fca4dab4024c0915dbe6, type: 3}
@@ -3318,6 +3324,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
+  director: {fileID: 0}
 --- !u!120 &2106156358
 LineRenderer:
   serializedVersion: 2
@@ -3513,6 +3520,7 @@ SceneRoots:
   - {fileID: 2081810909}
   - {fileID: 1079058168}
   - {fileID: 2106156356}
+  - {fileID: 992918858}
   - {fileID: 2039506657}
   - {fileID: 1795296641}
   - {fileID: 766887196}
@@ -3520,4 +3528,3 @@ SceneRoots:
   - {fileID: 1476967210}
   - {fileID: 415122242}
   - {fileID: 1973834182}
-  - {fileID: 992918858}

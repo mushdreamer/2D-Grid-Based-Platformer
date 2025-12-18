@@ -12,7 +12,6 @@ public struct ReplayFrame
     }
 }
 
-// 关卡个体：包含地图数据和特征分数
 public class LevelIndividual
 {
     public List<Vector2i> path;
@@ -20,32 +19,33 @@ public class LevelIndividual
     public List<Vector3> trajectory;
     public HashSet<int> safeColumns;
 
-    public float linearity;    // 特征维度 1
-    public float inputDensity; // 特征维度 2
-    public float fitness;      // 适应度 (比如关卡长度)
+    public float linearity;
+    public float inputDensity;
+    public float fitness;
 }
 
 public class LevelGenerator : MonoBehaviour
 {
     public Map map;
     public Bot characterPrefab;
+    public AdversarialDirector director; // [新增] 引用导演
 
     private Bot ghostAgent;
+    private Bot validatorAgent;
+
     private const float SIM_STEP = 0.02f;
     private float currentVirtualFloorY;
 
-    // --- MAP-Elites Settings ---
     private const int GRID_SIZE = 10;
     private LevelIndividual[,] eliteGrid = new LevelIndividual[GRID_SIZE, GRID_SIZE];
 
-    // 临时存储单次生成的数据
-    private List<Vector2i> tempPath = new List<Vector2i>();
-    // 新增：HashSet 用于快速查找，解决 contains 性能问题
-    private HashSet<Vector2i> tempPathSet = new HashSet<Vector2i>();
+    private List<Vector2i> ghostPath = new List<Vector2i>();
+    private HashSet<Vector2i> ghostPathSet = new HashSet<Vector2i>();
+    private List<ReplayFrame> ghostReplay = new List<ReplayFrame>();
+    private List<Vector3> ghostTrajectory = new List<Vector3>();
+    private HashSet<int> ghostSafeColumns = new HashSet<int>();
 
-    private List<ReplayFrame> tempReplay = new List<ReplayFrame>();
-    private List<Vector3> tempTrajectory = new List<Vector3>();
-    private HashSet<int> tempSafeColumns = new HashSet<int>();
+    private List<Vector3> verifiedTrajectory = new List<Vector3>();
 
     enum ActionType { MoveRight, JumpRight, LongJumpRight }
 
@@ -55,87 +55,110 @@ public class LevelGenerator : MonoBehaviour
         {
             ghostAgent = Instantiate(characterPrefab, Vector3.zero, Quaternion.identity);
             ghostAgent.gameObject.SetActive(false);
-            ghostAgent.name = "GhostAgent";
+            ghostAgent.name = "GhostGenerator";
             ghostAgent.mMap = map;
             ghostAgent.BotInit(new bool[(int)KeyInput.Count], new bool[(int)KeyInput.Count]);
         }
+
+        if (validatorAgent == null)
+        {
+            validatorAgent = Instantiate(characterPrefab, Vector3.zero, Quaternion.identity);
+            validatorAgent.gameObject.SetActive(false);
+            validatorAgent.name = "PathValidator";
+            validatorAgent.mMap = map;
+            validatorAgent.BotInit(new bool[(int)KeyInput.Count], new bool[(int)KeyInput.Count]);
+        }
     }
 
-    // --- MAP-Elites 主入口 ---
-    // startNode/endNode: 起终点
-    // iterations: 演化次数，比如跑 100 次模拟
     public void GenerateMapElitesLibrary(Vector2i startTile, Vector2i endTile, int iterations)
     {
         Initialize();
 
-        // 清空精英库
+        // [关键修复 1] 生成期间，强制关闭对抗导演，防止陷阱干扰验证
+        if (director != null) director.SetRunning(false);
+
         System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
         int validLevelsFound = 0;
+        int attempts = 0;
 
-        Debug.Log($">>> MAP-Elites 开始演化 ({iterations} 次迭代)...");
+        Debug.Log($">>> MAP-Elites 开始演化 (目标有效样本: {iterations})...");
 
-        for (int i = 0; i < iterations; i++)
+        // 这里的逻辑改为：直到找到足够数量的“真正可通关”关卡，或者尝试次数过多
+        while (validLevelsFound < iterations && attempts < iterations * 10) // 增加尝试次数上限
         {
-            // 1. 生成一个随机关卡
-            if (RunSimulationAttempt(startTile, endTile))
+            attempts++;
+
+            if (RunGhostSimulation(startTile, endTile))
             {
-                // 2. 计算特征
-                Vector2 startPos = map.GetMapTilePosition(startTile);
-                Vector2 endPos = map.GetMapTilePosition(endTile);
+                BakeLevelToMapDataOnly(ghostTrajectory, ghostSafeColumns, startTile, endTile);
 
-                float lin = LevelMetrics.CalculateLinearity(tempTrajectory, startPos, endPos);
-                float den = LevelMetrics.CalculateInputDensity(tempReplay);
-
-                // 3. 计算适应度 (这里简单用路径点数量代表长度，越长越好)
-                float fit = tempTrajectory.Count;
-
-                // 4. 映射到网格坐标 (0-9)
-                int x = Mathf.Clamp(Mathf.FloorToInt(lin * GRID_SIZE), 0, GRID_SIZE - 1);
-                int y = Mathf.Clamp(Mathf.FloorToInt(den * GRID_SIZE), 0, GRID_SIZE - 1);
-
-                // 5. 优胜劣汰：如果该格子是空的，或者新关卡适应度更高，则保留
-                if (eliteGrid[x, y] == null || fit > eliteGrid[x, y].fitness)
+                if (VerifyLevelWithRealPhysics(startTile, endTile))
                 {
-                    LevelIndividual newInd = new LevelIndividual();
-                    newInd.path = new List<Vector2i>(tempPath);
-                    newInd.replay = new List<ReplayFrame>(tempReplay);
-                    newInd.trajectory = new List<Vector3>(tempTrajectory);
-                    newInd.safeColumns = new HashSet<int>(tempSafeColumns);
-                    newInd.linearity = lin;
-                    newInd.inputDensity = den;
-                    newInd.fitness = fit;
+                    Vector2 startPos = map.GetMapTilePosition(startTile);
+                    Vector2 endPos = map.GetMapTilePosition(endTile);
 
-                    eliteGrid[x, y] = newInd;
-                    validLevelsFound++;
+                    float lin = LevelMetrics.CalculateLinearity(verifiedTrajectory, startPos, endPos);
+                    float den = LevelMetrics.CalculateInputDensity(ghostReplay);
+                    float fit = verifiedTrajectory.Count;
+
+                    int x = Mathf.Clamp(Mathf.FloorToInt(lin * GRID_SIZE), 0, GRID_SIZE - 1);
+                    int y = Mathf.Clamp(Mathf.FloorToInt(den * GRID_SIZE), 0, GRID_SIZE - 1);
+
+                    if (eliteGrid[x, y] == null || fit > eliteGrid[x, y].fitness)
+                    {
+                        LevelIndividual newInd = new LevelIndividual();
+                        newInd.path = new List<Vector2i>(ghostPath);
+                        newInd.replay = new List<ReplayFrame>(ghostReplay);
+                        newInd.trajectory = new List<Vector3>(verifiedTrajectory);
+                        newInd.safeColumns = new HashSet<int>(ghostSafeColumns);
+                        newInd.linearity = lin;
+                        newInd.inputDensity = den;
+                        newInd.fitness = fit;
+
+                        eliteGrid[x, y] = newInd;
+                        validLevelsFound++;
+                    }
                 }
+
+                map.ClearMapToEmpty();
             }
         }
 
-        Debug.Log($">>> 演化结束。发现了 {validLevelsFound} 个独特的关卡变体。");
+        Debug.Log($">>> 演化结束。尝试 {attempts} 次，发现了 {validLevelsFound} 个经物理验证的可通关关卡。");
 
-        // 默认加载一个“最平衡”的关卡 (位于网格中心)
+        // [关键修复 2] 生成结束后，重新启用导演 (如果是在 TrialPlay 模式下)
+        // 注意：具体的启用时机通常在 Map.cs 的 StartTrialMode 里，这里只需确保不永久关闭即可
+        // 但为了安全，我们保持关闭，直到 Map.cs 显式开启它
+
         SelectAndLoadLevel(5, 5);
     }
 
-    // 选择网格中特定风格的关卡加载
-    // x: 线性度 (0=曲折, 9=直线)
-    // y: 操作密度 (0=简单, 9=繁琐)
     public void SelectAndLoadLevel(int x, int y)
     {
-        // 如果选中格子是空的，尝试找最近的邻居
         LevelIndividual target = eliteGrid[x, y];
         if (target == null)
         {
-            // 简单遍历找非空
-            foreach (var ind in eliteGrid)
+            float minDist = float.MaxValue;
+            for (int i = 0; i < GRID_SIZE; i++)
             {
-                if (ind != null) { target = ind; break; }
+                for (int j = 0; j < GRID_SIZE; j++)
+                {
+                    if (eliteGrid[i, j] != null)
+                    {
+                        float d = Mathf.Pow(i - x, 2) + Mathf.Pow(j - y, 2);
+                        if (d < minDist)
+                        {
+                            minDist = d;
+                            target = eliteGrid[i, j];
+                        }
+                    }
+                }
             }
         }
 
         if (target != null)
         {
-            Debug.Log($"加载关卡风格 -> Linearity: {target.linearity:F2}, Density: {target.inputDensity:F2}");
+            Debug.Log($"加载关卡 -> Linearity: {target.linearity:F2}, Density: {target.inputDensity:F2}");
             map.ApplyGeneratedPath(target.path, target.replay, target.trajectory, target.safeColumns);
         }
         else
@@ -144,40 +167,35 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    // 单次模拟逻辑 (原 GenerateIWBTGLevel 的核心逻辑)
-    // 返回 true 表示生成成功到达终点
-    bool RunSimulationAttempt(Vector2i startTile, Vector2i endTile)
+    // ==========================================
+    // Phase 1: Ghost Simulation
+    // ==========================================
+    bool RunGhostSimulation(Vector2i startTile, Vector2i endTile)
     {
-        // 清理临时数据
-        tempPath.Clear();
-        tempPathSet.Clear(); // 必须清理 Set
-        tempReplay.Clear();
-        tempTrajectory.Clear();
-        tempSafeColumns.Clear();
+        ghostPath.Clear();
+        ghostPathSet.Clear();
+        ghostReplay.Clear();
+        ghostTrajectory.Clear();
+        ghostSafeColumns.Clear();
 
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
-        // 重置 Ghost
         ghostAgent.mPosition = startWorldPos;
         ghostAgent.mSpeed = Vector2.zero;
         ghostAgent.mCurrentState = Character.CharacterState.Stand;
         ghostAgent.mOnGround = false;
 
-        // 随机化初始虚拟地板，增加多样性
         currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
 
         int safetyCounter = 0;
         float lastXProgress = ghostAgent.mPosition.x;
         int stagnationCount = 0;
 
-        // 模拟循环
         while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 2000)
         {
             safetyCounter++;
             float heightDiff = endWorldPos.y - currentVirtualFloorY;
-
-            // 增加随机扰动，产生不同风格的关卡
             float noise = Random.Range(-0.2f, 0.2f);
             float bias = Mathf.Clamp(heightDiff / 100.0f + noise, -0.5f, 0.5f);
 
@@ -189,7 +207,7 @@ public class LevelGenerator : MonoBehaviour
             if (stagnationCount > 3) { nextAction = ActionType.LongJumpRight; stagnationCount = 0; }
             else nextAction = PickAction();
 
-            ExecuteAction(nextAction, bias);
+            ExecuteGhostAction(nextAction, bias);
 
             if (ghostAgent.mPosition.y < map.position.y)
             {
@@ -198,20 +216,105 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 成功到达终点附近才算有效
         return (ghostAgent.mPosition.x >= endWorldPos.x);
+    }
+
+    // ==========================================
+    // Phase 2: Verification
+    // ==========================================
+    bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile)
+    {
+        verifiedTrajectory.Clear();
+
+        Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
+        Vector2 endWorldPos = map.GetMapTilePosition(endTile);
+
+        validatorAgent.mPosition = startWorldPos;
+        validatorAgent.mSpeed = Vector2.zero;
+        validatorAgent.mCurrentState = Character.CharacterState.Stand;
+        validatorAgent.mOnGround = false;
+        validatorAgent.mAABB.Center = validatorAgent.mPosition + validatorAgent.mAABBOffset;
+
+        int frameIndex = 0;
+        int maxFrames = ghostReplay.Count + 60;
+
+        while (frameIndex < ghostReplay.Count && frameIndex < maxFrames)
+        {
+            bool[] currentInputs = ghostReplay[frameIndex].inputs;
+            validatorAgent.SimulationUpdate(SIM_STEP, currentInputs);
+            verifiedTrajectory.Add(new Vector3(validatorAgent.mPosition.x, validatorAgent.mPosition.y, -8f));
+
+            // [调试日志] 验证失败原因
+            if (validatorAgent.mPosition.y < map.position.y)
+            {
+                // Debug.Log("验证失败: 掉出地图"); // 调试用
+                return false;
+            }
+
+            // 注意：因为我们现在只生成 Block 或 OneWay，没有 Danger，所以不用检测 TileType.Danger
+
+            // 成功条件
+            if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 2)
+            {
+                return true;
+            }
+
+            frameIndex++;
+        }
+
+        // Debug.Log("验证失败: 超时未到达终点");
+        return false;
+    }
+
+    void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<int> safeCols, Vector2i start, Vector2i end)
+    {
+        map.ClearMapToEmpty();
+
+        Dictionary<int, int> columnFloorY = new Dictionary<int, int>();
+        foreach (var point in trajectory)
+        {
+            int x = Mathf.RoundToInt((point.x - map.position.x) / Map.cTileSize);
+            int y = Mathf.RoundToInt((point.y - map.position.y) / Map.cTileSize);
+            if (!columnFloorY.ContainsKey(x)) columnFloorY[x] = y;
+            else if (y < columnFloorY[x]) columnFloorY[x] = y;
+        }
+
+        foreach (int x in safeCols)
+        {
+            if (columnFloorY.ContainsKey(x))
+            {
+                int footY = columnFloorY[x];
+                int width = Random.Range(2, 5);
+                int halfW = width / 2;
+                for (int px = x - halfW; px <= x + halfW; px++)
+                {
+                    // [关键修复 3] 将生成的平台改为 OneWay
+                    // 这样 Validator 跳起来时不会撞到头顶的砖块而掉下去
+                    // 只有起点和终点才用实心块 Block
+                    map.SetTile(px, footY - 1, TileType.OneWay);
+                }
+            }
+        }
+
+        if (start.x != -1)
+        {
+            for (int px = start.x - 1; px <= start.x + 1; px++) map.SetTile(px, start.y - 1, TileType.Block);
+        }
+        if (end.x != -1)
+        {
+            for (int px = end.x - 1; px <= end.x + 1; px++) map.SetTile(px, end.y - 1, TileType.Block);
+        }
     }
 
     ActionType PickAction()
     {
         float r = Random.value;
-        // 增加大跳的概率
-        if (r < 0.2f) return ActionType.MoveRight; // 减少平走
+        if (r < 0.2f) return ActionType.MoveRight;
         if (r < 0.5f) return ActionType.JumpRight;
-        return ActionType.LongJumpRight; // 50% 概率大跳
+        return ActionType.LongJumpRight;
     }
 
-    void ExecuteAction(ActionType action, float heightBias)
+    void ExecuteGhostAction(ActionType action, float heightBias)
     {
         int frames = 0;
         bool jump = false;
@@ -226,53 +329,34 @@ public class LevelGenerator : MonoBehaviour
 
         if (jump)
         {
-            // --- 新的 IWBTG 风格逻辑 ---
             float heightChangeTiles = 0;
-
             float r = Random.value;
-            if (r < 0.4f)
-            {
-                // 向上跳台阶 (1-4格)
-                heightChangeTiles = Random.Range(1.0f, 4.0f);
-            }
-            else if (r < 0.7f)
-            {
-                // 向下跳深坑 (2-6格)
-                heightChangeTiles = Random.Range(-6.0f, -2.0f);
-            }
-            else
-            {
-                // 平地
-                heightChangeTiles = 0;
-            }
+            if (r < 0.4f) heightChangeTiles = Random.Range(1.0f, 4.0f);
+            else if (r < 0.7f) heightChangeTiles = Random.Range(-6.0f, -2.0f);
+            else heightChangeTiles = 0;
 
-            // 加上之前计算的 bias (引导去终点)
             heightChangeTiles += heightBias * 5.0f;
-
             float changeAmount = heightChangeTiles * Map.cTileSize;
             float newFloor = currentVirtualFloorY + changeAmount;
 
-            // 边界限制
             float mapBottom = map.position.y + Map.cTileSize * 2;
-            float mapTop = map.position.y + (map.mHeight - 8) * Map.cTileSize; // 留出头顶空间
+            float mapTop = map.position.y + (map.mHeight - 8) * Map.cTileSize;
             newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop));
 
-            // [关键]：直接改变虚拟地板高度，形成断层
             currentVirtualFloorY = newFloor;
         }
 
         for (int i = 0; i < frames; i++)
         {
-            // 优化建议：这里可以用对象池优化，但考虑到 Struct 复制特性，目前保留
             bool[] inputs = new bool[(int)KeyInput.Count];
             inputs[(int)KeyInput.GoRight] = right;
             if (jump && i < 15) inputs[(int)KeyInput.Jump] = true;
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
-            RecordTrajectory(); // 写入 tempPath
-            tempReplay.Add(new ReplayFrame(inputs));
-            tempTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
+            RecordGhostTrajectory();
+            ghostReplay.Add(new ReplayFrame(inputs));
+            ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
 
             if (CheckVirtualFloorCollision()) { }
         }
@@ -287,15 +371,15 @@ public class LevelGenerator : MonoBehaviour
             ghostAgent.mOnGround = true;
 
             int landingCol = Mathf.RoundToInt((ghostAgent.mPosition.x - map.position.x) / Map.cTileSize);
-            tempSafeColumns.Add(landingCol);
-            tempSafeColumns.Add(landingCol + 1);
-            tempSafeColumns.Add(landingCol - 1);
+            ghostSafeColumns.Add(landingCol);
+            ghostSafeColumns.Add(landingCol + 1);
+            ghostSafeColumns.Add(landingCol - 1);
             return true;
         }
         return false;
     }
 
-    void RecordTrajectory()
+    void RecordGhostTrajectory()
     {
         AABB box = ghostAgent.mAABB;
         float padding = 6.0f;
@@ -311,12 +395,10 @@ public class LevelGenerator : MonoBehaviour
                 if (x >= 0 && x < map.mWidth && y >= 0 && y < map.mHeight)
                 {
                     Vector2i pos = new Vector2i(x, y);
-
-                    // 优化：使用 HashSet 进行 O(1) 查找，而不是 List 的 O(N)
-                    if (!tempPathSet.Contains(pos))
+                    if (!ghostPathSet.Contains(pos))
                     {
-                        tempPathSet.Add(pos);
-                        tempPath.Add(pos);
+                        ghostPathSet.Add(pos);
+                        ghostPath.Add(pos);
                     }
                 }
             }
