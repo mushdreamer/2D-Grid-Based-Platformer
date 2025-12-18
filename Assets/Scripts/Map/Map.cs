@@ -60,7 +60,6 @@ public partial class Map : MonoBehaviour
     public List<Sprite> backgroundSprites;    // 7个背景
     public List<Sprite> terrainSprites;       // 2个地形 (Block样式)
     public List<Sprite> trapSprites;          // 15个陷阱
-    public List<Sprite> characterSprites;     // 4个角色皮肤
     public List<Sprite> fruitSprites;         // 水果图片
     public List<Sprite> checkpointSprites;    // 存档点图片
 
@@ -209,12 +208,6 @@ public partial class Map : MonoBehaviour
 
         if (trapSprites.Count > 0)
             currentThemeTrapIndex = Random.Range(0, trapSprites.Count);
-
-        if (characterSprites.Count > 0 && player != null)
-        {
-            int charIndex = Random.Range(0, characterSprites.Count);
-            player.SetSkin(characterSprites[charIndex]);
-        }
     }
 
     // 设置新的存档点
