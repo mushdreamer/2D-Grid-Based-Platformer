@@ -50,21 +50,25 @@ public partial class Map : MonoBehaviour
     public GamePhase currentPhase = GamePhase.Drawing;
 
     [Header("Game Elements")]
-    public GameObject spikePrefab;   // 尖刺的基础Prefab
-    public GameObject itemPrefab;    // 物品的基础Prefab (挂载 Collectible 脚本)
-    private List<GameObject> spawnedObjects = new List<GameObject>(); // 统一管理生成的尖刺和物品
+    public GameObject spikePrefab;
+    public GameObject itemPrefab;    // 通用物品 Prefab
 
-    [Header("Visual Assets (IWBTG Style)")]
-    // --- 新增：资源库，请在 Inspector 中拖入对应的图片 ---
-    public SpriteRenderer backgroundRenderer; // 拖入场景中的 "Bg" 物体
-    public List<Sprite> backgroundSprites;    // 7个背景
-    public List<Sprite> terrainSprites;       // 2个地形 (Block样式)
-    public List<Sprite> trapSprites;          // 15个陷阱
-    public List<Sprite> characterSprites;     // 4个角色皮肤
-    public List<Sprite> fruitSprites;         // 水果图片
-    public List<Sprite> checkpointSprites;    // 存档点图片
+    // --- 新增：特定功能的 Prefab ---
+    public GameObject checkpointPrefab; // 请拖入起点 Checkpoint Prefab
+    public GameObject finishPrefab;     // 请拖入终点 胜利 Prefab
+    // ----------------------------
 
-    // 当前关卡的主题索引
+    private List<GameObject> spawnedObjects = new List<GameObject>();
+
+    [Header("Visual Assets")]
+    public SpriteRenderer backgroundRenderer;
+    public List<Sprite> backgroundSprites;
+    public List<Sprite> terrainSprites;
+    public List<Sprite> trapSprites;
+    public List<Sprite> characterSprites;
+    public List<Sprite> fruitSprites;
+    public List<Sprite> checkpointSprites;
+
     private int currentThemeBgIndex = 0;
     private int currentThemeTerrainIndex = 0;
     private int currentThemeTrapIndex = 0;
@@ -99,7 +103,7 @@ public partial class Map : MonoBehaviour
     public RectTransform sliderHigh;
     public RectTransform sliderLow;
 
-    public List<Sprite> mDirtSprites; // 旧的自动拼贴资源，保留以防万一
+    public List<Sprite> mDirtSprites;
     System.Random mRandomNumber;
 
     public void Start()
@@ -110,26 +114,15 @@ public partial class Map : MonoBehaviour
         prevInputs = new bool[(int)KeyInput.Count];
         position = transform.position;
 
-        // 初始化随机种子
         Random.InitState((int)System.DateTime.Now.Ticks);
 
-        // 如果场景里有背景对象，先随机一个背景
         if (backgroundRenderer != null && backgroundSprites.Count > 0)
         {
             RandomizeTheme();
         }
 
-        // --- 确保对抗导演已初始化 ---
-        if (director != null)
-        {
-            director.map = this;
-            director.targetPlayer = player;
-            director.enabled = false; // 默认关闭，试玩时开启
-        }
-
         if (currentPhase == GamePhase.TrialPlay)
         {
-            // TrialPlay 初始化逻辑
             Debug.Log("Starting directly in PLAYING mode.");
             var mapRoom = mapRoomOneWay;
             mWidth = mapRoom.width;
@@ -162,8 +155,6 @@ public partial class Map : MonoBehaviour
         {
             Debug.Log("Starting in DRAWING mode.");
             Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
-
-            if (cTileSize <= 0) { Debug.LogError("cTileSize 必须大于 0!"); return; }
 
             if (autoSizeToCamera)
             {
@@ -201,7 +192,6 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // 新增：随机化关卡视觉主题
     public void RandomizeTheme()
     {
         if (backgroundSprites.Count > 0)
@@ -224,11 +214,30 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    // 设置新的存档点
     public void SetCheckpoint(Vector2i newStartTile)
     {
         startTile = newStartTile;
         Debug.Log("Checkpoint Updated to: " + startTile);
+    }
+
+    // --- 新增：胜利逻辑 ---
+    public void LevelComplete()
+    {
+        Debug.Log("<color=yellow>VICTORY! Level Finished.</color>");
+
+        // 胜利后停止角色
+        if (player != null)
+        {
+            player.StopReplay();
+            player.mSpeed = Vector2.zero;
+            player.mCurrentState = Character.CharacterState.Stand;
+        }
+
+        // 禁用对抗导演
+        if (director != null) director.enabled = false;
+
+        // 这里可以扩展：弹出胜利UI，或重置关卡
+        // Invoke("ResetToDrawingMode", 2.0f); // 例如 2秒后重置
     }
 
     void Update()
@@ -261,7 +270,6 @@ public partial class Map : MonoBehaviour
                     if (startTile.x == -1) startTile = new Vector2i(2, 5);
                     if (endTile.x == -1) endTile = new Vector2i(mWidth - 5, 5);
 
-                    // 每次生成时，随机切换主题！
                     RandomizeTheme();
 
                     Debug.Log("生成 MAP-Elites 关卡库中...");
@@ -292,31 +300,35 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
-    // --- ApplyGeneratedPath ---
+    // --- Modified ApplyGeneratedPath ---
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
-        // 0. 清理旧物体 (尖刺 + 道具) & 清理导演的陷阱
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
         if (director != null) director.ClearTraps();
 
-        // 1. 保存安全列并清空
         this.safeLandingColumns = new HashSet<int>(safeColumns);
         ClearMapToEmpty();
 
-        // 2. 更新路径数据
         playerSelectedPath.Clear();
         foreach (var p in path) playerSelectedPath.Add(p);
 
-        // 3. 生成浮岛、尖刺和道具
         GenerateIslandsFromPath(trajectoryPoints);
 
-        // 4. 设置起点终点平台
-        if (startTile.x != -1) BuildPlatformAt(startTile.x, startTile.y - 1, 3);
-        if (endTile.x != -1) BuildPlatformAt(endTile.x, endTile.y - 1, 3);
+        // 4. 设置起点终点平台，并生成对应的 Checkpoint/Finish Prefab
+        if (startTile.x != -1)
+        {
+            BuildPlatformAt(startTile.x, startTile.y - 1, 3);
+            // 生成起点 Checkpoint
+            SpawnSpecialItemAt(startTile.x, startTile.y, Collectible.ItemType.Checkpoint);
+        }
 
-        // 在终点生成一个 Checkpoint 或 奖杯
-        if (endTile.x != -1) SpawnItemAt(endTile.x, endTile.y, Collectible.ItemType.Checkpoint);
+        if (endTile.x != -1)
+        {
+            BuildPlatformAt(endTile.x, endTile.y - 1, 3);
+            // 生成终点 Victory/Finish Checkpoint
+            SpawnSpecialItemAt(endTile.x, endTile.y, Collectible.ItemType.Finish);
+        }
 
         Debug.Log(">>> 地图生成完毕。");
 
@@ -327,7 +339,6 @@ public partial class Map : MonoBehaviour
             guideLineRenderer.enabled = true;
         }
 
-        // --- 手动进入试玩 ---
         if (brushPreviewInstance != null) brushPreviewInstance.SetActive(false);
         Cursor.visible = true;
 
@@ -345,16 +356,35 @@ public partial class Map : MonoBehaviour
         }
 
         currentPhase = GamePhase.TrialPlay;
-
-        // --- 录像回放与对抗导演逻辑 ---
-        if (player != null)
-        {
-            player.StartReplay(replay);
-            // 录像回放期间，禁用导演，以免陷阱干扰演示
-            if (director != null) director.enabled = false;
-        }
+        if (player != null) player.StartReplay(replay);
+        if (director != null) director.enabled = false;
 
         Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
+    }
+
+    // --- 新增：专门用于生成特殊 Prefab 的辅助方法 ---
+    private void SpawnSpecialItemAt(int x, int y, Collectible.ItemType type)
+    {
+        GameObject prefabToSpawn = null;
+        if (type == Collectible.ItemType.Checkpoint) prefabToSpawn = checkpointPrefab;
+        else if (type == Collectible.ItemType.Finish) prefabToSpawn = finishPrefab;
+
+        // 如果没有指定特殊 Prefab，回退到通用 itemPrefab
+        if (prefabToSpawn == null) prefabToSpawn = itemPrefab;
+        if (prefabToSpawn == null) return;
+
+        Vector2 worldPos = GetMapTilePosition(x, y);
+        Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
+
+        GameObject obj = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+        obj.transform.parent = transform;
+
+        // 确保它有 Collectible 组件并设置正确的类型
+        Collectible col = obj.GetComponent<Collectible>();
+        if (col == null) col = obj.AddComponent<Collectible>();
+        col.type = type;
+
+        spawnedObjects.Add(obj);
     }
 
     public void GameOver()
@@ -367,7 +397,6 @@ public partial class Map : MonoBehaviour
             if (player != null)
             {
                 player.StopReplay();
-                // 复活到最近的 checkpoint (startTile 被 Checkpoint 物品更新过)
                 if (startTile.x != -1)
                 {
                     Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
@@ -379,7 +408,6 @@ public partial class Map : MonoBehaviour
                 player.mOnGround = true;
                 player.gameObject.SetActive(true);
 
-                // 玩家复活后，启用对抗导演
                 if (director != null) director.enabled = true;
             }
         }
@@ -395,12 +423,8 @@ public partial class Map : MonoBehaviour
         {
             player.BotUpdate();
 
-            // 如果录像被玩家中断了，启用对抗导演
-            // (注意：AdversarialDirector 只有在玩家全速奔跑时才工作，所以开启它很安全)
-            if (director != null && !director.enabled && player.mCurrentAction == Bot.BotAction.None) // None means player control in this context
+            if (director != null && !director.enabled && player.mCurrentAction == Bot.BotAction.None)
             {
-                // 检查 Bot 内部状态，如果是 isReplaying=false，则开启导演
-                // 这里通过反射或公开属性检查最好，这里假设玩家控制时 director 应开启
                 director.enabled = true;
             }
         }

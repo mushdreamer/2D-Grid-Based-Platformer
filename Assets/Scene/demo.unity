@@ -2835,6 +2835,7 @@ MonoBehaviour:
   observationWindow: 1
   predictionHorizon: 0.4
   cooldown: 2
+  trapLifetime: 5
 --- !u!4 &1973834182
 Transform:
   m_ObjectHideFlags: 0
@@ -3198,6 +3199,10 @@ MonoBehaviour:
   spikePrefab: {fileID: 7738998779214056495, guid: 721a41a8d0511724888dafb378fe81f8,
     type: 3}
   itemPrefab: {fileID: 992918854}
+  checkpointPrefab: {fileID: 7613058760506492704, guid: dda4e12ba883054428661848e2a28f96,
+    type: 3}
+  finishPrefab: {fileID: 1736170228504680222, guid: 9eb69e3b59b02fe4b8c43928e2e83eb2,
+    type: 3}
   backgroundRenderer: {fileID: 156268445}
   backgroundSprites:
   - {fileID: 21300000, guid: 8049ea91a9d5fca4dab4024c0915dbe6, type: 3}
@@ -3208,10 +3213,10 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 248611cc7bb8d85448933cee393ce41e, type: 3}
   - {fileID: 21300000, guid: 4d8c75a4d7dd2a0489270e1058d82128, type: 3}
   terrainSprites:
-  - {fileID: 258239692, guid: 413986c4a668c374d8de72a47621b531, type: 3}
-  - {fileID: -1204001023, guid: 413986c4a668c374d8de72a47621b531, type: 3}
-  - {fileID: -1288563950, guid: 413986c4a668c374d8de72a47621b531, type: 3}
-  - {fileID: -317989615, guid: 413986c4a668c374d8de72a47621b531, type: 3}
+  - {fileID: -3271834841568197018, guid: fc584d329b77b9545b9c9c8bb829e553, type: 3}
+  - {fileID: 5344191953466923600, guid: fc584d329b77b9545b9c9c8bb829e553, type: 3}
+  - {fileID: 1437503401646794464, guid: fc584d329b77b9545b9c9c8bb829e553, type: 3}
+  - {fileID: -4506956802181919417, guid: fc584d329b77b9545b9c9c8bb829e553, type: 3}
   trapSprites:
   - {fileID: 8784796110683535280, guid: fc834c17a763e0141b0fec5d598e279b, type: 3}
   - {fileID: 5273281925071742904, guid: a93caedcaa299f14e978454757f38077, type: 3}
