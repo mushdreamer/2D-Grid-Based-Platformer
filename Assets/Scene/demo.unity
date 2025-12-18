@@ -3199,12 +3199,12 @@ MonoBehaviour:
   spikePrefab: {fileID: 7738998779214056495, guid: 721a41a8d0511724888dafb378fe81f8,
     type: 3}
   itemPrefab: {fileID: 992918854}
-  checkpointPrefab: {fileID: 7613058760506492704, guid: dda4e12ba883054428661848e2a28f96,
+  checkpointPrefab: {fileID: 874230514257612436, guid: 3b6c67b7fd48c2a48916b51ac131a920,
     type: 3}
   checkpointSize:
     x: 1
     y: 1
-  finishPrefab: {fileID: 1736170228504680222, guid: 9eb69e3b59b02fe4b8c43928e2e83eb2,
+  finishPrefab: {fileID: 8683273997075378446, guid: 4074b7c5432e56946b54af1dfb04c9e2,
     type: 3}
   finishSize:
     x: 2

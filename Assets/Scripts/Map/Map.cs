@@ -22,6 +22,10 @@ public partial class Map : MonoBehaviour
     public SpriteRenderer tilePrefab;
     public PathFinderFast mPathFinder;
     [HideInInspector] public byte[,] mGrid;
+
+    // [新增] 道具占用网格：true 表示该位置已有道具/陷阱，禁止生成砖块
+    private bool[,] mItemGrid;
+
     [HideInInspector] private TileType[,] tiles;
     private SpriteRenderer[,] tilesSprites;
     public Transform mSpritesContainer;
@@ -48,18 +52,18 @@ public partial class Map : MonoBehaviour
 
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
-    private bool isLevelComplete = false; // 新增：记录是否通关
+    private bool isLevelComplete = false;
 
     [Header("Game Elements")]
     public GameObject spikePrefab;
     public GameObject itemPrefab;
 
-    // --- 新增：特殊 Prefab 设置 ---
+    // --- 特殊 Prefab 设置 ---
     public GameObject checkpointPrefab;
-    public Vector2i checkpointSize = new Vector2i(1, 1); // Checkpoint 占地大小 (宽, 高)
+    public Vector2i checkpointSize = new Vector2i(1, 1);
 
     public GameObject finishPrefab;
-    public Vector2i finishSize = new Vector2i(2, 2);     // 终点 占地大小
+    public Vector2i finishSize = new Vector2i(2, 2);
     // ----------------------------
 
     private List<GameObject> spawnedObjects = new List<GameObject>();
@@ -118,7 +122,6 @@ public partial class Map : MonoBehaviour
         prevInputs = new bool[(int)KeyInput.Count];
         position = transform.position;
 
-        // 确保游戏开始时时间是流动的
         Time.timeScale = 1.0f;
         isLevelComplete = false;
 
@@ -138,6 +141,7 @@ public partial class Map : MonoBehaviour
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mapRoom.width, mapRoom.height];
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
+            mItemGrid = new bool[mWidth, mHeight]; // 初始化
             InitPathFinder();
             Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
@@ -178,6 +182,7 @@ public partial class Map : MonoBehaviour
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mWidth, mHeight];
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
+            mItemGrid = new bool[mWidth, mHeight]; // 初始化
             InitPathFinder();
 
             for (int y = 0; y < mHeight; ++y)
@@ -228,7 +233,6 @@ public partial class Map : MonoBehaviour
         Debug.Log("Checkpoint Updated to: " + startTile);
     }
 
-    // --- 胜利逻辑 ---
     public void LevelComplete()
     {
         if (isLevelComplete) return;
@@ -236,7 +240,6 @@ public partial class Map : MonoBehaviour
         Debug.Log("<color=yellow>VICTORY! Level Finished.</color>");
         isLevelComplete = true;
 
-        // 胜利后停止角色
         if (player != null)
         {
             player.StopReplay();
@@ -244,14 +247,11 @@ public partial class Map : MonoBehaviour
             player.mCurrentState = Character.CharacterState.Stand;
         }
 
-        // 禁用对抗导演
         if (director != null) director.enabled = false;
 
-        // 暂停游戏
         Time.timeScale = 0f;
     }
 
-    // --- 使用 OnGUI 绘制简单的胜利文字 (在屏幕中心) ---
     void OnGUI()
     {
         if (isLevelComplete)
@@ -260,14 +260,11 @@ public partial class Map : MonoBehaviour
             style.fontSize = 60;
             style.alignment = TextAnchor.MiddleCenter;
             style.normal.textColor = Color.yellow;
-            // 绘制阴影
             GUI.color = Color.black;
             GUI.Label(new Rect(2, 2, Screen.width, Screen.height), "VICTORY!", style);
-            // 绘制正文
             GUI.color = Color.yellow;
             GUI.Label(new Rect(0, 0, Screen.width, Screen.height), "VICTORY!", style);
 
-            // 提示按 R 重置
             style.fontSize = 20;
             style.normal.textColor = Color.white;
             GUI.Label(new Rect(0, 50, Screen.width, Screen.height), "Press 'R' to Restart", style);
@@ -329,6 +326,16 @@ public partial class Map : MonoBehaviour
 
     public void ClearMapToEmpty()
     {
+        // 确保数组大小正确
+        if (mItemGrid == null || mItemGrid.GetLength(0) != mWidth || mItemGrid.GetLength(1) != mHeight)
+        {
+            mItemGrid = new bool[mWidth, mHeight];
+        }
+        else
+        {
+            System.Array.Clear(mItemGrid, 0, mItemGrid.Length);
+        }
+
         for (int y = 0; y < mHeight; y++)
             for (int x = 0; x < mWidth; x++)
                 SetTile(x, y, TileType.Empty);
@@ -348,7 +355,7 @@ public partial class Map : MonoBehaviour
 
         GenerateIslandsFromPath(trajectoryPoints);
 
-        // 4. 生成起点和终点，并根据大小占用网格
+        // 4. 生成起点和终点
         if (startTile.x != -1)
         {
             BuildPlatformAt(startTile.x, startTile.y - 1, 3);
@@ -377,13 +384,12 @@ public partial class Map : MonoBehaviour
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
 
-        // 恢复时间流速（如果之前胜利了）
         Time.timeScale = 1.0f;
         isLevelComplete = false;
 
         if (startTile.x != -1)
         {
-            SetTile(startTile.x, startTile.y, TileType.Empty); // 起点脚下也要清空
+            SetTile(startTile.x, startTile.y, TileType.Empty);
             SetTile(startTile.x, startTile.y + 1, TileType.Empty);
             Vector2 startPos = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
             player.mPosition = startPos;
@@ -410,7 +416,6 @@ public partial class Map : MonoBehaviour
             else if (y < columnFloorY[x]) columnFloorY[x] = y;
         }
 
-        // 1. 生成落脚点平台
         foreach (int x in safeLandingColumns)
         {
             if (columnFloorY.ContainsKey(x))
@@ -418,7 +423,6 @@ public partial class Map : MonoBehaviour
                 int footY = columnFloorY[x];
                 BuildPlatformAt(x, footY - 1, Random.Range(2, 5));
 
-                // [IWBTG元素] 20% 概率在平台上生成水果
                 if (Random.value < 0.2f)
                 {
                     SpawnItemAt(x, footY, Collectible.ItemType.Fruit);
@@ -426,7 +430,6 @@ public partial class Map : MonoBehaviour
             }
         }
 
-        // 2. 生成空域障碍 (悬浮块 + 随机陷阱)
         for (int x = 0; x < mWidth; x++)
         {
             if (!safeLandingColumns.Contains(x) && columnFloorY.ContainsKey(x))
@@ -437,21 +440,20 @@ public partial class Map : MonoBehaviour
                     int obstacleY = trajY - Random.Range(4, 9);
                     if (obstacleY > 0)
                     {
-                        // 随机决定是向上刺还是向下刺，或者纯砖块
                         float r = Random.value;
                         if (r < 0.4f)
                         {
                             SetTile(x, obstacleY, TileType.Block);
-                            SpawnSpikeAt(x, obstacleY + 1); // 朝上的刺
+                            SpawnSpikeAt(x, obstacleY + 1);
                         }
                         else if (r < 0.7f)
                         {
                             SetTile(x, obstacleY, TileType.Block);
-                            SpawnSpikeAt(x, obstacleY - 1, true); // 朝下的刺 (flip)
+                            SpawnSpikeAt(x, obstacleY - 1, true);
                         }
                         else
                         {
-                            SetTile(x, obstacleY, TileType.Block); // 纯砖块干扰
+                            SetTile(x, obstacleY, TileType.Block);
                         }
                     }
                 }
@@ -463,6 +465,9 @@ public partial class Map : MonoBehaviour
     {
         if (spikePrefab == null) return;
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+
+        // 占用标记
+        mItemGrid[x, y] = true;
 
         SetTile(x, y, TileType.Danger);
         tilesSprites[x, y].enabled = false;
@@ -494,6 +499,9 @@ public partial class Map : MonoBehaviour
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
         if (tiles[x, y] != TileType.Empty) return;
 
+        // 占用标记
+        mItemGrid[x, y] = true;
+
         Vector2 worldPos = GetMapTilePosition(x, y);
         Vector3 spawnPos = new Vector3(worldPos.x, worldPos.y, -3f);
 
@@ -516,7 +524,6 @@ public partial class Map : MonoBehaviour
         spawnedObjects.Add(newItem);
     }
 
-    // --- 新增：支持多尺寸占位的生成方法 ---
     private void SpawnSpecialItemAt(int centerX, int centerY, Collectible.ItemType type, Vector2i size)
     {
         GameObject prefabToSpawn = null;
@@ -532,16 +539,19 @@ public partial class Map : MonoBehaviour
         int startX = centerX;
         int startY = centerY;
 
-        // 清理占用区域的网格 (Set Empty)
+        // 清理占用区域的网格 (Set Empty) 并标记占用
         for (int x = startX; x < startX + width; x++)
         {
             for (int y = startY; y < startY + height; y++)
             {
-                SetTile(x, y, TileType.Empty);
+                if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+                {
+                    SetTile(x, y, TileType.Empty);
+                    mItemGrid[x, y] = true; // 标记这块区域被大道具占了
+                }
             }
         }
 
-        // 计算物体的世界坐标中心
         Vector2 minPos = GetMapTilePosition(startX, startY);
         Vector2 maxPos = GetMapTilePosition(startX + width - 1, startY + height - 1);
 
@@ -574,6 +584,14 @@ public partial class Map : MonoBehaviour
     {
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
 
+        // [核心修复] 如果这个格子已经被道具占用了，严禁生成砖块！
+        // 注意：Spike 本身是 TileType.Danger，属于 Item 的一种，所以 SpawnSpikeAt 内部调用 SetTile 时
+        // 我们不应该拦截它。拦截的主要是 "Block" 类型的铺路操作。
+        if (type == TileType.Block && mItemGrid != null && mItemGrid[x, y])
+        {
+            return;
+        }
+
         tiles[x, y] = type;
         SpriteRenderer sr = tilesSprites[x, y];
 
@@ -605,7 +623,6 @@ public partial class Map : MonoBehaviour
             mGrid[x, y] = 1;
             sr.enabled = false;
         }
-        // OneWay 逻辑保持不变...
     }
 
     public void GameOver()
