@@ -1,46 +1,43 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// 定义玩家状态，用于决策
-public enum PlayerContextState
+// --- 核心定义：放在类外面，确保全局可见 ---
+
+// 定义陷阱生成的策略类型
+public enum TrapStrategy
 {
-    Grounded,       // 在地上（适合用地刺、伪装块、天降苹果）
-    Jumping,        // 上升中（适合在头顶生成砖块挡路，或侧面飞刺）
-    Falling,        // 下落中（适合在落点生成地刺）
-    Idle            // 呆着不动（适合用狙击陷阱）
+    DropFromAbove,      // 天降系
+    RiseFromBelow,      // 地刺系
+    SniperIntercept,    // 狙击系
+    FakeBlockSurprise   // 伪装系
 }
 
-// 定义陷阱配置项，用于在 Inspector 里配置库
 [System.Serializable]
 public struct TrapConfig
 {
     public string name;
-    public GameObject prefab;       // 必须挂载 SmartTrap 脚本
-    public PlayerContextState targetState; // 这个陷阱专门针对哪种状态
-    [Range(0f, 1f)] public float weight;   // 出现概率权重
-    public Vector2 spawnOffset;     // 相对于玩家的生成位置偏移 (例如：(0, 5) 在头顶)
-    public bool snapToGrid;         // 是否强制对齐网格（针对伪装块）
+    public GameObject prefab;       // 必须挂载 SmartTrap
+    public TrapStrategy strategy;   // 生成策略
+    [Range(0f, 1f)] public float weight;   // 出现权重
 }
+
+// --- 导演类 ---
 
 public class AdversarialDirector : MonoBehaviour
 {
     public Bot targetPlayer;
     public Map map;
 
-    [Header("Director Settings")]
-    public float observationWindow = 0.5f; // 观察频率
-    public float cooldown = 2.0f;          // 陷阱生成冷却
+    [Header("Difficulty Brain")]
+    public float predictionWindow = 0.6f; // 预判窗口：我们预判多远的未来？
+    public float cooldown = 1.0f;         // 冷却时间
 
-    [Header("The Arsenal (Trap Library)")]
+    [Header("The Arsenal")]
     public List<TrapConfig> trapLibrary = new List<TrapConfig>();
 
     private float lastTrapTime = 0f;
     private bool isRunning = true;
     private List<GameObject> activeTraps = new List<GameObject>();
-
-    // 状态分析变量
-    private Vector2 lastVelocity;
-    private float timeStandingStill = 0f;
 
     public void SetRunning(bool state)
     {
@@ -52,166 +49,177 @@ public class AdversarialDirector : MonoBehaviour
     {
         if (!isRunning || targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy) return;
 
-        // 1. 实时清理失效陷阱
-        CleanUpTraps();
+        // 清理失效对象
+        for (int i = activeTraps.Count - 1; i >= 0; i--)
+            if (activeTraps[i] == null) activeTraps.RemoveAt(i);
 
-        // 2. 状态分析
-        PlayerContextState currentState = AnalyzePlayerState();
-
-        // 3. 决策生成
         if (Time.time > lastTrapTime + cooldown)
         {
-            // 只有当且仅当由于某种特定的“危险行为”或随机性满足时才触发
-            // 这里我们简化逻辑：冷却好了就尝试根据状态“折磨”玩家
-            if (ShouldSpawnTrap(currentState))
+            if (targetPlayer.mSpeed.magnitude > 5f || Random.value < 0.05f)
             {
-                SpawnTrapStrategy(currentState);
-                lastTrapTime = Time.time;
+                AttemptLethalTrap();
             }
         }
-
-        lastVelocity = targetPlayer.mSpeed;
     }
 
-    // --- 核心：状态分析 ---
-    PlayerContextState AnalyzePlayerState()
+    void AttemptLethalTrap()
     {
-        if (targetPlayer.mOnGround)
+        if (trapLibrary.Count == 0) return;
+
+        // 1. 随机选一种陷阱
+        TrapConfig config = GetRandomTrapConfig();
+
+        // 2. 预测玩家未来轨迹
+        List<Vector2> futurePath = SimulatePlayerPath(predictionWindow);
+        if (futurePath.Count == 0) return;
+
+        // 3. 计算生成点
+        Vector2? spawnPos = CalculateLethalSpawnPosition(config, futurePath);
+
+        // 4. 生成陷阱
+        if (spawnPos.HasValue)
         {
-            if (targetPlayer.mSpeed.magnitude < 10f)
-            {
-                timeStandingStill += Time.deltaTime;
-                return PlayerContextState.Idle; // 呆着不动最容易被坑
-            }
-            timeStandingStill = 0f;
-            return PlayerContextState.Grounded;
-        }
-        else
-        {
-            timeStandingStill = 0f;
-            if (targetPlayer.mSpeed.y > 0) return PlayerContextState.Jumping;
-            else return PlayerContextState.Falling;
+            // 目标击杀点设为预测路径的终点
+            Vector2 killZone = futurePath[futurePath.Count - 1];
+            SpawnTrap(config, spawnPos.Value, killZone);
+
+            lastTrapTime = Time.time;
         }
     }
 
-    bool ShouldSpawnTrap(PlayerContextState state)
+    TrapConfig GetRandomTrapConfig()
     {
-        // 自定义触发频率逻辑
-        // 比如：如果玩家正在跳跃，且处于最高点附近，概率极大
-        if (state == PlayerContextState.Jumping && targetPlayer.mSpeed.y < 100f) return true;
-
-        // 如果玩家呆着不动超过 1秒，必定触发
-        if (state == PlayerContextState.Idle && timeStandingStill > 1.0f) return true;
-
-        // 其他情况随机触发，增加不可预测性
-        return Random.value < 0.3f;
-    }
-
-    void SpawnTrapStrategy(PlayerContextState state)
-    {
-        // 1. 从库中筛选适合当前状态的陷阱
-        List<TrapConfig> candidates = new List<TrapConfig>();
         float totalWeight = 0f;
-
-        foreach (var config in trapLibrary)
-        {
-            // 匹配状态，或者这个陷阱是通用的 (设为 Idle 可以作为通用备选)
-            if (config.targetState == state || config.weight > 0.8f)
-            {
-                candidates.Add(config);
-                totalWeight += config.weight;
-            }
-        }
-
-        if (candidates.Count == 0) return;
-
-        // 2. 权重随机选择
+        foreach (var c in trapLibrary) totalWeight += c.weight;
         float r = Random.Range(0, totalWeight);
-        float current = 0;
-        TrapConfig selected = candidates[0];
-
-        foreach (var c in candidates)
+        float current = 0f;
+        foreach (var c in trapLibrary)
         {
             current += c.weight;
-            if (r <= current)
-            {
-                selected = c;
+            if (r <= current) return c;
+        }
+        return trapLibrary[0];
+    }
+
+    // --- 核心：逆向物理求解器 ---
+    Vector2? CalculateLethalSpawnPosition(TrapConfig config, List<Vector2> path)
+    {
+        Vector2 killZone = path[path.Count - 1];
+        // [修复] 这里使用 predictionWindow 变量
+        float timeToImpact = predictionWindow;
+
+        switch (config.strategy)
+        {
+            case TrapStrategy.DropFromAbove:
+                // 反推 S0 = S - 0.5*g*t^2
+                float gravityDist = 0.5f * Constants.cGravity * timeToImpact * timeToImpact;
+                Vector2 dropOrigin = new Vector2(killZone.x, killZone.y - gravityDist);
+
+                if (IsPositionValid(dropOrigin)) return dropOrigin;
                 break;
-            }
+
+            case TrapStrategy.RiseFromBelow:
+                // 寻找落地位置
+                foreach (Vector2 point in path)
+                {
+                    Vector2 groundCheck = point + Vector2.down * (Constants.cHalfSizes[0] + 16f);
+                    Vector2i tile = map.GetMapTileAtPoint(groundCheck);
+
+                    if (map.IsObstacle(tile.x, tile.y))
+                    {
+                        return map.GetMapTilePosition(tile);
+                    }
+                }
+                break;
+
+            case TrapStrategy.SniperIntercept:
+                // 寻找侧面射击位
+                float side = Random.value > 0.5f ? -1f : 1f;
+                Vector2 sniperPos = killZone + new Vector2(side * 300f, 100f);
+
+                if (!HasWallBetween(sniperPos, killZone)) return sniperPos;
+                break;
+
+            case TrapStrategy.FakeBlockSurprise:
+                // 寻找踩踏块
+                foreach (Vector2 point in path)
+                {
+                    Vector2 footPos = point + Vector2.down * (Constants.cHalfSizes[0] + 2f);
+                    Vector2i tile = map.GetMapTileAtPoint(footPos);
+
+                    if (map.IsObstacle(tile.x, tile.y))
+                    {
+                        return map.GetMapTilePosition(tile);
+                    }
+                }
+                break;
         }
 
-        // 3. 计算生成位置
-        Vector2 spawnPos = targetPlayer.mPosition + selected.spawnOffset;
-
-        // 针对“下落”状态的特殊预判：不仅仅是偏移，而是预判落点
-        if (state == PlayerContextState.Falling && selected.name.Contains("Spike"))
-        {
-            Vector2 predictedLandPos = PredictLandingPos();
-            if (predictedLandPos != Vector2.zero)
-            {
-                spawnPos = predictedLandPos + selected.spawnOffset;
-            }
-        }
-
-        // 4. 网格对齐 (针对伪装块)
-        if (selected.snapToGrid && map != null)
-        {
-            Vector2i tile = map.GetMapTileAtPoint(spawnPos);
-            Vector2 tileCenter = map.GetMapTilePosition(tile);
-            spawnPos = tileCenter;
-        }
-
-        // 5. 生成并激活
-        CreateTrapInstance(selected, spawnPos);
+        return null;
     }
 
-    void CreateTrapInstance(TrapConfig config, Vector2 pos)
+    List<Vector2> SimulatePlayerPath(float time)
     {
-        // Z轴设为 -5 确保在前景
-        GameObject trapObj = Instantiate(config.prefab, new Vector3(pos.x, pos.y, -5f), Quaternion.identity);
-        activeTraps.Add(trapObj);
+        List<Vector2> path = new List<Vector2>();
+        Vector2 pos = targetPlayer.mPosition;
+        Vector2 vel = targetPlayer.mSpeed;
 
-        SmartTrap smartTrap = trapObj.GetComponent<SmartTrap>();
-        if (smartTrap != null)
+        float dt = 0.02f;
+        int steps = Mathf.CeilToInt(time / dt);
+
+        for (int i = 0; i < steps; i++)
         {
-            smartTrap.ActivateTrap();
-        }
+            if (!targetPlayer.mOnGround)
+                vel.y += Constants.cGravity * dt;
 
-        Debug.Log($"Director: Spawning [{config.name}] because player is [{config.targetState}]");
+            pos += vel * dt;
+            path.Add(pos);
+
+            Vector2i tile = map.GetMapTileAtPoint(pos);
+            if (map.IsObstacle(tile.x, tile.y)) break;
+        }
+        return path;
     }
 
-    // 简易落点预测（射线检测地面）
-    Vector2 PredictLandingPos()
+    void SpawnTrap(TrapConfig config, Vector2 pos, Vector2 predictedKillZone)
     {
-        // 向下发射射线寻找最近的地面 Block
-        Vector2 start = targetPlayer.mPosition;
-        Vector2i tile = map.GetMapTileAtPoint(start);
+        GameObject obj = Instantiate(config.prefab, new Vector3(pos.x, pos.y, -5f), Quaternion.identity);
+        activeTraps.Add(obj);
+        SmartTrap trap = obj.GetComponent<SmartTrap>();
 
-        // 简单的垂直向下寻找
-        for (int y = tile.y; y >= 0; y--)
+        if (trap != null)
         {
-            if (map.IsObstacle(tile.x, y))
-            {
-                return map.GetMapTilePosition(tile.x, y + 1); // 返回地面上方一格的位置
-            }
+            // [修复] 这里之前用了 predictionTime 导致报错，现在统一改为 predictionWindow
+            trap.ActivateTrap(predictedKillZone, predictionWindow, targetPlayer);
         }
-        return Vector2.zero;
+    }
+
+    bool IsPositionValid(Vector2 pos)
+    {
+        if (pos.y > map.position.y + map.mHeight * Map.cTileSize + 200f) return false;
+
+        Vector2i tile = map.GetMapTileAtPoint(pos);
+        if (map.IsObstacle(tile.x, tile.y)) return false;
+
+        return true;
+    }
+
+    bool HasWallBetween(Vector2 start, Vector2 end)
+    {
+        Vector2 dir = (end - start).normalized;
+        float dist = Vector2.Distance(start, end);
+        for (float d = 0; d < dist; d += Map.cTileSize * 0.5f)
+        {
+            Vector2 check = start + dir * d;
+            Vector2i tile = map.GetMapTileAtPoint(check);
+            if (map.IsObstacle(tile.x, tile.y)) return true;
+        }
+        return false;
     }
 
     public void ClearTraps()
     {
-        foreach (var t in activeTraps)
-        {
-            if (t != null) Destroy(t);
-        }
+        foreach (var t in activeTraps) if (t != null) Destroy(t);
         activeTraps.Clear();
-    }
-
-    void CleanUpTraps()
-    {
-        for (int i = activeTraps.Count - 1; i >= 0; i--)
-        {
-            if (activeTraps[i] == null) activeTraps.RemoveAt(i);
-        }
     }
 }

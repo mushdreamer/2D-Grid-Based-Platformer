@@ -145,6 +145,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   behaviorType: 1
-  speed: 0
-  acceleration: 30
   activeDelay: 0
+  speed: 0
+  homingTurnRate: 5
