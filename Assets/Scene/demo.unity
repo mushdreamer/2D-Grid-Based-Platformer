@@ -522,7 +522,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
-  director: {fileID: 0}
+  director: {fileID: 1973834181}
+  blockDensity: 0.45
+  noiseScale: 0.15
 --- !u!1 &448407002
 GameObject:
   m_ObjectHideFlags: 0
@@ -3340,6 +3342,8 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 0}
+  blockDensity: 0.45
+  noiseScale: 0.15
 --- !u!120 &2106156358
 LineRenderer:
   serializedVersion: 2
