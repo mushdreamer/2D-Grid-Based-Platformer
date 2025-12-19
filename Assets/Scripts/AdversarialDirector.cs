@@ -30,7 +30,7 @@ public class AdversarialDirector : MonoBehaviour
 
     [Header("Difficulty Brain")]
     public float predictionWindow = 0.6f; // 预判窗口：我们预判多远的未来？
-    public float cooldown = 1.0f;         // 冷却时间
+    public float cooldown = 1.5f;         // 冷却时间
 
     [Header("The Arsenal")]
     public List<TrapConfig> trapLibrary = new List<TrapConfig>();
@@ -105,7 +105,6 @@ public class AdversarialDirector : MonoBehaviour
     Vector2? CalculateLethalSpawnPosition(TrapConfig config, List<Vector2> path)
     {
         Vector2 killZone = path[path.Count - 1];
-        // [修复] 这里使用 predictionWindow 变量
         float timeToImpact = predictionWindow;
 
         switch (config.strategy)
@@ -189,7 +188,7 @@ public class AdversarialDirector : MonoBehaviour
 
         if (trap != null)
         {
-            // [修复] 这里之前用了 predictionTime 导致报错，现在统一改为 predictionWindow
+            // [修复] 这里统一使用 predictionWindow，不再使用不存在的 predictionTime
             trap.ActivateTrap(predictedKillZone, predictionWindow, targetPlayer);
         }
     }

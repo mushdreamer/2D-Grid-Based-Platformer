@@ -348,12 +348,35 @@ public partial class Map : MonoBehaviour
         if (director != null) director.ClearTraps();
 
         this.safeLandingColumns = new HashSet<int>(safeColumns);
-        ClearMapToEmpty();
+
+        // 注意：这里不再调用 ClearMapToEmpty()，因为 LevelGenerator 已经把地形(Block)都烘焙进 mGrid 了
+        // 我们只需要根据 mGrid 的 TileType 来生成视觉对象 (特别是刺)
 
         playerSelectedPath.Clear();
         foreach (var p in path) playerSelectedPath.Add(p);
 
-        GenerateIslandsFromPath(trajectoryPoints);
+        // [核心修改] 不再调用 GenerateIslandsFromPath(trajectoryPoints);
+        // 而是遍历全图，根据 LevelGenerator 算好的 TileType 生成装饰物
+
+        for (int x = 0; x < mWidth; x++)
+        {
+            for (int y = 0; y < mHeight; y++)
+            {
+                TileType type = GetTile(x, y);
+
+                // 如果 LevelGenerator 标记了 Danger，我们需要在这里实例化真正的刺 Prefab
+                if (type == TileType.Danger)
+                {
+                    // 检查是地刺还是天花板刺?
+                    // 简单的判断：如果上面是 Block，就是倒刺；如果下面是 Block，就是地刺
+                    bool flipped = false;
+                    if (y < mHeight - 1 && GetTile(x, y + 1) == TileType.Block) flipped = true;
+
+                    SpawnSpikeAt(x, y, flipped);
+                }
+                // 如果是 Block，SetTile 已经处理了 Sprite 显示，不用管
+            }
+        }
 
         // 4. 生成起点和终点
         if (startTile.x != -1)
