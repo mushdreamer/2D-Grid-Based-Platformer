@@ -2831,11 +2831,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPlayer: {fileID: 600731197}
   map: {fileID: 2106156355}
-  trapPrefab: {fileID: 2370058098865023721, guid: b64545fff281d9145b8bb5f430dbe34e,
-    type: 3}
   observationWindow: 1
-  predictionHorizon: 0.4
-  cooldown: 2
+  cooldown: 3
+  trapLibrary:
+  - name: HeadBonk
+    prefab: {fileID: 7508243926920172977, guid: 299f480c5e72204439f193823b097cda,
+      type: 3}
+    targetState: 1
+    weight: 1
+    spawnOffset: {x: 0, y: 40}
+    snapToGrid: 1
+  - name: LandingSpike
+    prefab: {fileID: 6732079225660565854, guid: 794f3b440e2bbd24bac236e09c42550a,
+      type: 3}
+    targetState: 2
+    weight: 0.8
+    spawnOffset: {x: 0, y: -16}
+    snapToGrid: 0
+  - name: DeathApple
+    prefab: {fileID: 8108115727611482111, guid: 4b0eadf74ba262b43986b6b300d44fff,
+      type: 3}
+    targetState: 0
+    weight: 0.5
+    spawnOffset: {x: 0, y: 100}
+    snapToGrid: 0
+  - name: SideAmbush
+    prefab: {fileID: 8108115727611482111, guid: 4b0eadf74ba262b43986b6b300d44fff,
+      type: 3}
+    targetState: 1
+    weight: 0.5
+    spawnOffset: {x: 60, y: 0}
+    snapToGrid: 0
 --- !u!4 &1973834182
 Transform:
   m_ObjectHideFlags: 0

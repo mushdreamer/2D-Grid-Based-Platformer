@@ -76,6 +76,7 @@
     <Compile Include="Assets\Scripts\Level\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\AdversarialDirector.cs" />
     <Compile Include="Assets\Scripts\Character\AABB.cs" />
+    <Compile Include="Assets\Scripts\SmartTrap.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\Scripts\Map\MapRoomData.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />

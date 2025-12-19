@@ -386,6 +386,7 @@
 "Assets/Scripts/Setting/HUDFPS.cs"
 "Assets/Scripts/Setting/MovingObject.cs"
 "Assets/Scripts/Setting/Vector2i.cs"
+"Assets/Scripts/SmartTrap.cs"
 -langversion:9.0
 /deterministic
 /optimize-
