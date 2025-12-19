@@ -24,15 +24,41 @@ public class LevelIndividual
     public float fitness;
 }
 
+// 用于保存生成过程中的“存档点”
+public class GhostSnapshot
+{
+    public Vector2 position;
+    public Vector2 speed;
+    public bool onGround;
+    public float virtualFloorY;
+    public List<Vector2i> path;
+    public List<ReplayFrame> replay;
+    public List<Vector3> trajectory;
+    public HashSet<int> safeColumns;
+
+    public GhostSnapshot(Bot agent, float vFloor, List<Vector2i> p, List<ReplayFrame> r, List<Vector3> t, HashSet<int> s)
+    {
+        position = agent.mPosition;
+        speed = agent.mSpeed;
+        onGround = agent.mOnGround;
+        virtualFloorY = vFloor;
+        path = new List<Vector2i>(p);
+        replay = new List<ReplayFrame>(r);
+        trajectory = new List<Vector3>(t);
+        safeColumns = new HashSet<int>(s);
+    }
+}
+
 public class LevelGenerator : MonoBehaviour
 {
     public Map map;
     public Bot characterPrefab;
     public AdversarialDirector director;
 
-    [Header("Generation Style")]
-    [Range(0f, 1f)] public float blockDensity = 0.45f; // 砖块密度：0=全空，1=全满。建议 0.4-0.5
-    [Range(0.01f, 0.5f)] public float noiseScale = 0.15f; // 噪声缩放：越小地形越平缓巨大，越大越破碎
+    [Header("Generation Settings")]
+    [Range(2, 10)] public int generationSegments = 4; // 核心：将路程分成几段生成？
+    [Range(0f, 1f)] public float blockDensity = 0.45f;
+    [Range(0.01f, 0.5f)] public float noiseScale = 0.15f;
 
     private Bot ghostAgent;
     private Bot validatorAgent;
@@ -43,6 +69,7 @@ public class LevelGenerator : MonoBehaviour
     private const int GRID_SIZE = 10;
     private LevelIndividual[,] eliteGrid = new LevelIndividual[GRID_SIZE, GRID_SIZE];
 
+    // 运行时数据
     private List<Vector2i> ghostPath = new List<Vector2i>();
     private HashSet<Vector2i> ghostPathSet = new HashSet<Vector2i>();
     private List<ReplayFrame> ghostReplay = new List<ReplayFrame>();
@@ -84,13 +111,15 @@ public class LevelGenerator : MonoBehaviour
         int validLevelsFound = 0;
         int attempts = 0;
 
-        Debug.Log($">>> MAP-Elites 开始演化 (目标: {iterations})...");
+        Debug.Log($">>> MAP-Elites (分段生成模式) 开始演化 | 目标样本: {iterations}");
 
-        while (validLevelsFound < iterations && attempts < iterations * 20)
+        // 尝试总次数限制
+        while (validLevelsFound < iterations && attempts < iterations * 5)
         {
             attempts++;
 
-            if (RunGhostSimulation(startTile, endTile))
+            // [核心修改] 使用分段生成逻辑
+            if (RunSegmentedSimulation(startTile, endTile))
             {
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafeColumns, startTile, endTile);
 
@@ -121,7 +150,6 @@ public class LevelGenerator : MonoBehaviour
                         validLevelsFound++;
                     }
                 }
-
                 map.ClearMapToEmpty();
             }
         }
@@ -143,11 +171,7 @@ public class LevelGenerator : MonoBehaviour
                     if (eliteGrid[i, j] != null)
                     {
                         float d = Mathf.Pow(i - x, 2) + Mathf.Pow(j - y, 2);
-                        if (d < minDist)
-                        {
-                            minDist = d;
-                            target = eliteGrid[i, j];
-                        }
+                        if (d < minDist) { minDist = d; target = eliteGrid[i, j]; }
                     }
                 }
             }
@@ -167,58 +191,117 @@ public class LevelGenerator : MonoBehaviour
     }
 
     // ==========================================
-    // Phase 1: Ghost Simulation
+    // Phase 1: Segmented Ghost Simulation (核心逻辑)
     // ==========================================
-    bool RunGhostSimulation(Vector2i startTile, Vector2i endTile)
+    bool RunSegmentedSimulation(Vector2i startTile, Vector2i endTile)
     {
-        ghostPath.Clear();
-        ghostPathSet.Clear();
-        ghostReplay.Clear();
-        ghostTrajectory.Clear();
-        ghostSafeColumns.Clear();
-
+        // 1. 初始化数据
+        ClearGhostData();
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
+        // 设置初始状态
         ghostAgent.mPosition = startWorldPos;
         ghostAgent.mSpeed = Vector2.zero;
         ghostAgent.mCurrentState = Character.CharacterState.Stand;
         ghostAgent.mOnGround = false;
-
         currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
 
+        // 2. 规划途径点 (Waypoints)
+        float totalDistance = endWorldPos.x - startWorldPos.x;
+        float segmentLength = totalDistance / generationSegments;
+
+        // 初始存档
+        GhostSnapshot currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
+
+        // 3. 逐段推进
+        for (int i = 1; i <= generationSegments; i++)
+        {
+            float targetX = startWorldPos.x + segmentLength * i;
+            if (i == generationSegments) targetX = endWorldPos.x; // 确保最后一段对齐终点
+
+            bool segmentSuccess = false;
+            int segmentAttempts = 0;
+
+            // 每一段最多尝试 50 次，如果都失败了，说明上一段的位置不好，整个重来
+            while (!segmentSuccess && segmentAttempts < 50)
+            {
+                segmentAttempts++;
+
+                // [读档] 恢复到上一段成功的状态
+                RestoreSnapshot(currentSnapshot);
+
+                // 尝试跑这一段
+                if (SimulateSegment(targetX, endWorldPos))
+                {
+                    // [存档] 这一段跑通了，保存状态，准备下一段
+                    segmentSuccess = true;
+                    currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
+                }
+            }
+
+            if (!segmentSuccess) return false; // 这一段彻底卡死，放弃本次生成
+        }
+
+        return true;
+    }
+
+    void RestoreSnapshot(GhostSnapshot snap)
+    {
+        ghostAgent.mPosition = snap.position;
+        ghostAgent.mSpeed = snap.speed;
+        ghostAgent.mOnGround = snap.onGround;
+        currentVirtualFloorY = snap.virtualFloorY;
+
+        // 恢复列表 (Deep Copy is handled by constructor, here we replace)
+        ghostPath = new List<Vector2i>(snap.path);
+        ghostPathSet = new HashSet<Vector2i>(snap.path);
+        ghostReplay = new List<ReplayFrame>(snap.replay);
+        ghostTrajectory = new List<Vector3>(snap.trajectory);
+        ghostSafeColumns = new HashSet<int>(snap.safeColumns);
+    }
+
+    bool SimulateSegment(float targetX, Vector2 finalDest)
+    {
         int safetyCounter = 0;
         float lastXProgress = ghostAgent.mPosition.x;
         int stagnationCount = 0;
 
-        while (ghostAgent.mPosition.x < endWorldPos.x && safetyCounter < 2000)
+        // 只要没到目标X轴，就继续跑
+        while (ghostAgent.mPosition.x < targetX && safetyCounter < 300) // 每段步数限制
         {
             safetyCounter++;
-            float heightDiff = endWorldPos.y - currentVirtualFloorY;
-            float noise = Random.Range(-0.2f, 0.2f);
-            float bias = Mathf.Clamp(heightDiff / 100.0f + noise, -0.5f, 0.5f);
 
+            // 简单的防卡死
             if (ghostAgent.mPosition.x - lastXProgress < 1.0f) stagnationCount++;
             else stagnationCount = 0;
             lastXProgress = ghostAgent.mPosition.x;
 
             ActionType nextAction;
             if (stagnationCount > 3) { nextAction = ActionType.LongJumpRight; stagnationCount = 0; }
-            else nextAction = PickAction();
+            else nextAction = PickAction(ghostAgent.mPosition, finalDest);
+
+            // 智能 Bias：根据相对高度调整跳跃力度
+            float heightDiff = finalDest.y - currentVirtualFloorY;
+            float bias = Mathf.Clamp(heightDiff / 100.0f + Random.Range(-0.2f, 0.4f), -0.5f, 0.6f);
 
             ExecuteGhostAction(nextAction, bias);
 
-            if (ghostAgent.mPosition.y < map.position.y)
-            {
-                ghostAgent.mPosition.y = currentVirtualFloorY + Map.cTileSize * 2;
-                ghostAgent.mSpeed.y = 0;
-            }
+            // 掉出地图判定
+            if (ghostAgent.mPosition.y < map.position.y) return false;
         }
-        return (ghostAgent.mPosition.x >= endWorldPos.x);
+
+        return (ghostAgent.mPosition.x >= targetX);
+    }
+
+    void ClearGhostData()
+    {
+        ghostPath.Clear(); ghostPathSet.Clear(); ghostReplay.Clear();
+        ghostTrajectory.Clear(); ghostSafeColumns.Clear();
     }
 
     // ==========================================
-    // Phase 2: Verification
+    // Phase 2: Verification (保持不变)
     // ==========================================
     bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile)
     {
@@ -233,7 +316,8 @@ public class LevelGenerator : MonoBehaviour
         validatorAgent.mAABB.Center = validatorAgent.mPosition + validatorAgent.mAABBOffset;
 
         int frameIndex = 0;
-        int maxFrames = ghostReplay.Count + 60;
+        // 给一点额外时间容错，因为验证时的物理可能和模拟有微小误差
+        int maxFrames = ghostReplay.Count + 120;
 
         while (frameIndex < ghostReplay.Count && frameIndex < maxFrames)
         {
@@ -250,143 +334,98 @@ public class LevelGenerator : MonoBehaviour
         return false;
     }
 
-    // =================================================================
-    // [核心修改] 伪开放结构生成 (Noise Filling + Path Masking)
-    // =================================================================
+    // ==========================================
+    // [风格] 伪开放结构生成 (Noise + Mask)
+    // ==========================================
     void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<int> safeCols, Vector2i start, Vector2i end)
     {
         map.ClearMapToEmpty();
 
-        // 1. 构建安全区掩码 (Safety Mask)
-        // 凡是轨迹经过的地方，绝对不能生成砖块 (挖空)
-        // 凡是需要落脚的地方，绝对要生成砖块 (平台)
         HashSet<Vector2i> airMask = new HashSet<Vector2i>();
         Dictionary<int, int> platformMask = new Dictionary<int, int>();
 
-        int padding = 2; // 头部空间预留
+        int padding = 2;
         float seed = Random.Range(0f, 100f);
 
-        // 分析轨迹，构建 Mask
         foreach (var point in trajectory)
         {
             int x = Mathf.RoundToInt((point.x - map.position.x) / Map.cTileSize);
             int y = Mathf.RoundToInt((point.y - map.position.y) / Map.cTileSize);
 
-            // 标记空气区域（轨迹周围）
             for (int dx = -1; dx <= 1; dx++)
-            {
                 for (int dy = 0; dy <= padding; dy++)
-                {
                     airMask.Add(new Vector2i(x + dx, y + dy));
-                }
-            }
 
-            // 标记落脚平台
             if (safeCols.Contains(x))
             {
-                // 注意：我们这里不填满柱子，只记录落脚点，柱子由下面的噪声生成来决定是否连接地面
                 if (!platformMask.ContainsKey(x) || y < platformMask[x])
-                {
-                    platformMask[x] = y - 1; // 脚下一格是平台
-                }
+                    platformMask[x] = y - 1;
             }
         }
 
-        // 2. 遍历全图，使用柏林噪声生成 "虚假地形"
         for (int x = 0; x < map.mWidth; x++)
         {
             for (int y = 0; y < map.mHeight; y++)
             {
                 Vector2i currentPos = new Vector2i(x, y);
 
-                // [优先级 1] 强制空气 (挖空路径)
-                if (airMask.Contains(currentPos))
-                {
-                    map.SetTile(x, y, TileType.Empty);
-                    continue;
-                }
+                // 强制路径通畅
+                if (airMask.Contains(currentPos)) { map.SetTile(x, y, TileType.Empty); continue; }
+                // 强制落脚点
+                if (platformMask.ContainsKey(x) && platformMask[x] == y) { map.SetTile(x, y, TileType.Block); continue; }
+                // 强制基座
+                if (y < 2) { map.SetTile(x, y, TileType.Block); continue; }
 
-                // [优先级 2] 强制平台 (落脚点)
-                if (platformMask.ContainsKey(x) && platformMask[x] == y)
-                {
-                    map.SetTile(x, y, TileType.Block);
-                    continue;
-                }
-
-                // [优先级 3] 强制地面 (防止玩家掉出世界，保留最底部的基座)
-                if (y < 2)
-                {
-                    map.SetTile(x, y, TileType.Block);
-                    continue;
-                }
-
-                // [优先级 4] 伪随机地形生成 (Openness Control)
-                // 使用 Perlin Noise 生成自然的斑块、浮岛和结构
+                // 噪声生成背景
                 float noiseVal = Mathf.PerlinNoise(x * noiseScale + seed, y * noiseScale + seed);
-
-                // 增加高度衰减：越高的地方，生成砖块的概率越低 (让顶部更开阔)
                 float heightAtten = 1.0f - ((float)y / map.mHeight) * 0.5f;
 
-                // 最终判定
-                if (noiseVal * heightAtten > (1.0f - blockDensity))
-                {
-                    map.SetTile(x, y, TileType.Block);
-                }
-                else
-                {
-                    map.SetTile(x, y, TileType.Empty);
-                }
+                if (noiseVal * heightAtten > (1.0f - blockDensity)) map.SetTile(x, y, TileType.Block);
+                else map.SetTile(x, y, TileType.Empty);
             }
         }
 
-        // 3. 装饰性刺生成 (Spike Coating)
-        // 遍历所有空气格子，如果它紧邻一个 Block，有机率生成刺
+        // 装饰性刺
         for (int x = 1; x < map.mWidth - 1; x++)
         {
             for (int y = 1; y < map.mHeight - 1; y++)
             {
-                // 只在空气处生成刺，且不能在安全路径上
                 if (map.GetTile(x, y) == TileType.Empty && !airMask.Contains(new Vector2i(x, y)))
                 {
                     bool topBlock = map.GetTile(x, y + 1) == TileType.Block;
                     bool bottomBlock = map.GetTile(x, y - 1) == TileType.Block;
-
-                    // 避免刺生成得太密，增加随机性
                     if (Random.value < 0.15f)
                     {
-                        if (topBlock) SpawnSpike(x, y, true); // 倒刺
-                        else if (bottomBlock) SpawnSpike(x, y, false); // 地刺
+                        if (topBlock) SpawnSpike(x, y, true);
+                        else if (bottomBlock) SpawnSpike(x, y, false);
                     }
                 }
             }
         }
 
-        // 4. 起点终点加固
         if (start.x != -1) FillColumn(start.x, 0, start.y - 1, TileType.Block);
         if (end.x != -1) FillColumn(end.x, 0, end.y - 1, TileType.Block);
     }
 
     void FillColumn(int x, int yStart, int yEnd, TileType type)
     {
-        for (int y = yStart; y <= yEnd; y++)
-        {
-            map.SetTile(x, y, type);
-        }
+        for (int y = yStart; y <= yEnd; y++) map.SetTile(x, y, type);
     }
 
     void SpawnSpike(int x, int y, bool flipped)
     {
-        if (map.GetTile(x, y) == TileType.Empty)
-        {
-            map.SetTile(x, y, TileType.Danger);
-        }
+        if (map.GetTile(x, y) == TileType.Empty) map.SetTile(x, y, TileType.Danger);
     }
 
-    ActionType PickAction()
+    // [优化] 智能动作选择
+    ActionType PickAction(Vector2 currentPos, Vector2 endPos)
     {
+        float distToGoal = endPos.x - currentPos.x;
+        float forwardBias = (distToGoal > 100f) ? 0.5f : 0.3f;
+
         float r = Random.value;
-        if (r < 0.2f) return ActionType.MoveRight;
-        if (r < 0.5f) return ActionType.JumpRight;
+        if (r < forwardBias) return ActionType.MoveRight;
+        if (Random.value < 0.6f) return ActionType.JumpRight;
         return ActionType.LongJumpRight;
     }
 
