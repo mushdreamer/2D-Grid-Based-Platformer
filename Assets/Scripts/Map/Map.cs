@@ -596,6 +596,60 @@ public partial class Map : MonoBehaviour
         }
     }
 
+    public void ConvertRegionToDynamic(Vector2i center, int width, int height, TerrainMotion motion, float speed)
+    {
+        int startX = center.x - width / 2;
+        int startY = center.y - height / 2;
+
+        List<GameObject> extractedBlocks = new List<GameObject>();
+        Vector3 centerPos = Vector3.zero;
+
+        // 1. 遍历区域，挖出砖块
+        for (int x = startX; x < startX + width; x++)
+        {
+            for (int y = startY; y < startY + height; y++)
+            {
+                if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+                {
+                    // 只有 Block 能变动 (Empty 或 Danger 不变)
+                    if (GetTile(x, y) == TileType.Block)
+                    {
+                        SpriteRenderer sr = tilesSprites[x, y];
+
+                        // 创建替身物体
+                        GameObject blockObj = new GameObject("DynamicBlock");
+                        blockObj.transform.position = sr.transform.position;
+                        blockObj.transform.localScale = sr.transform.localScale;
+
+                        SpriteRenderer newSr = blockObj.AddComponent<SpriteRenderer>();
+                        newSr.sprite = sr.sprite;
+                        newSr.color = sr.color;
+                        newSr.sortingOrder = 20; // 确保显示在最上层
+
+                        extractedBlocks.Add(blockObj);
+                        centerPos += blockObj.transform.position;
+
+                        // 原地设为空气 (挖空)
+                        SetTile(x, y, TileType.Empty);
+                    }
+                }
+            }
+        }
+
+        if (extractedBlocks.Count == 0) return;
+
+        // 2. 创建父容器
+        centerPos /= extractedBlocks.Count;
+        GameObject terrainRoot = new GameObject("DynamicTerrain_Root");
+        terrainRoot.transform.position = centerPos;
+
+        // 3. 挂载控制器
+        DynamicTerrain dt = terrainRoot.AddComponent<DynamicTerrain>();
+        dt.Initialize(extractedBlocks, motion, speed);
+
+        Debug.Log($"Map: 区域 {center} 已切片并动态化！");
+    }
+
     void FixedUpdate()
     {
         if (currentPhase == GamePhase.TrialPlay && player.gameObject.activeInHierarchy)

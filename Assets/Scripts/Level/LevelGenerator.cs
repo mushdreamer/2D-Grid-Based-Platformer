@@ -24,7 +24,7 @@ public class LevelIndividual
     public float fitness;
 }
 
-// 用于保存生成过程中的“存档点”
+// 存档点类
 public class GhostSnapshot
 {
     public Vector2 position;
@@ -56,7 +56,7 @@ public class LevelGenerator : MonoBehaviour
     public AdversarialDirector director;
 
     [Header("Generation Settings")]
-    [Range(2, 10)] public int generationSegments = 4; // 核心：将路程分成几段生成？
+    [Range(2, 10)] public int generationSegments = 4; // 分段数量
     [Range(0f, 1f)] public float blockDensity = 0.45f;
     [Range(0.01f, 0.5f)] public float noiseScale = 0.15f;
 
@@ -111,14 +111,15 @@ public class LevelGenerator : MonoBehaviour
         int validLevelsFound = 0;
         int attempts = 0;
 
-        Debug.Log($">>> MAP-Elites (分段生成模式) 开始演化 | 目标样本: {iterations}");
+        // [修正] 恢复高倍率尝试次数 (50 * 100 = 5000次上限)，确保一定能跑出来
+        int maxAttempts = iterations * 100;
 
-        // 尝试总次数限制
-        while (validLevelsFound < iterations && attempts < iterations * 5)
+        Debug.Log($">>> 开始生成 (目标: {iterations} 个样本, 最大尝试: {maxAttempts} 次)...");
+
+        while (validLevelsFound < iterations && attempts < maxAttempts)
         {
             attempts++;
 
-            // [核心修改] 使用分段生成逻辑
             if (RunSegmentedSimulation(startTile, endTile))
             {
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafeColumns, startTile, endTile);
@@ -148,13 +149,16 @@ public class LevelGenerator : MonoBehaviour
 
                         eliteGrid[x, y] = newInd;
                         validLevelsFound++;
+
+                        // 每找到几个就汇报一次，防止以为卡死了
+                        if (validLevelsFound % 5 == 0) Debug.Log($"进度: {validLevelsFound}/{iterations} (尝试 {attempts} 次)");
                     }
                 }
                 map.ClearMapToEmpty();
             }
         }
 
-        Debug.Log($">>> 演化结束。尝试 {attempts} 次，发现了 {validLevelsFound} 个有效关卡。");
+        Debug.Log($">>> 生成完毕! 总尝试: {attempts} 次，成功: {validLevelsFound} 个。");
         SelectAndLoadLevel(5, 5);
     }
 
@@ -188,59 +192,54 @@ public class LevelGenerator : MonoBehaviour
             }
             map.ApplyGeneratedPath(target.path, target.replay, target.trajectory, target.safeColumns);
         }
+        else
+        {
+            Debug.LogError("未能生成任何有效关卡，请检查起点终点是否太远，或地形参数是否过高。");
+        }
     }
 
     // ==========================================
-    // Phase 1: Segmented Ghost Simulation (核心逻辑)
+    // Phase 1: Segmented Ghost Simulation
     // ==========================================
     bool RunSegmentedSimulation(Vector2i startTile, Vector2i endTile)
     {
-        // 1. 初始化数据
         ClearGhostData();
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
-        // 设置初始状态
         ghostAgent.mPosition = startWorldPos;
         ghostAgent.mSpeed = Vector2.zero;
         ghostAgent.mCurrentState = Character.CharacterState.Stand;
         ghostAgent.mOnGround = false;
         currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
 
-        // 2. 规划途径点 (Waypoints)
         float totalDistance = endWorldPos.x - startWorldPos.x;
         float segmentLength = totalDistance / generationSegments;
 
-        // 初始存档
         GhostSnapshot currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
 
-        // 3. 逐段推进
         for (int i = 1; i <= generationSegments; i++)
         {
             float targetX = startWorldPos.x + segmentLength * i;
-            if (i == generationSegments) targetX = endWorldPos.x; // 确保最后一段对齐终点
+            if (i == generationSegments) targetX = endWorldPos.x;
 
             bool segmentSuccess = false;
             int segmentAttempts = 0;
 
-            // 每一段最多尝试 50 次，如果都失败了，说明上一段的位置不好，整个重来
-            while (!segmentSuccess && segmentAttempts < 50)
+            // [修正] 增加每段的尝试次数，防止因为运气不好而放弃整条路
+            while (!segmentSuccess && segmentAttempts < 100)
             {
                 segmentAttempts++;
-
-                // [读档] 恢复到上一段成功的状态
                 RestoreSnapshot(currentSnapshot);
 
-                // 尝试跑这一段
                 if (SimulateSegment(targetX, endWorldPos))
                 {
-                    // [存档] 这一段跑通了，保存状态，准备下一段
                     segmentSuccess = true;
                     currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
                 }
             }
 
-            if (!segmentSuccess) return false; // 这一段彻底卡死，放弃本次生成
+            if (!segmentSuccess) return false;
         }
 
         return true;
@@ -253,7 +252,6 @@ public class LevelGenerator : MonoBehaviour
         ghostAgent.mOnGround = snap.onGround;
         currentVirtualFloorY = snap.virtualFloorY;
 
-        // 恢复列表 (Deep Copy is handled by constructor, here we replace)
         ghostPath = new List<Vector2i>(snap.path);
         ghostPathSet = new HashSet<Vector2i>(snap.path);
         ghostReplay = new List<ReplayFrame>(snap.replay);
@@ -267,12 +265,10 @@ public class LevelGenerator : MonoBehaviour
         float lastXProgress = ghostAgent.mPosition.x;
         int stagnationCount = 0;
 
-        // 只要没到目标X轴，就继续跑
-        while (ghostAgent.mPosition.x < targetX && safetyCounter < 300) // 每段步数限制
+        while (ghostAgent.mPosition.x < targetX && safetyCounter < 300)
         {
             safetyCounter++;
 
-            // 简单的防卡死
             if (ghostAgent.mPosition.x - lastXProgress < 1.0f) stagnationCount++;
             else stagnationCount = 0;
             lastXProgress = ghostAgent.mPosition.x;
@@ -281,13 +277,11 @@ public class LevelGenerator : MonoBehaviour
             if (stagnationCount > 3) { nextAction = ActionType.LongJumpRight; stagnationCount = 0; }
             else nextAction = PickAction(ghostAgent.mPosition, finalDest);
 
-            // 智能 Bias：根据相对高度调整跳跃力度
             float heightDiff = finalDest.y - currentVirtualFloorY;
             float bias = Mathf.Clamp(heightDiff / 100.0f + Random.Range(-0.2f, 0.4f), -0.5f, 0.6f);
 
             ExecuteGhostAction(nextAction, bias);
 
-            // 掉出地图判定
             if (ghostAgent.mPosition.y < map.position.y) return false;
         }
 
@@ -301,7 +295,7 @@ public class LevelGenerator : MonoBehaviour
     }
 
     // ==========================================
-    // Phase 2: Verification (保持不变)
+    // Phase 2: Verification
     // ==========================================
     bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile)
     {
@@ -316,7 +310,6 @@ public class LevelGenerator : MonoBehaviour
         validatorAgent.mAABB.Center = validatorAgent.mPosition + validatorAgent.mAABBOffset;
 
         int frameIndex = 0;
-        // 给一点额外时间容错，因为验证时的物理可能和模拟有微小误差
         int maxFrames = ghostReplay.Count + 120;
 
         while (frameIndex < ghostReplay.Count && frameIndex < maxFrames)
@@ -326,6 +319,7 @@ public class LevelGenerator : MonoBehaviour
             verifiedTrajectory.Add(new Vector3(validatorAgent.mPosition.x, validatorAgent.mPosition.y, -8f));
 
             if (validatorAgent.mPosition.y < map.position.y) return false;
+            // 验证时如果碰到危险物，也算失败
             if (validatorAgent.mCurrentState == Character.CharacterState.Die) return false;
 
             if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 2) return true;
@@ -335,7 +329,7 @@ public class LevelGenerator : MonoBehaviour
     }
 
     // ==========================================
-    // [风格] 伪开放结构生成 (Noise + Mask)
+    // 地形生成 (Noise + Mask)
     // ==========================================
     void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<int> safeCols, Vector2i start, Vector2i end)
     {
@@ -369,14 +363,10 @@ public class LevelGenerator : MonoBehaviour
             {
                 Vector2i currentPos = new Vector2i(x, y);
 
-                // 强制路径通畅
                 if (airMask.Contains(currentPos)) { map.SetTile(x, y, TileType.Empty); continue; }
-                // 强制落脚点
                 if (platformMask.ContainsKey(x) && platformMask[x] == y) { map.SetTile(x, y, TileType.Block); continue; }
-                // 强制基座
                 if (y < 2) { map.SetTile(x, y, TileType.Block); continue; }
 
-                // 噪声生成背景
                 float noiseVal = Mathf.PerlinNoise(x * noiseScale + seed, y * noiseScale + seed);
                 float heightAtten = 1.0f - ((float)y / map.mHeight) * 0.5f;
 
@@ -385,7 +375,6 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 装饰性刺
         for (int x = 1; x < map.mWidth - 1; x++)
         {
             for (int y = 1; y < map.mHeight - 1; y++)
@@ -417,7 +406,6 @@ public class LevelGenerator : MonoBehaviour
         if (map.GetTile(x, y) == TileType.Empty) map.SetTile(x, y, TileType.Danger);
     }
 
-    // [优化] 智能动作选择
     ActionType PickAction(Vector2 currentPos, Vector2 endPos)
     {
         float distToGoal = endPos.x - currentPos.x;
