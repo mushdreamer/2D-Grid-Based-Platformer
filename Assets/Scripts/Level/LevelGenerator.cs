@@ -28,7 +28,7 @@ public class LevelGenerator : MonoBehaviour
 {
     public Map map;
     public Bot characterPrefab;
-    public AdversarialDirector director; // 引用导演，用于在生成时临时关闭它
+    public AdversarialDirector director;
 
     private Bot ghostAgent;
     private Bot validatorAgent;
@@ -74,7 +74,6 @@ public class LevelGenerator : MonoBehaviour
     {
         Initialize();
 
-        // [修复] 生成期间关闭对抗导演，防止陷阱干扰验证
         if (director != null) director.SetRunning(false);
 
         System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
@@ -83,13 +82,12 @@ public class LevelGenerator : MonoBehaviour
 
         Debug.Log($">>> MAP-Elites 开始演化 (目标有效样本: {iterations})...");
 
-        while (validLevelsFound < iterations && attempts < iterations * 20) // 增加尝试上限
+        while (validLevelsFound < iterations && attempts < iterations * 20)
         {
             attempts++;
 
             if (RunGhostSimulation(startTile, endTile))
             {
-                // 先烘焙地形数据，以便 validator 能在真实物理环境中跑图
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafeColumns, startTile, endTile);
 
                 if (VerifyLevelWithRealPhysics(startTile, endTile))
@@ -126,7 +124,6 @@ public class LevelGenerator : MonoBehaviour
 
         Debug.Log($">>> 演化结束。尝试 {attempts} 次，发现了 {validLevelsFound} 个经物理验证的可通关关卡。");
 
-        // 自动加载一个中等难度的关卡
         SelectAndLoadLevel(5, 5);
     }
 
@@ -157,18 +154,13 @@ public class LevelGenerator : MonoBehaviour
         {
             Debug.Log($"加载关卡 -> Linearity: {target.linearity:F2}, Density: {target.inputDensity:F2}");
 
-            // [核心修复] 加载时必须重新烘焙地形！
-            // 因为 LevelIndividual 只存了轨迹，没有存 Map 的 Block 数据。
             if (target.path != null && target.path.Count > 0)
             {
                 Vector2i start = target.path[0];
                 Vector2i end = target.path[target.path.Count - 1];
-
-                // 这一步会将 Block 和 Danger 写入 Map 的数据层
                 BakeLevelToMapDataOnly(target.trajectory, target.safeColumns, start, end);
             }
 
-            // 然后再调用 Map 的方法来实例化视觉对象(刺、起点、终点)
             map.ApplyGeneratedPath(target.path, target.replay, target.trajectory, target.safeColumns);
         }
         else
@@ -256,8 +248,6 @@ public class LevelGenerator : MonoBehaviour
 
             if (validatorAgent.mPosition.y < map.position.y) return false;
 
-            // 验证时如果碰到刺，也算失败
-            // (ValidatorAgent 内部有 CheckForDangerZone 调用 Die，所以检查状态即可)
             if (validatorAgent.mCurrentState == Character.CharacterState.Die) return false;
 
             if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 2)
@@ -272,19 +262,19 @@ public class LevelGenerator : MonoBehaviour
     }
 
     // ==========================================
-    // [核心] IWBTG 风格地形生成
+    // [核心] IWBTG 风格地形生成 (已加入混合风格)
     // ==========================================
     void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<int> safeCols, Vector2i start, Vector2i end)
     {
         map.ClearMapToEmpty();
 
-        // 1. 获取轨迹的包围盒与高度信息
         Dictionary<int, int> columnTrajectoryMinY = new Dictionary<int, int>();
         Dictionary<int, int> columnTrajectoryMaxY = new Dictionary<int, int>();
         HashSet<Vector2i> trajectorySafetyZone = new HashSet<Vector2i>();
 
         int padding = 3;
 
+        // 1. 分析轨迹
         foreach (var point in trajectory)
         {
             int x = Mathf.RoundToInt((point.x - map.position.x) / Map.cTileSize);
@@ -305,12 +295,14 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 2. 生成地形 (柱子与房间风格)
+        // 用于风格切换的随机种子
+        float terrainSeed = Random.Range(0f, 100f);
+
+        // 2. 生成地形
         for (int x = 0; x < map.mWidth; x++)
         {
             if (!columnTrajectoryMinY.ContainsKey(x))
             {
-                // 边缘填墙
                 if (x < 2 || x > map.mWidth - 3) FillColumn(x, 0, map.mHeight, TileType.Block);
                 continue;
             }
@@ -318,11 +310,17 @@ public class LevelGenerator : MonoBehaviour
             int trajMinY = columnTrajectoryMinY[x];
             int trajMaxY = columnTrajectoryMaxY[x];
 
-            // A. 地板/坑洞逻辑
+            // --- 风格决策：使用 Perlin Noise 决定这里是 "洞穴" 还是 "露天" ---
+            // 0.1f 是频率，决定了风格变化的快慢
+            float noiseVal = Mathf.PerlinNoise(x * 0.15f, terrainSeed);
+            bool isCaveSection = noiseVal > 0.4f; // 60% 概率是洞穴（隧道），40% 是露天
+            // ----------------------------------------------------------------
+
+            // A. 地板逻辑 (永远存在，保证能踩)
             if (safeCols.Contains(x))
             {
                 int platformY = trajMinY - 1;
-                FillColumn(x, 0, platformY, TileType.Block); // 填实心柱子
+                FillColumn(x, 0, platformY, TileType.Block);
                 map.SetTile(x, platformY, TileType.Block);
             }
             else
@@ -332,25 +330,29 @@ public class LevelGenerator : MonoBehaviour
                 if (pitTop > 0)
                 {
                     FillColumn(x, 0, pitTop, TileType.Block);
-                    // 坑底放刺
+                    // 坑底刺：任何模式下都有
                     SpawnSpike(x, pitTop + 1, false);
                 }
             }
 
-            // B. 天花板逻辑
-            int ceilingBottom = trajMaxY + Random.Range(4, 6);
-            if (ceilingBottom < map.mHeight)
+            // B. 天花板逻辑 (只在洞穴模式下生成)
+            if (isCaveSection)
             {
-                FillColumn(x, ceilingBottom, map.mHeight, TileType.Block);
-                // 天花板倒刺
-                if (Random.value < 0.3f)
+                int ceilingBottom = trajMaxY + Random.Range(4, 6);
+                if (ceilingBottom < map.mHeight)
                 {
-                    SpawnSpike(x, ceilingBottom - 1, true);
+                    FillColumn(x, ceilingBottom, map.mHeight, TileType.Block);
+                    // 天花板倒刺：只在洞穴里有
+                    if (Random.value < 0.3f)
+                    {
+                        SpawnSpike(x, ceilingBottom - 1, true);
+                    }
                 }
             }
+            // 如果是露天模式 (Open Air)，我们不填天花板，留出呼吸空间
         }
 
-        // 3. 清理轨迹安全区
+        // 3. 清理轨迹安全区 (挖空隧道)
         foreach (var safePos in trajectorySafetyZone)
         {
             if (map.GetTile(safePos.x, safePos.y) == TileType.Block)
@@ -359,7 +361,7 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 4. 起点终点平台
+        // 4. 起点终点加固
         if (start.x != -1) FillColumn(start.x, 0, start.y - 1, TileType.Block);
         if (end.x != -1) FillColumn(end.x, 0, end.y - 1, TileType.Block);
     }
