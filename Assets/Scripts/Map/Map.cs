@@ -12,6 +12,7 @@ public enum TileType
     Danger
 }
 
+// 这是一个分部类，与 Map_Utils, Map_Drawing, Map_IO 共同组成 Map 类
 [System.Serializable]
 public partial class Map : MonoBehaviour
 {
@@ -23,7 +24,7 @@ public partial class Map : MonoBehaviour
     public PathFinderFast mPathFinder;
     [HideInInspector] public byte[,] mGrid;
 
-    // [新增] 道具占用网格：true 表示该位置已有道具/陷阱，禁止生成砖块
+    // [新增] 道具占用网格
     private bool[,] mItemGrid;
 
     [HideInInspector] private TileType[,] tiles;
@@ -58,13 +59,11 @@ public partial class Map : MonoBehaviour
     public GameObject spikePrefab;
     public GameObject itemPrefab;
 
-    // --- 特殊 Prefab 设置 ---
     public GameObject checkpointPrefab;
     public Vector2i checkpointSize = new Vector2i(1, 1);
 
     public GameObject finishPrefab;
     public Vector2i finishSize = new Vector2i(2, 2);
-    // ----------------------------
 
     private List<GameObject> spawnedObjects = new List<GameObject>();
 
@@ -114,6 +113,9 @@ public partial class Map : MonoBehaviour
     public List<Sprite> mDirtSprites;
     System.Random mRandomNumber;
 
+    // [新增] 地图状态备份，用于死亡回溯
+    private TileType[,] initialTilesBackup;
+
     public void Start()
     {
         mRandomNumber = new System.Random();
@@ -141,8 +143,11 @@ public partial class Map : MonoBehaviour
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mapRoom.width, mapRoom.height];
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
-            mItemGrid = new bool[mWidth, mHeight]; // 初始化
+            mItemGrid = new bool[mWidth, mHeight];
+
+            // 调用 Map_Utils 中的初始化
             InitPathFinder();
+
             Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
             for (int y = 0; y < mHeight; ++y)
@@ -182,7 +187,9 @@ public partial class Map : MonoBehaviour
             tiles = new TileType[mWidth, mHeight];
             tilesSprites = new SpriteRenderer[mWidth, mHeight];
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
-            mItemGrid = new bool[mWidth, mHeight]; // 初始化
+            mItemGrid = new bool[mWidth, mHeight];
+
+            // 调用 Map_Utils 中的初始化
             InitPathFinder();
 
             for (int y = 0; y < mHeight; ++y)
@@ -195,6 +202,8 @@ public partial class Map : MonoBehaviour
                 }
             }
             player.gameObject.SetActive(false);
+
+            // 调用 Map_Drawing 中的方法
             ResetToDrawingMode();
         }
 
@@ -249,8 +258,8 @@ public partial class Map : MonoBehaviour
 
         if (director != null)
         {
+            director.SetRunning(false);
             director.enabled = false;
-            director.SetRunning(false); // 胜利后关闭陷阱系统
         }
 
         Time.timeScale = 0f;
@@ -277,9 +286,11 @@ public partial class Map : MonoBehaviour
 
     void Update()
     {
+        // Python 脚本相关逻辑 (Map_IO.cs)
         if (pythonScriptsFinished)
         {
             pythonScriptsFinished = false;
+            // LoadGeneratedLevel 在 Map_IO.cs 中定义
             LoadGeneratedLevel();
         }
 
@@ -289,13 +300,17 @@ public partial class Map : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Alpha1)) { currentBrush = BrushType.StartPoint; Debug.Log("Brush: Start Point"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha2)) { currentBrush = BrushType.Path; Debug.Log("Brush: Path"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha3)) { currentBrush = BrushType.EndPoint; Debug.Log("Brush: End Point"); }
+
+                // HandleEnterKeySave 在 Map_IO.cs 中定义
                 else if (Input.GetKeyDown(KeyCode.Return)) { HandleEnterKeySave(); }
 
+                // HandleDrawingInput 在 Map_Drawing.cs 中定义
                 HandleDrawingInput();
 
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     if (startTile.x == -1 || endTile.x == -1) Debug.LogError("无法开始：请先设置 起点(1) 和 终点(3)！");
+                    // StartTrialMode 在 Map_Drawing.cs 中定义
                     else StartTrialMode();
                 }
 
@@ -314,11 +329,55 @@ public partial class Map : MonoBehaviour
                 break;
 
             case GamePhase.TrialPlay:
+                // HandlePlayingInput 在 Map_Drawing.cs 中定义
                 HandlePlayingInput();
-                if (Input.GetKeyDown(KeyCode.Backspace)) ReturnToDrawingMode();
-                else if (Input.GetKeyDown(KeyCode.R)) ResetToDrawingMode();
+
+                if (Input.GetKeyDown(KeyCode.Backspace)) ReturnToDrawingMode(); // Map_Drawing.cs
+                else if (Input.GetKeyDown(KeyCode.R)) ResetToDrawingMode(); // Map_Drawing.cs
                 break;
         }
+    }
+
+    // [新增] 备份地图状态
+    public void BackupMapState()
+    {
+        initialTilesBackup = new TileType[mWidth, mHeight];
+        for (int x = 0; x < mWidth; x++)
+        {
+            for (int y = 0; y < mHeight; y++)
+            {
+                // GetTile 在 Map_Utils.cs 中
+                initialTilesBackup[x, y] = GetTile(x, y);
+            }
+        }
+        Debug.Log("Map: 初始状态已备份。");
+    }
+
+    // [新增] 还原地图状态
+    public void ResetMapToInitial()
+    {
+        if (initialTilesBackup == null) return;
+
+        // 1. 清理动态地形碎片
+        var dynamics = FindObjectsOfType<DynamicTerrain>();
+        foreach (var d in dynamics) Destroy(d.gameObject);
+
+        // 2. 清理临时动态块
+        var renderers = FindObjectsOfType<SpriteRenderer>();
+        foreach (var sr in renderers)
+        {
+            if (sr.gameObject.name == "DynamicBlock") Destroy(sr.gameObject);
+        }
+
+        // 3. 还原网格数据
+        for (int x = 0; x < mWidth; x++)
+        {
+            for (int y = 0; y < mHeight; y++)
+            {
+                SetTile(x, y, initialTilesBackup[x, y]);
+            }
+        }
+        Debug.Log("Map: 地图地形已还原。");
     }
 
     public void FillMapWithBlocks()
@@ -330,7 +389,6 @@ public partial class Map : MonoBehaviour
 
     public void ClearMapToEmpty()
     {
-        // 确保数组大小正确
         if (mItemGrid == null || mItemGrid.GetLength(0) != mWidth || mItemGrid.GetLength(1) != mHeight)
         {
             mItemGrid = new bool[mWidth, mHeight];
@@ -345,17 +403,17 @@ public partial class Map : MonoBehaviour
                 SetTile(x, y, TileType.Empty);
     }
 
+    // [核心] 应用生成的关卡（生成器用）
     public void ApplyGeneratedPath(List<Vector2i> path, List<ReplayFrame> replay, List<Vector3> trajectoryPoints, HashSet<int> safeColumns)
     {
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        // 确保清理陷阱，并重置导演状态
         if (director != null)
         {
             director.ClearTraps();
-            director.SetRunning(true); // [关键修复] 重新激活导演的逻辑
-            director.enabled = false;  // 组件先暂时禁用，直到回放结束
+            director.SetRunning(true);
+            director.enabled = false;
         }
 
         this.safeLandingColumns = new HashSet<int>(safeColumns);
@@ -368,7 +426,6 @@ public partial class Map : MonoBehaviour
             for (int y = 0; y < mHeight; y++)
             {
                 TileType type = GetTile(x, y);
-
                 if (type == TileType.Danger)
                 {
                     bool flipped = false;
@@ -418,15 +475,68 @@ public partial class Map : MonoBehaviour
             player.transform.position = new Vector3(startPos.x, startPos.y, player.transform.position.z);
         }
 
+        // [核心] 备份地图状态！
+        BackupMapState();
+
         currentPhase = GamePhase.TrialPlay;
         if (player != null) player.StartReplay(replay);
+
+        if (director != null)
+        {
+            director.SetRunning(true);
+            director.enabled = false;
+        }
 
         Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
     }
 
-    private void GenerateIslandsFromPath(List<Vector3> trajectory)
+    // [新增] 地形切片功能 (Map Slicing)
+    public void ConvertRegionToDynamic(Vector2i center, int width, int height, TerrainMotion motion, float speed)
     {
-        // 旧方法，暂时保留或移除均可
+        int startX = center.x - width / 2;
+        int startY = center.y - height / 2;
+
+        List<GameObject> extractedBlocks = new List<GameObject>();
+        Vector3 centerPos = Vector3.zero;
+
+        for (int x = startX; x < startX + width; x++)
+        {
+            for (int y = startY; y < startY + height; y++)
+            {
+                if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
+                {
+                    if (GetTile(x, y) == TileType.Block)
+                    {
+                        SpriteRenderer sr = tilesSprites[x, y];
+
+                        GameObject blockObj = new GameObject("DynamicBlock");
+                        blockObj.transform.position = sr.transform.position;
+                        blockObj.transform.localScale = sr.transform.localScale;
+
+                        SpriteRenderer newSr = blockObj.AddComponent<SpriteRenderer>();
+                        newSr.sprite = sr.sprite;
+                        newSr.color = sr.color;
+                        newSr.sortingOrder = 20;
+
+                        extractedBlocks.Add(blockObj);
+                        centerPos += blockObj.transform.position;
+
+                        SetTile(x, y, TileType.Empty);
+                    }
+                }
+            }
+        }
+
+        if (extractedBlocks.Count == 0) return;
+
+        centerPos /= extractedBlocks.Count;
+        GameObject terrainRoot = new GameObject("DynamicTerrain_Root");
+        terrainRoot.transform.position = centerPos;
+
+        DynamicTerrain dt = terrainRoot.AddComponent<DynamicTerrain>();
+        dt.Initialize(extractedBlocks, motion, speed);
+
+        Debug.Log($"Map: 区域 {center} 已切片并动态化！");
     }
 
     private void SpawnSpikeAt(int x, int y, bool flipped = false)
@@ -462,7 +572,7 @@ public partial class Map : MonoBehaviour
 
     private void SpawnItemAt(int x, int y, Collectible.ItemType type)
     {
-        // ... (保持不变)
+        SpawnSpecialItemAt(x, y, type, new Vector2i(1, 1));
     }
 
     private void SpawnSpecialItemAt(int centerX, int centerY, Collectible.ItemType type, Vector2i size)
@@ -547,7 +657,8 @@ public partial class Map : MonoBehaviour
             }
             else
             {
-                sr.sprite = mDirtSprites[1];
+                if (mDirtSprites != null && mDirtSprites.Count > 1)
+                    sr.sprite = mDirtSprites[1];
             }
         }
         else if (type == TileType.Danger)
@@ -562,13 +673,28 @@ public partial class Map : MonoBehaviour
         }
     }
 
+    // [核心] 死亡逻辑：结合导演与地图重置
     public void GameOver()
     {
-        if (director != null) director.ClearTraps();
-
         if (currentPhase == GamePhase.TrialPlay)
         {
-            Debug.Log(">>> 玩家死亡！");
+            Debug.Log(">>> 玩家死亡！开始重置...");
+
+            // 1. 导演结算：谁是凶手？保留凶手，清理废物
+            if (director != null) director.OnPlayerDeath();
+
+            // 2. 地图物理重置 (填补裂缝)
+            ResetMapToInitial();
+
+            // 3. 导演重生：在重置后的地图上生成永久陷阱
+            if (director != null)
+            {
+                director.RespawnPermanentThreats();
+                director.enabled = true;
+                director.SetRunning(true);
+            }
+
+            // 4. 玩家复活
             if (player != null)
             {
                 player.StopReplay();
@@ -582,12 +708,6 @@ public partial class Map : MonoBehaviour
                 player.mCurrentState = Character.CharacterState.Stand;
                 player.mOnGround = true;
                 player.gameObject.SetActive(true);
-
-                if (director != null)
-                {
-                    director.enabled = true;
-                    director.SetRunning(true); // [关键修复] 重生时也要确保逻辑开启
-                }
             }
         }
         else
@@ -596,71 +716,16 @@ public partial class Map : MonoBehaviour
         }
     }
 
-    public void ConvertRegionToDynamic(Vector2i center, int width, int height, TerrainMotion motion, float speed)
-    {
-        int startX = center.x - width / 2;
-        int startY = center.y - height / 2;
-
-        List<GameObject> extractedBlocks = new List<GameObject>();
-        Vector3 centerPos = Vector3.zero;
-
-        // 1. 遍历区域，挖出砖块
-        for (int x = startX; x < startX + width; x++)
-        {
-            for (int y = startY; y < startY + height; y++)
-            {
-                if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
-                {
-                    // 只有 Block 能变动 (Empty 或 Danger 不变)
-                    if (GetTile(x, y) == TileType.Block)
-                    {
-                        SpriteRenderer sr = tilesSprites[x, y];
-
-                        // 创建替身物体
-                        GameObject blockObj = new GameObject("DynamicBlock");
-                        blockObj.transform.position = sr.transform.position;
-                        blockObj.transform.localScale = sr.transform.localScale;
-
-                        SpriteRenderer newSr = blockObj.AddComponent<SpriteRenderer>();
-                        newSr.sprite = sr.sprite;
-                        newSr.color = sr.color;
-                        newSr.sortingOrder = 20; // 确保显示在最上层
-
-                        extractedBlocks.Add(blockObj);
-                        centerPos += blockObj.transform.position;
-
-                        // 原地设为空气 (挖空)
-                        SetTile(x, y, TileType.Empty);
-                    }
-                }
-            }
-        }
-
-        if (extractedBlocks.Count == 0) return;
-
-        // 2. 创建父容器
-        centerPos /= extractedBlocks.Count;
-        GameObject terrainRoot = new GameObject("DynamicTerrain_Root");
-        terrainRoot.transform.position = centerPos;
-
-        // 3. 挂载控制器
-        DynamicTerrain dt = terrainRoot.AddComponent<DynamicTerrain>();
-        dt.Initialize(extractedBlocks, motion, speed);
-
-        Debug.Log($"Map: 区域 {center} 已切片并动态化！");
-    }
-
     void FixedUpdate()
     {
         if (currentPhase == GamePhase.TrialPlay && player.gameObject.activeInHierarchy)
         {
             player.BotUpdate();
 
-            // 如果录像结束，玩家接管操作，且导演未开启，则开启导演
             if (director != null && !director.enabled && player.mCurrentAction == Bot.BotAction.None)
             {
                 director.enabled = true;
-                director.SetRunning(true); // [关键修复] 录像结束时开启逻辑
+                director.SetRunning(true);
             }
         }
     }

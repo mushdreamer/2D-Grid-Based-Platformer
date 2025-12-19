@@ -16,7 +16,7 @@ public class DynamicTerrain : MonoBehaviour
 
     private bool isMoving = false;
 
-    // 初始化：接收一堆砖块的 Sprite
+    // 初始化：接收一堆砖块物体，将它们设为自己的子物体
     public void Initialize(List<GameObject> blocks, TerrainMotion motion, float spd)
     {
         motionType = motion;
@@ -28,8 +28,9 @@ public class DynamicTerrain : MonoBehaviour
         }
         isMoving = true;
 
-        // 5秒后销毁，节省性能
-        Destroy(gameObject, 5.0f);
+        // 设置一个较长的自动销毁时间，防止飞出屏幕太远消耗性能
+        // 注意：地图重置(ResetMapToInitial)时会强制销毁它，所以这里只是保底
+        Destroy(gameObject, 10.0f);
     }
 
     void Update()
