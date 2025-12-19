@@ -178,7 +178,11 @@ public partial class Map
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
         currentPhase = GamePhase.TrialPlay;
 
-        if (director != null) director.enabled = true;
+        if (director != null)
+        {
+            director.enabled = true;
+            director.SetRunning(true);
+        }
     }
 
     private void UpdateBrushPreview(int mouseTileX, int mouseTileY)
