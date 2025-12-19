@@ -7,14 +7,14 @@ public enum TrapStrategy { DropFromAbove, RiseFromBelow, SniperIntercept, FakeBl
 [System.Serializable]
 public struct TrapConfig { public string name; public GameObject prefab; public TrapStrategy strategy; [Range(0f, 1f)] public float weight; }
 
-// [新增] 杀手记忆结构
+[System.Serializable]
 public struct KillerMemory
 {
-    public string configName;   // 配置名
-    public Vector2 spawnPos;    // 生成点
-    public Vector2 targetPos;   // 目标点(当时玩家位置)
-    public bool isEvent;        // 是否为事件
-    public Vector2i eventTile;  // 事件坐标
+    public string configName;
+    public Vector2 spawnPos;
+    public Vector2 targetPos;
+    public bool isEvent;
+    public Vector2i eventTile;
 }
 
 public class AdversarialDirector : MonoBehaviour
@@ -33,18 +33,16 @@ public class AdversarialDirector : MonoBehaviour
     [Header("The Arsenal")]
     public List<TrapConfig> trapLibrary = new List<TrapConfig>();
 
-    // 运行时变量
     private float lastTrapTime = 0f;
     private bool isRunning = true;
     private List<GameObject> activeTraps = new List<GameObject>();
 
-    // --- 永久化系统变量 ---
-    private List<KillerMemory> killerHallOfFame = new List<KillerMemory>(); // 永久陷阱列表
-    private HashSet<Vector2i> permanentCrackTriggers = new HashSet<Vector2i>(); // 永久裂地触发点
+    // 永久化记忆
+    private List<KillerMemory> killerHallOfFame = new List<KillerMemory>();
+    private HashSet<Vector2i> permanentCrackTriggers = new HashSet<Vector2i>();
 
-    // 临时击杀记录 (本回合谁杀了玩家)
+    // 临时击杀记录
     private KillerMemory? currentFrameKiller = null;
-    // 记录最近一次裂地事件，用于判定坠落死
     private Vector2i lastCrackTile;
     private float lastCrackTime = -999f;
 
@@ -64,24 +62,24 @@ public class AdversarialDirector : MonoBehaviour
 
         if (!isRunning || targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy) return;
 
-        // 1. 清理空对象
+        // 1. 清理已销毁对象
         for (int i = activeTraps.Count - 1; i >= 0; i--)
             if (activeTraps[i] == null) activeTraps.RemoveAt(i);
 
-        // 2. 优先检测：永久裂地触发点
+        // 2. 检测永久裂地触发点
         if (targetPlayer.mOnGround)
         {
             Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
             Vector2i currentTile = map.GetMapTileAtPoint(feetPos);
 
-            // 如果踩到了永久触发点，且该点还没被挖空(防止重复触发)
             if (permanentCrackTriggers.Contains(currentTile))
             {
+                // 只有当地面还是实心的时候才触发（防止重复触发）
                 if (map.GetTile(currentTile.x, currentTile.y) == TileType.Block)
                 {
                     Debug.Log("<color=red>Director: 触发永久地形杀！</color>");
                     TriggerGroundCrackComboAt(currentTile);
-                    return; // 这一帧处理了永久事件就不做随机了
+                    return;
                 }
             }
         }
@@ -98,6 +96,7 @@ public class AdversarialDirector : MonoBehaviour
         // 4. 随机地形变动
         if (Time.time > lastTerrainTime + terrainCooldown)
         {
+            // 只要在地上，就有小概率触发
             if (targetPlayer.mOnGround && Random.value < 0.05f)
             {
                 TriggerGroundCrackCombo();
@@ -105,63 +104,138 @@ public class AdversarialDirector : MonoBehaviour
         }
     }
 
-    // --- 击杀记录接口 ---
+    // ----------------------------------------------------
+    //  地形连招系统 (Improved Logic)
+    // ----------------------------------------------------
 
-    // 陷阱杀人时调用
+    void TriggerGroundCrackCombo()
+    {
+        if (map == null) return;
+        Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
+        Vector2i playerTile = map.GetMapTileAtPoint(feetPos);
+
+        // 确保脚下有地
+        if (map.GetTile(playerTile.x, playerTile.y) == TileType.Block)
+        {
+            TriggerGroundCrackComboAt(playerTile);
+        }
+    }
+
+    // 在指定位置触发裂地 + 深渊刺
+    void TriggerGroundCrackComboAt(Vector2i centerTile)
+    {
+        lastCrackTile = centerTile;
+        lastCrackTime = Time.time;
+
+        // 目标：制造一个 gap，让 centerTile 处的砖块飞走
+        // 左半块：包含 centerTile，向左飞
+        // 右半块：从 centerTile+1 开始，向右飞
+
+        int leftWidth = 3;
+        int rightWidth = 3;
+        int depth = 5; // 深度，确保挖穿
+
+        // 计算左半块的中心点
+        // 范围 [centerTile.x - 2, centerTile.x]
+        // 中心 x = centerTile.x - 1
+        Vector2i leftCenter = new Vector2i(centerTile.x - 1, centerTile.y - depth / 2 + 1);
+
+        map.ConvertRegionToDynamic(
+            leftCenter,
+            leftWidth, depth,
+            TerrainMotion.SplitHorizontal, -180f // 向左
+        );
+
+        // 计算右半块的中心点
+        // 范围 [centerTile.x + 1, centerTile.x + 3]
+        // 中心 x = centerTile.x + 2
+        Vector2i rightCenter = new Vector2i(centerTile.x + 2, centerTile.y - depth / 2 + 1);
+
+        map.ConvertRegionToDynamic(
+            rightCenter,
+            rightWidth, depth,
+            TerrainMotion.SplitHorizontal, 180f // 向右
+        );
+
+        lastTerrainTime = Time.time;
+
+        // [连携] 在坑底生成刺
+        StartCoroutine(SpawnAbyssSpikes(centerTile, depth));
+    }
+
+    // 在深渊底部生成一排静态刺
+    IEnumerator SpawnAbyssSpikes(Vector2i centerTile, int depth)
+    {
+        yield return new WaitForSeconds(0.15f); // 稍微等地板滑开
+
+        if (map.spikePrefab != null)
+        {
+            // 在坑底覆盖一排刺
+            int yPos = centerTile.y - depth; // 坑的最底下
+
+            // 覆盖 x-1 到 x+1 的范围
+            for (int x = centerTile.x - 1; x <= centerTile.x + 1; x++)
+            {
+                Vector2 spawnPos = map.GetMapTilePosition(x, yPos);
+
+                GameObject spikeObj = Instantiate(map.spikePrefab, new Vector3(spawnPos.x, spawnPos.y, -5f), Quaternion.identity);
+                activeTraps.Add(spikeObj); // 加入列表以便清理
+
+                SmartTrap trap = spikeObj.GetComponent<SmartTrap>();
+                if (trap == null) trap = spikeObj.AddComponent<SmartTrap>();
+
+                // 设置为静态深渊刺
+                trap.behaviorType = TrapBehaviorType.Static;
+                trap.configName = "AbyssSpike"; // 特殊标记
+
+                // 激活
+                trap.ActivateTrap(Vector2.zero, 0, targetPlayer);
+            }
+        }
+    }
+
+    // ----------------------------------------------------
+    //  记录与重生系统
+    // ----------------------------------------------------
+
     public void RecordKillerTrap(SmartTrap trap)
     {
         KillerMemory memory = new KillerMemory
         {
             configName = trap.configName,
             spawnPos = trap.initialSpawnPosition,
-            targetPos = targetPlayer.mPosition, // 记录当时玩家位置作为参考
+            targetPos = targetPlayer.mPosition,
             isEvent = false
         };
         currentFrameKiller = memory;
-        // 注意：这里不立即加入 HallOfFame，等 OnPlayerDeath 结算，防止一尸两命导致重复
     }
 
-    // 玩家死亡时调用 (结算)
     public void OnPlayerDeath()
     {
         bool killerFound = false;
 
-        // 1. 优先判定实体陷阱击杀
+        // 1. 实体陷阱击杀
         if (currentFrameKiller.HasValue)
         {
             killerHallOfFame.Add(currentFrameKiller.Value);
             killerFound = true;
-            Debug.Log($"<color=yellow>Director: 陷阱 [{currentFrameKiller.Value.configName}] 已晋升为永久威胁！</color>");
+            Debug.Log($"<color=yellow>Director: 陷阱 [{currentFrameKiller.Value.configName}] 已晋升！</color>");
         }
-        // 2. 如果没有实体陷阱，检查是否死于地形裂变 (坠落死)
-        else if (Time.time - lastCrackTime < 2.5f) // 如果死前 2.5秒内发生过裂地
+        // 2. 地形杀 (坠落)
+        else if (Time.time - lastCrackTime < 2.5f)
         {
-            // 判定为地形杀
-            KillerMemory eventMem = new KillerMemory
-            {
-                isEvent = true,
-                eventTile = lastCrackTile
-            };
+            KillerMemory eventMem = new KillerMemory { isEvent = true, eventTile = lastCrackTile };
             killerHallOfFame.Add(eventMem);
             killerFound = true;
-            Debug.Log($"<color=yellow>Director: 地形裂变 [{lastCrackTile}] 已晋升为永久威胁！</color>");
+            Debug.Log($"<color=yellow>Director: 地形裂变 [{lastCrackTile}] 已晋升！</color>");
         }
 
         currentFrameKiller = null;
-
-        if (!killerFound)
-        {
-            Debug.Log("Director: 玩家死因不明或自然死亡，无新陷阱被记录。");
-        }
-
-        // 3. 清理所有临时陷阱 (没杀人的都是垃圾)
         ClearTraps();
     }
 
-    // 重生永久威胁 (由 Map 在重置后调用)
     public void RespawnPermanentThreats()
     {
-        // 1. 注册永久事件
         foreach (var mem in killerHallOfFame)
         {
             if (mem.isEvent)
@@ -170,9 +244,12 @@ public class AdversarialDirector : MonoBehaviour
             }
             else
             {
-                // 2. 实例化永久陷阱
+                // 如果是深渊刺，不在这里重生，而是由裂地事件触发
+                if (mem.configName == "AbyssSpike") continue;
+
+                // 普通陷阱重生
                 TrapConfig config = trapLibrary.Find(x => x.name == mem.configName);
-                if (config.prefab == null && trapLibrary.Count > 0) config = trapLibrary[0]; // 保底
+                if (config.prefab == null && trapLibrary.Count > 0) config = trapLibrary[0];
 
                 if (config.prefab != null)
                 {
@@ -180,57 +257,12 @@ public class AdversarialDirector : MonoBehaviour
                 }
             }
         }
-        Debug.Log($"Director: 已重置 {permanentCrackTriggers.Count} 个地形杀和 {killerHallOfFame.Count - permanentCrackTriggers.Count} 个实体陷阱。");
+        Debug.Log($"Director: 重生了 {permanentCrackTriggers.Count} 个必死地形点。");
     }
 
-    // --- 陷阱生成逻辑 ---
-
-    void TriggerGroundCrackCombo()
-    {
-        if (map == null) return;
-        Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
-        Vector2i playerTile = map.GetMapTileAtPoint(feetPos);
-        TriggerGroundCrackComboAt(playerTile);
-    }
-
-    void TriggerGroundCrackComboAt(Vector2i centerTile)
-    {
-        if (map.GetTile(centerTile.x, centerTile.y) != TileType.Block) return;
-
-        // 记录这次事件，以防玩家掉下去摔死
-        lastCrackTile = centerTile;
-        lastCrackTime = Time.time;
-
-        int halfWidth = 3;
-        int depth = 4;
-
-        map.ConvertRegionToDynamic(
-            new Vector2i(centerTile.x - halfWidth / 2 - 1, centerTile.y - depth / 2 + 1),
-            halfWidth, depth, TerrainMotion.SplitHorizontal, -150f
-        );
-
-        map.ConvertRegionToDynamic(
-            new Vector2i(centerTile.x + halfWidth / 2 + 1, centerTile.y - depth / 2 + 1),
-            halfWidth, depth, TerrainMotion.SplitHorizontal, 150f
-        );
-
-        lastTerrainTime = Time.time;
-        StartCoroutine(SpawnTrapDelay(centerTile, 0.2f));
-    }
-
-    IEnumerator SpawnTrapDelay(Vector2i centerTile, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        TrapConfig spikeConfig = trapLibrary.Find(x => x.strategy == TrapStrategy.RiseFromBelow);
-        if (spikeConfig.prefab == null && trapLibrary.Count > 0) spikeConfig = trapLibrary[0];
-
-        if (spikeConfig.prefab != null)
-        {
-            Vector2 spawnPos = map.GetMapTilePosition(centerTile.x, centerTile.y - 5);
-            // 这里的陷阱也是临时的，除非它杀人
-            SpawnTrap(spikeConfig, spawnPos, targetPlayer.mPosition, false);
-        }
-    }
+    // ----------------------------------------------------
+    //  常规辅助方法
+    // ----------------------------------------------------
 
     void AttemptLethalTrap()
     {
@@ -248,7 +280,6 @@ public class AdversarialDirector : MonoBehaviour
         }
     }
 
-    // 生成陷阱通用方法
     void SpawnTrap(TrapConfig config, Vector2 pos, Vector2 targetZone, bool isPermanent)
     {
         GameObject obj = Instantiate(config.prefab, new Vector3(pos.x, pos.y, -5f), Quaternion.identity);
@@ -256,24 +287,18 @@ public class AdversarialDirector : MonoBehaviour
         SmartTrap trap = obj.GetComponent<SmartTrap>();
         if (trap != null)
         {
-            trap.configName = config.name; // 记名
-            // 如果是永久陷阱，行为稍微呆一点(固定)，如果是临时的，要有预判
-            // 这里统一处理，都让它们动起来
+            trap.configName = config.name;
             trap.ActivateTrap(targetZone, predictionWindow, targetPlayer);
         }
     }
 
-    // ... (辅助方法：GetRandomTrapConfig, CalculateLethalSpawnPosition, SimulatePlayerPath, IsPositionValid, HasWallBetween, ClearTraps)
-    // 请保留您原有的这些辅助方法，不做改动 ... 
-
-    // 为了完整性，这里补充 ClearTraps
     public void ClearTraps()
     {
         foreach (var t in activeTraps) if (t != null) Destroy(t);
         activeTraps.Clear();
     }
 
-    // 占位符：请确保下面这些辅助方法存在
+    // 辅助计算方法
     TrapConfig GetRandomTrapConfig()
     {
         float totalWeight = 0f; foreach (var c in trapLibrary) totalWeight += c.weight;
@@ -281,22 +306,25 @@ public class AdversarialDirector : MonoBehaviour
         foreach (var c in trapLibrary) { cur += c.weight; if (r <= cur) return c; }
         return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig();
     }
+
     Vector2? CalculateLethalSpawnPosition(TrapConfig c, List<Vector2> p)
     {
-        // ... (保持您原有的逻辑) ...
-        // 简写示意：
         Vector2 k = p[p.Count - 1];
         if (c.strategy == TrapStrategy.DropFromAbove) return new Vector2(k.x, k.y + 150f);
         if (c.strategy == TrapStrategy.RiseFromBelow) return k + Vector2.down * 50f;
+        // 狙击逻辑略
         return k + Vector2.left * 200f;
     }
+
     List<Vector2> SimulatePlayerPath(float t)
     {
         List<Vector2> path = new List<Vector2>();
         Vector2 p = targetPlayer.mPosition; Vector2 v = targetPlayer.mSpeed;
-        for (int i = 0; i < 30; i++) { v.y += Constants.cGravity * 0.02f; p += v * 0.02f; path.Add(p); }
+        for (int i = 0; i < 30; i++)
+        {
+            if (!targetPlayer.mOnGround) v.y += Constants.cGravity * 0.02f;
+            p += v * 0.02f; path.Add(p);
+        }
         return path;
     }
-    bool IsPositionValid(Vector2 p) { return true; }
-    bool HasWallBetween(Vector2 s, Vector2 e) { return false; }
 }

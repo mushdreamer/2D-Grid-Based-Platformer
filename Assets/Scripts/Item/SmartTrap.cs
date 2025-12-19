@@ -5,7 +5,8 @@ public enum TrapBehaviorType
     Static,
     Falling,
     Rising,
-    FakeBlock,
+    FakeBlock,      // 坑爹砖：踩上去消失
+    FakeSpike,      // [新增] 伪装刺：踩上去变刺
     Ballistic,
     Sniper,
     Homing
@@ -21,10 +22,13 @@ public class SmartTrap : MonoBehaviour
     public float speed = 0f;
     public float homingTurnRate = 5f;
 
-    // [新增] 记录出生地，用于重生
+    // 重生系统需要的数据
     [HideInInspector] public Vector2 initialSpawnPosition;
-    // [新增] 记录所属的配置名称，用于重生时查找 Prefab
     [HideInInspector] public string configName;
+
+    // 伪装系统需要的数据
+    private Sprite spikeSprite; // 原始刺图片
+    private Sprite blockSprite; // 伪装砖图片
 
     private bool isActive = false;
     private float timer = 0f;
@@ -38,14 +42,14 @@ public class SmartTrap : MonoBehaviour
     void Awake()
     {
         sr = GetComponent<SpriteRenderer>();
-        initialSpawnPosition = transform.position; // 记录初始位置
+        initialSpawnPosition = transform.position;
 
-        // 只有非伪装块才加杀伤判定，伪装块靠坑人
-        if (behaviorType != TrapBehaviorType.FakeBlock)
-        {
-            if (GetComponent<KillerObject>() == null)
-                gameObject.AddComponent<KillerObject>();
-        }
+        // 自动添加杀人组件（如果是伪装块，稍后会禁用）
+        if (GetComponent<KillerObject>() == null)
+            gameObject.AddComponent<KillerObject>();
+
+        // 保存原始长相（刺的图片）
+        if (sr != null) spikeSprite = sr.sprite;
     }
 
     public void ActivateTrap(Vector2 predictedPos, float timeToReach, Bot player)
@@ -58,6 +62,9 @@ public class SmartTrap : MonoBehaviour
         {
             case TrapBehaviorType.FakeBlock:
                 InitializeFakeBlock();
+                break;
+            case TrapBehaviorType.FakeSpike: // [新增]
+                InitializeFakeSpike();
                 break;
             case TrapBehaviorType.Falling:
                 velocity = Vector3.down * (speed > 0 ? speed : 100f);
@@ -87,23 +94,60 @@ public class SmartTrap : MonoBehaviour
         }
     }
 
+    // 初始化：伪装成路
     void InitializeFakeBlock()
     {
         if (map == null) return;
         myTilePos = map.GetMapTileAtPoint(transform.position);
+
+        // 物理上设为实心 Block，玩家能站住
         map.SetTile(myTilePos.x, myTilePos.y, TileType.Block);
+
+        // 视觉上隐藏自己（显示地图原本的砖块）
         if (sr != null) sr.enabled = false;
+
+        // 对齐网格
         transform.position = map.GetMapTilePosition(myTilePos);
+
+        // 暂时禁用杀人能力
+        var killer = GetComponent<KillerObject>();
+        if (killer) killer.enabled = false;
+    }
+
+    // 初始化：伪装成路，但是是假的
+    void InitializeFakeSpike()
+    {
+        if (map == null) return;
+        myTilePos = map.GetMapTileAtPoint(transform.position);
+
+        // 获取当前关卡的砖块贴图
+        if (map.terrainSprites != null && map.terrainSprites.Count > 0)
+            blockSprite = map.terrainSprites[0];
+        else if (map.mDirtSprites != null && map.mDirtSprites.Count > 0)
+            blockSprite = map.mDirtSprites[0];
+
+        // 换皮：变成砖块的样子
+        if (sr != null && blockSprite != null) sr.sprite = blockSprite;
+
+        // 对齐网格
+        transform.position = map.GetMapTilePosition(myTilePos);
+
+        // 注意：我们不调用 map.SetTile(Block)。
+        // 这样它在 Map 数据层面上依然是 Empty 或 Danger，玩家站上去没有物理支撑。
+        // 这符合“陷阱”的定位，且如果不小心站上去会穿过它触发内部判定。
     }
 
     void Update()
     {
         if (!isActive) return;
 
-        if (behaviorType == TrapBehaviorType.FakeBlock)
+        // 伪装系逻辑检查
+        if (behaviorType == TrapBehaviorType.FakeBlock || behaviorType == TrapBehaviorType.FakeSpike)
         {
-            CheckFakeBlockTrigger();
-            if (timer > 0)
+            CheckTrigger(); // 检测玩家距离
+
+            // 伪装块倒计时塌陷
+            if (behaviorType == TrapBehaviorType.FakeBlock && timer > 0)
             {
                 timer += Time.deltaTime;
                 if (timer > activeDelay) CollapseBlock();
@@ -111,9 +155,11 @@ public class SmartTrap : MonoBehaviour
             return;
         }
 
+        // 延迟启动逻辑（针对移动陷阱）
         if (timer < activeDelay)
         {
             timer += Time.deltaTime;
+            // 启动前稍微抖动一下提示危险（可选）
             if (behaviorType != TrapBehaviorType.Static)
                 transform.position += (Vector3)(Random.insideUnitCircle * 2f);
             return;
@@ -122,31 +168,45 @@ public class SmartTrap : MonoBehaviour
         PerformMovement(Time.deltaTime);
     }
 
-    void CheckFakeBlockTrigger()
+    void CheckTrigger()
     {
         if (targetPlayer == null || map == null) return;
-        if (timer > 0) return;
+        if (timer > 0) return; // 已经触发过了
 
-        if (targetPlayer.mOnGround)
+        // 简单的距离触发：当玩家靠近中心点时
+        if (Vector2.Distance(targetPlayer.mPosition, transform.position) < Map.cTileSize * 1.2f)
         {
-            Vector2 playerFootPos = targetPlayer.mPosition - new Vector2(0, targetPlayer.mAABB.HalfSizeY + 2.0f);
-            Vector2i playerStandingTile = map.GetMapTileAtPoint(playerFootPos);
-
-            if (playerStandingTile == myTilePos)
+            // 伪装刺：靠近即死，现原形
+            if (behaviorType == TrapBehaviorType.FakeSpike)
             {
-                timer = 0.001f;
+                RevealSpike();
+            }
+            // 伪装块：踩在头上才触发
+            else if (behaviorType == TrapBehaviorType.FakeBlock && targetPlayer.mOnGround)
+            {
+                Vector2 playerFootPos = targetPlayer.mPosition - new Vector2(0, targetPlayer.mAABB.HalfSizeY + 2.0f);
+                Vector2i playerStandingTile = map.GetMapTileAtPoint(playerFootPos);
+                if (playerStandingTile == myTilePos) timer = 0.001f; // 开始倒计时
             }
         }
+    }
+
+    // [新增] 伪装刺现原形
+    void RevealSpike()
+    {
+        timer = 1.0f; // 标记为已触发
+
+        // 变回刺的样子
+        if (sr != null && spikeSprite != null) sr.sprite = spikeSprite;
+
+        // 确保杀人判定开启
+        var killer = GetComponent<KillerObject>();
+        if (killer) killer.enabled = true;
     }
 
     void CollapseBlock()
     {
         if (map != null) map.SetTile(myTilePos.x, myTilePos.y, TileType.Empty);
-
-        // 伪装块虽然不直接杀人，但导致坠落。
-        // 我们可以在这里通知导演记录事件，或者简单销毁。
-        // 对于 FakeBlock，通常作为地形事件处理更合适。
-
         Destroy(gameObject);
     }
 
@@ -176,8 +236,12 @@ public class SmartTrap : MonoBehaviour
                 break;
         }
 
-        if (transform.position.y < map.position.y - 500f || transform.position.y > map.position.y + map.mHeight * Map.cTileSize + 500f)
-            Destroy(gameObject);
+        // 边界销毁
+        if (map != null)
+        {
+            if (transform.position.y < map.position.y - 500f || transform.position.y > map.position.y + map.mHeight * Map.cTileSize + 500f)
+                Destroy(gameObject);
+        }
     }
 
     void RotateToFaceVelocity()
@@ -189,12 +253,15 @@ public class SmartTrap : MonoBehaviour
         }
     }
 
-    // [核心] 碰撞检测：如果碰到玩家，我就是凶手
     void OnTriggerEnter2D(Collider2D other)
     {
+        if (behaviorType == TrapBehaviorType.FakeBlock) return;
+
         if (other.GetComponent<Bot>() != null)
         {
-            // 向导演自首
+            // 如果是伪装刺，还没显形就撞上了（比如速度很快），强制显形
+            if (behaviorType == TrapBehaviorType.FakeSpike) RevealSpike();
+
             var director = FindObjectOfType<AdversarialDirector>();
             if (director != null)
             {

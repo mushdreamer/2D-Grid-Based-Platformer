@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 2085320813732963417}
   - component: {fileID: 8921095592719255291}
   m_Layer: 0
-  m_Name: Trap_RisingSpike
+  m_Name: Trap_FakeSpike
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -143,7 +143,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc0f301152e89ce43af86565fe3dbc05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  behaviorType: 2
-  speed: 400
-  acceleration: 0
+  behaviorType: 4
   activeDelay: 0
+  speed: 0
+  homingTurnRate: 5
+  initialSpawnPosition: {x: 0, y: 0}
+  configName: 

@@ -523,6 +523,7 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
+  generationSegments: 4
   blockDensity: 0.45
   noiseScale: 0.15
 --- !u!1 &448407002
@@ -2835,13 +2836,14 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   predictionWindow: 0.6
   cooldown: 3
+  terrainCooldown: 4
   trapLibrary:
   - name: Falling Apple
     prefab: {fileID: 8108115727611482111, guid: 4b0eadf74ba262b43986b6b300d44fff,
       type: 3}
     strategy: 0
     weight: 1
-  - name: Rising Spike
+  - name: Fake Spike
     prefab: {fileID: 6732079225660565854, guid: 794f3b440e2bbd24bac236e09c42550a,
       type: 3}
     strategy: 0
@@ -3336,6 +3338,7 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 0}
+  generationSegments: 4
   blockDensity: 0.45
   noiseScale: 0.15
 --- !u!120 &2106156358
