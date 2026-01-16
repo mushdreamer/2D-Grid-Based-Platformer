@@ -7,7 +7,6 @@ public partial class Map
 {
     private void HandleDrawingInput()
     {
-        // 1. 防止 UI 穿透
         if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
         {
             return;
@@ -17,6 +16,12 @@ public partial class Map
         if (scrollInput != 0f)
         {
             brushSize = Mathf.Clamp(brushSize + (scrollInput > 0 ? 1 : -1), 1, 10);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            currentBrush = BrushType.SurvivalSpace;
+            Debug.Log("Brush: Survival Space (Safe Zone)");
         }
 
         Vector2 mousePos = Input.mousePosition;
@@ -57,6 +62,11 @@ public partial class Map
                             playerSelectedPath.Add(targetCell);
                             SetVisual(currentX, currentY, new Color(0.5f, 1f, 0.5f, 0.5f));
                         }
+                        else if (currentBrush == BrushType.SurvivalSpace)
+                        {
+                            survivalSpaceTiles.Add(targetCell);
+                            SetVisual(currentX, currentY, new Color(0f, 1f, 0f, 0.4f));
+                        }
                     }
                 }
             }
@@ -71,9 +81,18 @@ public partial class Map
                     int currentX = mouseTileX + xOffset;
                     int currentY = mouseTileY + yOffset;
                     Vector2i currentCell = new Vector2i(currentX, currentY);
-                    bool removed = playerSelectedPath.Remove(currentCell);
+
+                    bool removed = false;
+                    if (playerSelectedPath.Remove(currentCell)) removed = true;
+                    if (survivalSpaceTiles.Contains(currentCell))
+                    {
+                        survivalSpaceTiles.Remove(currentCell);
+                        removed = true;
+                    }
+
                     if (startTile == currentCell) { startTile = new Vector2i(-1, -1); removed = true; }
                     if (endTile == currentCell) { endTile = new Vector2i(-1, -1); removed = true; }
+
                     if (removed) ResetVisual(currentX, currentY);
                 }
             }
@@ -89,7 +108,6 @@ public partial class Map
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            // 2. 防止 UI 穿透
             if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
                 return;
@@ -106,11 +124,15 @@ public partial class Map
 
     private void ResetToDrawingMode()
     {
-        // 核心修复：确保重置时取消暂停，并重置胜利状态
         Time.timeScale = 1.0f;
         isLevelComplete = false;
 
         playerSelectedPath.Clear();
+        survivalSpaceTiles.Clear();
+
+        // [新增] 清理可视化显示
+        ClearSurvivalSpaceVisuals();
+
         startTile = new Vector2i(-1, -1);
         endTile = new Vector2i(-1, -1);
 
@@ -133,7 +155,6 @@ public partial class Map
 
     private void ReturnToDrawingMode()
     {
-        // 核心修复：确保返回时取消暂停，并重置胜利状态
         Time.timeScale = 1.0f;
         isLevelComplete = false;
 
@@ -151,9 +172,11 @@ public partial class Map
                 Vector2i currentTile = new Vector2i(x, y);
                 tiles[x, y] = TileType.Empty;
                 mGrid[x, y] = 1;
+
                 if (currentTile == startTile) SetVisual(x, y, Color.cyan);
                 else if (currentTile == endTile) SetVisual(x, y, Color.yellow);
                 else if (playerSelectedPath.Contains(currentTile)) SetVisual(x, y, new Color(0.5f, 1f, 0.5f, 0.5f));
+                else if (survivalSpaceTiles.Contains(currentTile)) SetVisual(x, y, new Color(0f, 1f, 0f, 0.4f));
                 else ResetVisual(x, y);
             }
         }
@@ -176,7 +199,13 @@ public partial class Map
         player.BotInit(inputs, prevInputs);
         player.mMap = this;
         player.mPosition = GetMapTilePosition(startTile) + new Vector2(0, player.mAABB.HalfSizeY);
+
+        BackupMapState();
+
         currentPhase = GamePhase.TrialPlay;
+
+        // [新增] 试玩开始时显示可视化
+        ShowSurvivalSpaceVisuals();
 
         if (director != null)
         {
@@ -207,6 +236,7 @@ public partial class Map
         if (startTile == cell) startTile = new Vector2i(-1, -1);
         if (endTile == cell) endTile = new Vector2i(-1, -1);
         playerSelectedPath.Remove(cell);
+        survivalSpaceTiles.Remove(cell);
     }
 
     private void SetVisual(int x, int y, Color color)
