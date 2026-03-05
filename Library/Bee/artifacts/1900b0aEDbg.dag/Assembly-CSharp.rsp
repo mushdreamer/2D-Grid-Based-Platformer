@@ -379,6 +379,7 @@
 "Assets/Scripts/Map/Map.cs"
 "Assets/Scripts/Map/MapRoomData.cs"
 "Assets/Scripts/Map/Map_Drawing.cs"
+"Assets/Scripts/Map/Map_Heatmap.cs"
 "Assets/Scripts/Map/Map_IO.cs"
 "Assets/Scripts/Map/Map_Utils.cs"
 "Assets/Scripts/Pathfinding/PathFinderFast.cs"
