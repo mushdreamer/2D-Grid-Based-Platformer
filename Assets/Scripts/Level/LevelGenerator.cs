@@ -1,6 +1,10 @@
-using UnityEngine;
+Ôªøusing UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using System;
+using Random = UnityEngine.Random;
 
 public struct ReplayFrame
 {
@@ -18,6 +22,7 @@ public class LevelIndividual
     public List<ReplayFrame> replay;
     public List<Vector3> trajectory;
     public HashSet<int> safeColumns;
+    public HashSet<Vector2i> safePlatforms;
     public float linearity;
     public float inputDensity;
     public float fitness;
@@ -53,11 +58,9 @@ public class LevelGenerator : MonoBehaviour
     public AdversarialDirector director;
 
     [Header("Generation Settings")]
-    [Range(2, 10)] public int generationSegments = 4;
     [Range(0f, 1f)] public float blockDensity = 0.45f;
     [Range(0.01f, 0.5f)] public float noiseScale = 0.15f;
 
-    // ÷’µ„‘§÷∆ÃÂ£¨«Î‘⁄ Inspector ÷–Õœ»Î∞¸∫¨ Collectible (ItemType.Finish) µƒ Prefab
     public GameObject finishLinePrefab;
 
     [Header("IWBTG Hardcore Baking")]
@@ -78,10 +81,12 @@ public class LevelGenerator : MonoBehaviour
     private List<ReplayFrame> ghostReplay = new List<ReplayFrame>();
     private List<Vector3> ghostTrajectory = new List<Vector3>();
     private HashSet<int> ghostSafeColumns = new HashSet<int>();
+    private HashSet<Vector2i> ghostSafePlatforms = new HashSet<Vector2i>();
 
     private List<Vector3> verifiedTrajectory = new List<Vector3>();
+    private Dictionary<Vector2i, int> survivalGradient = new Dictionary<Vector2i, int>();
 
-    enum ActionType { MoveRight, JumpRight, LongJumpRight }
+    enum ActionType { MoveRight, MoveLeft, JumpRight, JumpLeft, LongJumpRight, LongJumpLeft, Drop }
 
     public void Initialize()
     {
@@ -104,24 +109,98 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
+    private void BuildSurvivalGradient(Vector2i endTile)
+    {
+        survivalGradient.Clear();
+        if (map.survivalSpaceTiles == null || map.survivalSpaceTiles.Count == 0) return;
+
+        Queue<Vector2i> queue = new Queue<Vector2i>();
+        HashSet<Vector2i> visited = new HashSet<Vector2i>();
+
+        Vector2i bestStart = endTile;
+        float minDist = float.MaxValue;
+        foreach (var tile in map.survivalSpaceTiles)
+        {
+            float d = Vector2.Distance(new Vector2(tile.x, tile.y), new Vector2(endTile.x, endTile.y));
+            if (d < minDist)
+            {
+                minDist = d;
+                bestStart = tile;
+            }
+        }
+
+        queue.Enqueue(bestStart);
+        visited.Add(bestStart);
+        survivalGradient[bestStart] = 0;
+
+        Vector2i[] directions = new Vector2i[] { new Vector2i(1, 0), new Vector2i(-1, 0), new Vector2i(0, 1), new Vector2i(0, -1) };
+
+        while (queue.Count > 0)
+        {
+            Vector2i current = queue.Dequeue();
+            int currentDist = survivalGradient[current];
+
+            foreach (var dir in directions)
+            {
+                Vector2i neighbor = new Vector2i(current.x + dir.x, current.y + dir.y);
+                if (map.survivalSpaceTiles.Contains(neighbor) && !visited.Contains(neighbor))
+                {
+                    visited.Add(neighbor);
+                    survivalGradient[neighbor] = currentDist + 1;
+                    queue.Enqueue(neighbor);
+                }
+            }
+        }
+    }
+
     public void GenerateMapElitesLibrary(Vector2i startTile, Vector2i endTile, int iterations)
+    {
+        StartCoroutine(GenerateMapElitesRoutine(startTile, endTile, iterations));
+    }
+
+    private IEnumerator GenerateMapElitesRoutine(Vector2i startTile, Vector2i endTile, int iterations)
     {
         Initialize();
         if (director != null) director.SetRunning(false);
         System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
         int validLevelsFound = 0;
         int attempts = 0;
-        int maxAttempts = iterations * 100;
+        int maxAttempts = iterations * 150;
 
-        Debug.Log($">>> ø™ º…˙≥… (ƒø±Í: {iterations} ∏ˆ—˘±æ, ◊Ó¥Û≥¢ ‘: {maxAttempts} ¥Œ)...");
+        int failTimeoutCount = 0;
+        int failFallCount = 0;
+        int failVerifyFallCount = 0;
+        int failVerifyDieCount = 0;
+        int failVerifyTimeoutCount = 0;
+
+        string logFilePath = Path.Combine(Application.dataPath, "../LevelGeneratorLog.txt");
+        File.WriteAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] Á≥ªÁªüÂêØÂä®ÔºöÂºÄÂßãÁîüÊàêÂÖ®ÂêëÂºïÂäõÂÖ≥Âç°Â∫ì (ÂèØËßÜÂåñËøõÁ®ãÁâà)\n");
+        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] ÁõÆÊ†áÊúâÊïàÊ†∑Êú¨Êï∞: {iterations}ÔºåÂÆâÂÖ®ÁÜîÊñ≠ÊúÄÂ§ßÂ∞ùËØïÊ¨°Êï∞: {maxAttempts}\n");
+        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
+
+        BuildSurvivalGradient(endTile);
+
+        Debug.Log($">>> ÂºÄÂßãÁîüÊàêÂÖ®ÂêëÂºïÂäõÂÖ≥Âç° (ÁõÆÊ†á: {iterations} ‰∏™Ê†∑Êú¨, ÊúÄÂ§ßÂ∞ùËØï: {maxAttempts} Ê¨°)... ËØ∑Êü•ÁúãÈ°πÁõÆÊ†πÁõÆÂΩï‰∏ãÁöÑ LevelGeneratorLog.txt ‰∫ÜËß£ÂÆûÊó∂ËøõÂ∫¶ÔºÅ");
 
         while (validLevelsFound < iterations && attempts < maxAttempts)
         {
             attempts++;
-            if (RunSegmentedSimulation(startTile, endTile))
+            string failReason = "";
+
+            if (RunGuidedSimulation(startTile, endTile, out failReason))
             {
-                BakeLevelToMapDataOnly(ghostTrajectory, ghostSafeColumns, startTile, endTile);
-                if (VerifyLevelWithRealPhysics(startTile, endTile))
+                BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, startTile, endTile);
+
+                if (map.guideLineRenderer != null && ghostTrajectory.Count > 0)
+                {
+                    map.guideLineRenderer.positionCount = ghostTrajectory.Count;
+                    map.guideLineRenderer.SetPositions(ghostTrajectory.ToArray());
+                    map.guideLineRenderer.enabled = true;
+                }
+
+                yield return null;
+
+                if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason))
                 {
                     Vector2 startPos = map.GetMapTilePosition(startTile);
                     Vector2 endPos = map.GetMapTilePosition(endTile);
@@ -138,18 +217,65 @@ public class LevelGenerator : MonoBehaviour
                         newInd.replay = new List<ReplayFrame>(ghostReplay);
                         newInd.trajectory = new List<Vector3>(verifiedTrajectory);
                         newInd.safeColumns = new HashSet<int>(ghostSafeColumns);
+                        newInd.safePlatforms = new HashSet<Vector2i>(ghostSafePlatforms);
                         newInd.linearity = lin;
                         newInd.inputDensity = den;
                         newInd.fitness = fit;
                         eliteGrid[x, y] = newInd;
                         validLevelsFound++;
-                        if (validLevelsFound % 5 == 0) Debug.Log($"Ω¯∂»: {validLevelsFound}/{iterations} (≥¢ ‘ {attempts} ¥Œ)");
+
+                        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] [ÊàêÂäüÂÖ•Â∫ì] ÊâæÂà∞ÊúâÊïàÂÖ≥Âç°ÔºÅÂΩìÂâçËøõÂ∫¶: {validLevelsFound} / {iterations} (Â∑≤ËÄóË¥πÂ∞ùËØïÊ¨°Êï∞: {attempts})\n");
+                        Debug.Log($"ËøõÂ∫¶: {validLevelsFound}/{iterations} (Â∞ùËØï {attempts} Ê¨°)");
+
+                        yield return new WaitForSeconds(0.15f);
                     }
                 }
+                else
+                {
+                    if (failReason == "VerifyFall") failVerifyFallCount++;
+                    else if (failReason == "VerifyDie") failVerifyDieCount++;
+                    else if (failReason == "VerifyTimeout") failVerifyTimeoutCount++;
+                }
+
                 map.ClearMapToEmpty();
+                if (map.guideLineRenderer != null) map.guideLineRenderer.enabled = false;
+            }
+            else
+            {
+                if (failReason == "Timeout") failTimeoutCount++;
+                else if (failReason == "FallOut") failFallCount++;
+
+                if (attempts % 15 == 0)
+                {
+                    if (map.guideLineRenderer != null && ghostTrajectory.Count > 0)
+                    {
+                        map.guideLineRenderer.positionCount = ghostTrajectory.Count;
+                        map.guideLineRenderer.SetPositions(ghostTrajectory.ToArray());
+                        map.guideLineRenderer.enabled = true;
+                    }
+                    yield return null;
+                }
+            }
+
+            if (attempts % 100 == 0)
+            {
+                File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] [Áä∂ÊÄÅÊí≠Êä•] ÂΩìÂâçÊÄªÂ∞ùËØïÊ¨°Êï∞: {attempts}ÔºåÂ∑≤ÂÖ•Â∫ì: {validLevelsFound}\n");
+                File.AppendAllText(logFilePath, $"   -> ÊúÄËøë100Ê¨°Â§±Ë¥•ÂéüÂõ†ÔºöÈ¨ºÈ≠ÇÂç°Ê≠ª({failTimeoutCount}) | È¨ºÈ≠ÇÂù†Â¥ñ({failFallCount}) | È™åËØÅÂù†ËêΩ({failVerifyFallCount}) | È™åËØÅÊ≠ª‰∫°({failVerifyDieCount}) | È™åËØÅÂç°Â¢ô({failVerifyTimeoutCount})\n");
+
+                failTimeoutCount = 0;
+                failFallCount = 0;
+                failVerifyFallCount = 0;
+                failVerifyDieCount = 0;
+                failVerifyTimeoutCount = 0;
             }
         }
-        Debug.Log($">>> …˙≥…ÕÍ±œ! ◊‹≥¢ ‘: {attempts} ¥Œ£¨≥…π¶: {validLevelsFound} ∏ˆ°£");
+
+        if (map.guideLineRenderer != null) map.guideLineRenderer.enabled = false;
+        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
+        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] ÁîüÊàêÂ∑•‰ΩúÂÖ®ÈÉ®ÁªìÊùüÔºÅ\n");
+        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] ÊúÄÁªàÁªüËÆ° -> ÊÄªÂ∞ùËØï: {attempts} Ê¨°ÔºåÊàêÂäüÁîüÊàê: {validLevelsFound} ‰∏™ÂÖ≥Âç°„ÄÇ\n");
+        Debug.Log($">>> ÁîüÊàêÂÆåÊØï! ÊÄªÂ∞ùËØï: {attempts} Ê¨°ÔºåÊàêÂäü: {validLevelsFound} ‰∏™„ÄÇ");
+
         SelectAndLoadLevel(5, 5);
     }
 
@@ -178,14 +304,13 @@ public class LevelGenerator : MonoBehaviour
 
         if (target != null)
         {
-            Debug.Log($"º”‘ÿπÿø® -> Linearity: {target.linearity:F2}, Density: {target.inputDensity:F2}");
+            Debug.Log($"Âä†ËΩΩÂÖ≥Âç° -> Linearity: {target.linearity:F2}, Density: {target.inputDensity:F2}");
             if (target.path != null && target.path.Count > 0)
             {
                 Vector2i start = target.path[0];
                 Vector2i end = target.path[target.path.Count - 1];
-                BakeLevelToMapDataOnly(target.trajectory, target.safeColumns, start, end);
+                BakeLevelToMapDataOnly(target.trajectory, target.safePlatforms, start, end);
 
-                // --- ŒÔ¿Ì≤„√Ê∞≤∑≈÷’µ„ ---
                 if (finishLinePrefab != null)
                 {
                     Vector2 endWorldPos = map.GetMapTilePosition(end);
@@ -201,80 +326,80 @@ public class LevelGenerator : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Œ¥ƒ‹…˙≥…»Œ∫Œ”––ßπÿø®");
+            Debug.LogError("Êú™ËÉΩÁîüÊàê‰ªª‰ΩïÊúâÊïàÂÖ≥Âç°");
         }
     }
 
-    bool RunSegmentedSimulation(Vector2i startTile, Vector2i endTile)
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, out string finalReason)
     {
-        ClearGhostData();
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
         Vector2 endWorldPos = map.GetMapTilePosition(endTile);
-        ghostAgent.mPosition = startWorldPos;
-        ghostAgent.mSpeed = Vector2.zero;
-        ghostAgent.mCurrentState = Character.CharacterState.Stand;
-        ghostAgent.mOnGround = false;
-        currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
-        float totalDistance = endWorldPos.x - startWorldPos.x;
-        float segmentLength = totalDistance / generationSegments;
-        GhostSnapshot currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
-        for (int i = 1; i <= generationSegments; i++)
+        int microAttempts = 200;
+        finalReason = "";
+
+        for (int i = 0; i < microAttempts; i++)
         {
-            float targetX = startWorldPos.x + segmentLength * i;
-            if (i == generationSegments) targetX = endWorldPos.x;
-            bool segmentSuccess = false;
-            int segmentAttempts = 0;
-            while (!segmentSuccess && segmentAttempts < 200)
+            ClearGhostData();
+            ghostAgent.mPosition = startWorldPos;
+            ghostAgent.mSpeed = Vector2.zero;
+            ghostAgent.mCurrentState = Character.CharacterState.Stand;
+            ghostAgent.mOnGround = false;
+            currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
+
+            if (SimulateGuidedPath(endWorldPos, out finalReason))
             {
-                segmentAttempts++;
-                RestoreSnapshot(currentSnapshot);
-                if (SimulateSegment(targetX, endWorldPos))
-                {
-                    segmentSuccess = true;
-                    currentSnapshot = new GhostSnapshot(ghostAgent, currentVirtualFloorY, ghostPath, ghostReplay, ghostTrajectory, ghostSafeColumns);
-                }
+                return true;
             }
-            if (!segmentSuccess) return false;
         }
-        return true;
+        return false;
     }
 
-    void RestoreSnapshot(GhostSnapshot snap)
+    bool SimulateGuidedPath(Vector2 finalDest, out string reason)
     {
-        ghostAgent.mPosition = snap.position;
-        ghostAgent.mSpeed = snap.speed;
-        ghostAgent.mOnGround = snap.onGround;
-        currentVirtualFloorY = snap.virtualFloorY;
-        ghostPath = new List<Vector2i>(snap.path);
-        ghostPathSet = new HashSet<Vector2i>(snap.path);
-        ghostReplay = new List<ReplayFrame>(snap.replay);
-        ghostTrajectory = new List<Vector3>(snap.trajectory);
-        ghostSafeColumns = new HashSet<int>(snap.safeColumns);
-    }
-
-    bool SimulateSegment(float targetX, Vector2 finalDest)
-    {
-        int safetyCounter = 0;
-        float lastXProgress = ghostAgent.mPosition.x;
+        int framesLimit = 1500;
+        int currentFrames = 0;
         int stagnationCount = 0;
-        while (ghostAgent.mPosition.x < targetX && safetyCounter < 300)
+        Vector2 lastProgressPos = ghostAgent.mPosition;
+
+        while (currentFrames < framesLimit)
         {
-            safetyCounter++;
-            if (ghostAgent.mPosition.x - lastXProgress < 1.0f) stagnationCount++; else stagnationCount = 0;
-            lastXProgress = ghostAgent.mPosition.x;
-            ActionType nextAction;
-            if (stagnationCount > 3)
+            if (Vector2.Distance(ghostAgent.mPosition, finalDest) < Map.cTileSize * 3)
             {
-                nextAction = ActionType.LongJumpRight;
+                reason = "Success";
+                return true;
+            }
+            if (ghostAgent.mPosition.y < map.position.y - 100f)
+            {
+                reason = "FallOut";
+                return false;
+            }
+
+            if (Vector2.Distance(ghostAgent.mPosition, lastProgressPos) < 2.0f)
+            {
+                stagnationCount++;
+            }
+            else
+            {
+                stagnationCount = 0;
+                lastProgressPos = ghostAgent.mPosition;
+            }
+
+            ActionType nextAction;
+            if (stagnationCount > 8)
+            {
+                nextAction = (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
                 stagnationCount = 0;
             }
-            else nextAction = PickAction(ghostAgent.mPosition, finalDest);
-            float heightDiff = finalDest.y - currentVirtualFloorY;
-            float bias = Mathf.Clamp(heightDiff / 100.0f + Random.Range(-0.2f, 0.4f), -0.5f, 0.6f);
-            ExecuteGhostAction(nextAction, bias);
-            if (ghostAgent.mPosition.y < map.position.y) return false;
+            else
+            {
+                nextAction = PickAction(ghostAgent.mPosition, finalDest);
+            }
+
+            currentFrames += ExecuteGhostAction(nextAction);
         }
-        return (ghostAgent.mPosition.x >= targetX);
+
+        reason = "Timeout";
+        return false;
     }
 
     void ClearGhostData()
@@ -284,9 +409,10 @@ public class LevelGenerator : MonoBehaviour
         ghostReplay.Clear();
         ghostTrajectory.Clear();
         ghostSafeColumns.Clear();
+        ghostSafePlatforms.Clear();
     }
 
-    bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile)
+    bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile, out string reason)
     {
         verifiedTrajectory.Clear();
         Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, Map.cTileSize * 2);
@@ -298,16 +424,32 @@ public class LevelGenerator : MonoBehaviour
         validatorAgent.mAABB.Center = validatorAgent.mPosition + validatorAgent.mAABBOffset;
         int frameIndex = 0;
         int maxFrames = ghostReplay.Count + 120;
+
         while (frameIndex < ghostReplay.Count && frameIndex < maxFrames)
         {
             bool[] currentInputs = ghostReplay[frameIndex].inputs;
             validatorAgent.SimulationUpdate(SIM_STEP, currentInputs);
             verifiedTrajectory.Add(new Vector3(validatorAgent.mPosition.x, validatorAgent.mPosition.y, -8f));
-            if (validatorAgent.mPosition.y < map.position.y) return false;
-            if (validatorAgent.mCurrentState == Character.CharacterState.Die) return false;
-            if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 2) return true;
+
+            if (validatorAgent.mPosition.y < map.position.y)
+            {
+                reason = "VerifyFall";
+                return false;
+            }
+            if (validatorAgent.mCurrentState == Character.CharacterState.Die)
+            {
+                reason = "VerifyDie";
+                return false;
+            }
+            if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 2)
+            {
+                reason = "Success";
+                return true;
+            }
             frameIndex++;
         }
+
+        reason = "VerifyTimeout";
         return false;
     }
 
@@ -323,65 +465,168 @@ public class LevelGenerator : MonoBehaviour
 
     ActionType PickAction(Vector2 currentPos, Vector2 endPos)
     {
-        float distToGoal = endPos.x - currentPos.x;
-        float forwardBias = (distToGoal > 100f) ? 0.5f : 0.3f;
-        float r = Random.value;
-        if (r < forwardBias) return ActionType.MoveRight;
-        if (Random.value < 0.6f) return ActionType.JumpRight;
-        return ActionType.LongJumpRight;
+        Vector2i curTile = map.GetMapTileAtPoint(currentPos);
+        float weightRight = 1f;
+        float weightLeft = 1f;
+        float weightUp = 1f;
+        float weightDown = 1f;
+
+        if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
+        {
+            int bestRight = int.MaxValue, bestLeft = int.MaxValue, bestUp = int.MaxValue, bestDown = int.MaxValue;
+            int scanRadius = 3;
+
+            int currentStroke = -1;
+            if (map.survivalSpaceStrokeOrder != null) map.survivalSpaceStrokeOrder.TryGetValue(curTile, out currentStroke);
+
+            for (int dx = -scanRadius; dx <= scanRadius; dx++)
+            {
+                for (int dy = -scanRadius; dy <= scanRadius; dy++)
+                {
+                    Vector2i targetTile = new Vector2i(curTile.x + dx, curTile.y + dy);
+
+                    if (map.survivalSpaceTiles.Contains(targetTile))
+                    {
+                        float baseWeight = 2f;
+                        int targetStroke = -1;
+                        if (map.survivalSpaceStrokeOrder != null) map.survivalSpaceStrokeOrder.TryGetValue(targetTile, out targetStroke);
+
+                        if (targetStroke > currentStroke && targetStroke != -1)
+                        {
+                            baseWeight += 50f;
+                        }
+
+                        if (dx > 0) weightRight += baseWeight;
+                        if (dx < 0) weightLeft += baseWeight;
+                        if (dy > 0) weightUp += baseWeight;
+                        if (dy < 0) weightDown += baseWeight;
+                    }
+
+                    if (survivalGradient.TryGetValue(targetTile, out int dist))
+                    {
+                        if (dx > 0 && dist < bestRight) bestRight = dist;
+                        if (dx < 0 && dist < bestLeft) bestLeft = dist;
+                        if (dy > 0 && dist < bestUp) bestUp = dist;
+                        if (dy < 0 && dist < bestDown) bestDown = dist;
+                    }
+                }
+            }
+
+            int currentDist = int.MaxValue;
+            if (survivalGradient.TryGetValue(curTile, out int cDist)) currentDist = cDist;
+
+            if (bestRight < currentDist) weightRight += 20f;
+            if (bestLeft < currentDist) weightLeft += 20f;
+            if (bestUp < currentDist) weightUp += 20f;
+            if (bestDown < currentDist) weightDown += 20f;
+        }
+        else
+        {
+            if (endPos.x > currentPos.x) weightRight += 5f;
+            else weightLeft += 5f;
+            if (endPos.y > currentPos.y) weightUp += 5f;
+            else weightDown += 5f;
+        }
+
+        float totalWeight = weightRight + weightLeft + weightUp + weightDown;
+        float r = Random.Range(0, totalWeight);
+
+        if (r < weightRight) return (Random.value > 0.4f) ? ActionType.MoveRight : ActionType.JumpRight;
+        r -= weightRight;
+        if (r < weightLeft) return (Random.value > 0.4f) ? ActionType.MoveLeft : ActionType.JumpLeft;
+        r -= weightLeft;
+        if (r < weightUp) return (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
+        return ActionType.Drop;
     }
 
-    void ExecuteGhostAction(ActionType action, float heightBias)
+    int ExecuteGhostAction(ActionType action)
     {
         int frames = 0;
-        bool jump = false;
         bool right = true;
+        bool left = false;
+        bool jump = false;
+        bool drop = false;
+
         switch (action)
         {
-            case ActionType.MoveRight: frames = 15; break;
-            case ActionType.JumpRight: frames = 25; jump = true; break;
-            case ActionType.LongJumpRight: frames = 45; jump = true; break;
+            case ActionType.MoveRight: frames = 15; right = true; break;
+            case ActionType.MoveLeft: frames = 15; left = true; right = false; break;
+            case ActionType.JumpRight: frames = 25; right = true; jump = true; break;
+            case ActionType.JumpLeft: frames = 25; left = true; right = false; jump = true; break;
+            case ActionType.LongJumpRight: frames = 45; right = true; jump = true; break;
+            case ActionType.LongJumpLeft: frames = 45; left = true; right = false; jump = true; break;
+            case ActionType.Drop: frames = 20; drop = true; right = false; left = false; break;
         }
-        if (jump)
-        {
-            float heightChangeTiles = 0;
-            float r = Random.value;
-            if (r < 0.4f) heightChangeTiles = Random.Range(1.0f, 4.0f);
-            else if (r < 0.7f) heightChangeTiles = Random.Range(-6.0f, -2.0f);
-            else heightChangeTiles = 0;
-            heightChangeTiles += heightBias * 5.0f;
-            float changeAmount = heightChangeTiles * Map.cTileSize;
-            float newFloor = currentVirtualFloorY + changeAmount;
-            float mapBottom = map.position.y + Map.cTileSize * 2;
-            float mapTop = map.position.y + (map.mHeight - 8) * Map.cTileSize;
-            newFloor = Mathf.Max(mapBottom, Mathf.Min(newFloor, mapTop));
-            currentVirtualFloorY = newFloor;
-        }
+
         for (int i = 0; i < frames; i++)
         {
             bool[] inputs = new bool[(int)KeyInput.Count];
-            inputs[(int)KeyInput.GoRight] = right;
+            if (!drop)
+            {
+                inputs[(int)KeyInput.GoRight] = right;
+                inputs[(int)KeyInput.GoLeft] = left;
+            }
             if (jump && i < 15) inputs[(int)KeyInput.Jump] = true;
+
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
             RecordGhostTrajectory();
             ghostReplay.Add(new ReplayFrame(inputs));
             ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
+
             if (CheckVirtualFloorCollision()) { }
         }
+        return frames;
     }
 
     bool CheckVirtualFloorCollision()
     {
-        if (ghostAgent.mSpeed.y <= 0 && ghostAgent.mPosition.y <= currentVirtualFloorY)
+        if (ghostAgent.mSpeed.y <= 0)
         {
-            ghostAgent.mPosition.y = currentVirtualFloorY;
-            ghostAgent.mSpeed.y = 0;
-            ghostAgent.mOnGround = true;
-            int landingCol = Mathf.RoundToInt((ghostAgent.mPosition.x - map.position.x) / Map.cTileSize);
-            ghostSafeColumns.Add(landingCol);
-            ghostSafeColumns.Add(landingCol + 1);
-            ghostSafeColumns.Add(landingCol - 1);
-            return true;
+            Vector2i curTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
+            Vector2i tileBelow = new Vector2i(curTile.x, curTile.y - 1);
+
+            bool shouldLand = false;
+            float landY = currentVirtualFloorY;
+
+            if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
+            {
+                if (map.survivalSpaceTiles.Contains(curTile))
+                {
+                    shouldLand = true;
+                    landY = map.GetMapTilePosition(curTile).y - Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
+                }
+                else if (map.survivalSpaceTiles.Contains(tileBelow))
+                {
+                    shouldLand = true;
+                    landY = map.GetMapTilePosition(tileBelow).y + Map.cTileSize / 2.0f + ghostAgent.mAABB.HalfSizeY;
+                }
+            }
+
+            if (!shouldLand && ghostAgent.mPosition.y <= currentVirtualFloorY)
+            {
+                shouldLand = true;
+                landY = currentVirtualFloorY;
+            }
+
+            if (shouldLand && ghostAgent.mPosition.y <= landY + 2f)
+            {
+                ghostAgent.mPosition.y = landY;
+                ghostAgent.mSpeed.y = 0;
+                ghostAgent.mOnGround = true;
+
+                int landingColX = Mathf.RoundToInt((ghostAgent.mPosition.x - map.position.x) / Map.cTileSize);
+                int landingColY = Mathf.RoundToInt((landY - ghostAgent.mAABB.HalfSizeY - map.position.y) / Map.cTileSize);
+
+                ghostSafeColumns.Add(landingColX);
+                ghostSafeColumns.Add(landingColX + 1);
+                ghostSafeColumns.Add(landingColX - 1);
+
+                ghostSafePlatforms.Add(new Vector2i(landingColX, landingColY));
+                ghostSafePlatforms.Add(new Vector2i(landingColX + 1, landingColY));
+                ghostSafePlatforms.Add(new Vector2i(landingColX - 1, landingColY));
+
+                return true;
+            }
         }
         return false;
     }
@@ -411,72 +656,42 @@ public class LevelGenerator : MonoBehaviour
         }
     }
 
-    void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<int> safeCols, Vector2i start, Vector2i end)
+    void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<Vector2i> safePlatforms, Vector2i start, Vector2i end)
     {
         map.ClearMapToEmpty();
-
         HashSet<Vector2i> airMask = new HashSet<Vector2i>();
-        Dictionary<int, int> platformMask = new Dictionary<int, int>();
 
-        int padding = 2;
-        float seed = Random.Range(0f, 100f);
-
-        // 1. ”ƒ¡ÈπÏº£’⁄’÷
         foreach (var point in trajectory)
         {
             int x = Mathf.RoundToInt((point.x - map.position.x) / Map.cTileSize);
             int y = Mathf.RoundToInt((point.y - map.position.y) / Map.cTileSize);
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = 0; dy <= padding; dy++)
+            for (int dx = -2; dx <= 2; dx++)
+                for (int dy = -1; dy <= 3; dy++)
                     airMask.Add(new Vector2i(x + dx, y + dy));
-
-            if (safeCols.Contains(x))
-            {
-                if (!platformMask.ContainsKey(x) || y < platformMask[x])
-                    platformMask[x] = y - 1;
-            }
         }
 
-        // --- ∫À–ƒ–ﬁ∏¥£∫«ø÷∆’˚∫œ…Ëº∆ ¶µƒ…˙¥Êø’º‰ ---
         if (map.survivalSpaceTiles != null)
         {
             foreach (Vector2i safeTile in map.survivalSpaceTiles)
             {
-                // …Ëº∆ ¶ª≠π˝µƒµÿ∑Ω£¨«ø÷∆…ËŒ™ø’∆¯Õ®µ¿
                 airMask.Add(safeTile);
-
-                // Õ–µ◊¬ﬂº≠£∫ºÏ≤Èµ±«∞…˙¥Êø’º‰œ¬∑Ωµƒ“ª∏Ò°£
-                // »Áπ˚œ¬∑Ω≤ª «…˙¥Êø’º‰£¨Àµ√˜’‚ «µÿ∞Â±ﬂ‘µ£¨«ø÷∆“™«Û‘⁄¥À…˙≥…“ªøÈ µÃÂ◊©øÈ£°
-                Vector2i tileBelow = new Vector2i(safeTile.x, safeTile.y - 1);
-                if (!map.survivalSpaceTiles.Contains(tileBelow))
-                {
-                    // ∏≤–¥ platformMask£¨»∑±£’‚¿Ô≥§≥ˆµÊΩ≈ Ø
-                    if (!platformMask.ContainsKey(tileBelow.x) || tileBelow.y > platformMask[tileBelow.x])
-                    {
-                        platformMask[tileBelow.x] = tileBelow.y;
-                    }
-                }
             }
         }
-        // ----------------------------------------
 
-        // 2. µÿ–ŒÃÓ≥‰”Î≥ÂÕª≤√æˆ
+        float seed = Random.Range(0f, 100f);
+
         for (int x = 0; x < map.mWidth; x++)
         {
             for (int y = 0; y < map.mHeight; y++)
             {
                 Vector2i currentPos = new Vector2i(x, y);
 
-                // »Áπ˚Œª”⁄’⁄’÷ƒ⁄£®AI πÏº£ªÚ…Ëº∆ ¶µƒ…˙¥ÊÕ®µ¿£©£¨±ÿ–Î «ø’µƒ
+                if (safePlatforms != null && safePlatforms.Contains(currentPos)) { map.SetTile(x, y, TileType.Block); continue; }
+
                 if (airMask.Contains(currentPos)) { map.SetTile(x, y, TileType.Empty); continue; }
 
-                // »Áπ˚ «Õ–µ◊«¯”Ú£¨±ÿ–Î « µÃÂ◊©øÈ
-                if (platformMask.ContainsKey(x) && platformMask[x] >= y) { map.SetTile(x, y, TileType.Block); continue; }
-
-                // µ◊≤„ª˘◊˘
                 if (y < 2) { map.SetTile(x, y, TileType.Block); continue; }
 
-                // ∆‰À˚Œﬁπÿ«¯”Ú£¨Ωª∏¯∞ÿ¡÷‘Î…˘ÀÊª˙…˙≥…
                 float noiseVal = Mathf.PerlinNoise(x * noiseScale + seed, y * noiseScale + seed);
                 float heightAtten = 1.0f - ((float)y / map.mHeight) * 0.5f;
 
@@ -485,7 +700,6 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 3. ◊∞ Œ–‘æ≤Ã¨º‚¥Ã…˙≥…
         for (int x = 1; x < map.mWidth - 1; x++)
         {
             for (int y = 1; y < map.mHeight - 1; y++)
@@ -494,7 +708,6 @@ public class LevelGenerator : MonoBehaviour
                 Vector2i up = new Vector2i(x, y + 1);
                 Vector2i down = new Vector2i(x, y - 1);
 
-                // …Ëº∆ ¶πÊªÆµƒ…˙¥Ê«¯∏ΩΩ¸£¨æ¯∂‘≤ª≥§ÃÏ»ªº‚¥Ã
                 bool isSafeZone = false;
                 if (map.survivalSpaceTiles != null)
                 {
@@ -521,7 +734,6 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        // ∆µ„”Î÷’µ„µƒ±£ª§¡¢÷˘
         if (start.x != -1) FillColumn(start.x, 0, start.y - 1, TileType.Block);
         if (end.x != -1) FillColumn(end.x, 0, end.y - 1, TileType.Block);
     }
@@ -536,7 +748,6 @@ public class LevelGenerator : MonoBehaviour
             {
                 if (map.GetTile(x, y) == TileType.Empty)
                 {
-                    // »∑±£≤ªª·∞—œ›⁄Â∑≈Ω¯…˙¥Êø’º‰¿Ô
                     if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Contains(new Vector2i(x, y)))
                         continue;
 
@@ -564,6 +775,6 @@ public class LevelGenerator : MonoBehaviour
         }
 
         map.GenerateHeatmap(trapPositions);
-        Debug.Log($">>> IWBTG ∫Ê±∫ÕÍ≥…£°»´Õºπ≤πÃªØ {trapPositions.Count} ∏ˆ”¿æ√œ›⁄Â£¨“—À¯∂®Œ®“ª…˙¥Ê¬∑œﬂ°£");
+        Debug.Log($">>> IWBTG ÁÉòÁÑôÂÆåÊàêÔºÅÂÖ®ÂõæÂÖ±Âõ∫Âåñ {trapPositions.Count} ‰∏™Ê∞∏‰πÖÈô∑Èò±ÔºåÂ∑≤ÈîÅÂÆöÂîØ‰∏ÄÁîüÂ≠òË∑ØÁ∫ø„ÄÇ");
     }
 }

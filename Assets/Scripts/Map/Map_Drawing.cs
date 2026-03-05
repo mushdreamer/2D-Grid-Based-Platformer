@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -22,6 +22,12 @@ public partial class Map
         {
             currentBrush = BrushType.SurvivalSpace;
             Debug.Log("Brush: Survival Space (Safe Zone)");
+        }
+
+        // 捕捉生存空间画笔起笔的瞬间，递增绘制批次计数器
+        if (currentBrush == BrushType.SurvivalSpace && Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            currentSurvivalStrokeIndex++;
         }
 
         Vector2 mousePos = Input.mousePosition;
@@ -67,6 +73,8 @@ public partial class Map
                         else if (currentBrush == BrushType.SurvivalSpace)
                         {
                             survivalSpaceTiles.Add(targetCell);
+                            // 将当前涂抹的格子关联到当前的批次索引中
+                            survivalSpaceStrokeOrder[targetCell] = currentSurvivalStrokeIndex;
                             if (targetCell != startTile && targetCell != endTile)
                                 SetVisual(currentX, currentY, new Color(0f, 1f, 0f, 0.4f));
                         }
@@ -87,9 +95,12 @@ public partial class Map
 
                     bool removed = false;
                     if (playerSelectedPath.Remove(currentCell)) removed = true;
+
                     if (survivalSpaceTiles.Contains(currentCell))
                     {
                         survivalSpaceTiles.Remove(currentCell);
+                        // 右键擦除时同步清理批次字典，避免脏数据残留
+                        survivalSpaceStrokeOrder.Remove(currentCell);
                         removed = true;
                     }
 
@@ -132,6 +143,10 @@ public partial class Map
 
         playerSelectedPath.Clear();
         survivalSpaceTiles.Clear();
+
+        // 重置时清空批次字典与计数器
+        survivalSpaceStrokeOrder.Clear();
+        currentSurvivalStrokeIndex = 0;
 
         ClearSurvivalSpaceVisuals();
 
@@ -189,7 +204,7 @@ public partial class Map
 
     private void StartTrialMode()
     {
-        if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("�޷���ʼ��δ���������յ㣡"); return; }
+        if (startTile.x == -1 || endTile.x == -1) { Debug.LogError("无法开始：未设置起点或终点！"); return; }
 
         FillMapWithBlocks();
         SetTile(startTile.x, startTile.y, TileType.Empty);

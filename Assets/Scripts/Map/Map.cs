@@ -96,6 +96,10 @@ public partial class Map : MonoBehaviour
     // 生存空间集合
     public HashSet<Vector2i> survivalSpaceTiles = new HashSet<Vector2i>();
 
+    // [新增] 记录生存空间的绘制批次（Stroke），用于区分规划的先后顺序
+    public Dictionary<Vector2i, int> survivalSpaceStrokeOrder = new Dictionary<Vector2i, int>();
+    public int currentSurvivalStrokeIndex = 0;
+
     // [新增] 可视化对象列表
     private List<GameObject> debugSafeZoneVisuals = new List<GameObject>();
 
