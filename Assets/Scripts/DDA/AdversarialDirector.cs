@@ -26,12 +26,22 @@ public class AdversarialDirector : MonoBehaviour
     public float predictionWindow = 0.6f;
     public float cooldown = 1.5f;
 
+    [Header("Quality of Life (体验优化)")]
+    public bool ignoreIdlePlayer = true;      // 是否忽略静止的玩家
+    public float spawnProtectionTime = 2.0f;  // 出生无敌保护时间（秒）
+    private float runStartTime = 0f;          // 记录导演开始运行的时间
+
     [Header("Terrain Trap Settings")]
     public float terrainCooldown = 4.0f;
     private float lastTerrainTime = 0f;
 
     [Header("The Arsenal")]
     public List<TrapConfig> trapLibrary = new List<TrapConfig>();
+
+    [Header("IWBTG Sculpting Mode")]
+    public bool isIWBTGSculptingMode = false;
+    public float deviationTolerance = 1.5f; // 允许偏离基准轨迹的最大距离约束
+    private List<Vector3> goldenTrajectory = new List<Vector3>();
 
     private float lastTrapTime = 0f;
     private bool isRunning = true;
@@ -47,7 +57,23 @@ public class AdversarialDirector : MonoBehaviour
     public void SetRunning(bool state)
     {
         isRunning = state;
-        if (!isRunning) ClearTraps();
+        if (isRunning)
+        {
+            runStartTime = Time.time; // 启动时记录时间，开启出生保护
+            lastTrapTime = Time.time;
+            lastTerrainTime = Time.time;
+        }
+        else
+        {
+            ClearTraps();
+        }
+    }
+
+    public void StartIWBTGSculpting(List<Vector3> intendedPath)
+    {
+        goldenTrajectory = new List<Vector3>(intendedPath);
+        isIWBTGSculptingMode = true;
+        Debug.Log(">>> 导演已进入 IWBTG 雕刻模式，开始执行空间约束闭环。");
     }
 
     void Update()
@@ -60,16 +86,51 @@ public class AdversarialDirector : MonoBehaviour
 
         if (!isRunning || targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy) return;
 
+        // --- 1. 出生保护期 ---
+        // 游戏刚开始的几秒内，导演强制挂机，避免玩家刚出生还没看清地图就暴毙
+        if (Time.time < runStartTime + spawnProtectionTime)
+        {
+            lastTrapTime = Time.time;
+            lastTerrainTime = Time.time;
+            return;
+        }
+
+        // --- 2. 静止摸鱼保护 ---
+        // 只要玩家不在死亡状态，且在地面上没有明显的水平移动，导演就不会发动攻击
+        // 注意：在 IWBTG 自动烘焙模式下，我们不需要保护，让 Bot 接受严苛测试
+        if (ignoreIdlePlayer && targetPlayer.mCurrentState != Character.CharacterState.Die && !isIWBTGSculptingMode)
+        {
+            bool isIdle = targetPlayer.mOnGround && Mathf.Abs(targetPlayer.mSpeed.x) < 0.1f;
+            if (isIdle)
+            {
+                // 玩家挂机，导演的冷却计时器也跟着冻结
+                lastTrapTime = Time.time;
+                lastTerrainTime = Time.time;
+                return;
+            }
+        }
+
+        // 如果处于极限难度雕刻模式，则执行严格的轨迹约束，跳过常规的随机陷阱逻辑
+        if (isIWBTGSculptingMode && targetPlayer.mCurrentState != Character.CharacterState.Die)
+        {
+            CheckDeviationAndEnforceConstraint();
+            return;
+        }
+
         // 清理空对象
         for (int i = activeTraps.Count - 1; i >= 0; i--)
             if (activeTraps[i] == null) activeTraps.RemoveAt(i);
 
-        // --- 0. 检测玩家是否在生存空间 ---
+        // --- 3. 检测玩家是否在生存空间 ---
         Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
         Vector2i playerTile = map.GetMapTileAtPoint(feetPos);
-        bool inSafeZone = map.survivalSpaceTiles.Contains(playerTile);
+        bool inSafeZone = false;
+        if (map.survivalSpaceTiles != null)
+        {
+            inSafeZone = map.survivalSpaceTiles.Contains(playerTile);
+        }
 
-        // --- 1. 永久地形杀检测 (无视安全区，因为这是玩家自己作死留下的遗产) ---
+        // --- 4. 永久地形杀检测 (无视安全区) ---
         if (targetPlayer.mOnGround)
         {
             if (permanentCrackTriggers.Contains(playerTile))
@@ -83,15 +144,15 @@ public class AdversarialDirector : MonoBehaviour
             }
         }
 
-        // --- 2. 安全区逻辑分支 ---
+        // --- 5. 安全区逻辑分支 ---
         if (inSafeZone)
         {
-            // 在安全区内：休眠，不生成新陷阱
+            // 在安全区内：休眠，不生成新陷阱，重置冷却时间防止出圈瞬间被秒杀
+            lastTrapTime = Time.time;
             return;
         }
 
-        // --- 3. 危险区逻辑 (暴走模式) ---
-        // 在非安全区，我们使用更激进的冷却时间
+        // --- 6. 危险区逻辑 (暴走模式) ---
         float effectiveCooldown = 0.5f; // 极速攻击
 
         // 普通陷阱
@@ -100,18 +161,46 @@ public class AdversarialDirector : MonoBehaviour
             AttemptLethalTrap();
         }
 
-        // 地形变动 (仍然保持一定的节奏，否则地面全裂没了)
+        // 地形变动 
         if (Time.time > lastTerrainTime + terrainCooldown)
         {
-            if (targetPlayer.mOnGround && Random.value < 0.1f) // 提高触发概率
+            if (targetPlayer.mOnGround && Random.value < 0.1f)
             {
                 TriggerGroundCrackCombo();
             }
         }
     }
 
-    // ... (以下所有方法保持不变：TriggerGroundCrackCombo, RecordKillerTrap, OnPlayerDeath 等) ...
-    // ... 请保留原有的其他逻辑代码，不要删除 ...
+    void CheckDeviationAndEnforceConstraint()
+    {
+        if (goldenTrajectory == null || goldenTrajectory.Count == 0) return;
+
+        float minDistance = float.MaxValue;
+        foreach (Vector3 pos in goldenTrajectory)
+        {
+            float dist = Vector2.Distance(targetPlayer.mPosition, (Vector2)pos);
+            if (dist < minDistance) minDistance = dist;
+        }
+
+        if (minDistance > deviationTolerance * Map.cTileSize)
+        {
+            Debug.Log($"<color=magenta>Director: 发现轨迹违规偏移 (偏差 {minDistance:F2})，执行硬约束抹杀。</color>");
+
+            TrapConfig executionConfig = trapLibrary.Find(x => x.name == "AbyssSpike");
+            if (executionConfig.prefab == null && trapLibrary.Count > 0) executionConfig = trapLibrary[0];
+
+            if (executionConfig.prefab != null)
+            {
+                Vector2 killZone = targetPlayer.mPosition;
+                SpawnTrap(executionConfig, killZone + Vector2.up * 50f, killZone, true);
+
+                KillerMemory mem = new KillerMemory { configName = executionConfig.name, spawnPos = killZone + Vector2.up * 50f, targetPos = killZone, isEvent = false };
+                killerHallOfFame.Add(mem);
+
+                targetPlayer.Die();
+            }
+        }
+    }
 
     void TriggerGroundCrackCombo()
     {
@@ -194,7 +283,7 @@ public class AdversarialDirector : MonoBehaviour
         {
             Vector2 killZone = futurePath[futurePath.Count - 1];
             SpawnTrap(config, spawnPos.Value, killZone, false);
-            lastTrapTime = Time.time;
+            lastTrapTime = Time.time; // 攻击后重置计时器
         }
     }
 

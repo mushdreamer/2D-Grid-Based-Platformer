@@ -44,15 +44,16 @@ public partial class Map
 
                     if (currentX >= 0 && currentX < mWidth && currentY >= 0 && currentY < mHeight)
                     {
-                        ClearTileState(targetCell);
                         if (currentBrush == BrushType.StartPoint)
                         {
+                            ClearTileState(targetCell);
                             if (startTile.x != -1) ResetVisual(startTile.x, startTile.y);
                             startTile = targetCell;
                             SetVisual(currentX, currentY, Color.cyan);
                         }
                         else if (currentBrush == BrushType.EndPoint)
                         {
+                            ClearTileState(targetCell);
                             if (endTile.x != -1) ResetVisual(endTile.x, endTile.y);
                             endTile = targetCell;
                             SetVisual(currentX, currentY, Color.yellow);
@@ -60,12 +61,14 @@ public partial class Map
                         else if (currentBrush == BrushType.Path)
                         {
                             playerSelectedPath.Add(targetCell);
-                            SetVisual(currentX, currentY, new Color(0.5f, 1f, 0.5f, 0.5f));
+                            if (targetCell != startTile && targetCell != endTile)
+                                SetVisual(currentX, currentY, new Color(0.5f, 1f, 0.5f, 0.5f));
                         }
                         else if (currentBrush == BrushType.SurvivalSpace)
                         {
                             survivalSpaceTiles.Add(targetCell);
-                            SetVisual(currentX, currentY, new Color(0f, 1f, 0f, 0.4f));
+                            if (targetCell != startTile && targetCell != endTile)
+                                SetVisual(currentX, currentY, new Color(0f, 1f, 0f, 0.4f));
                         }
                     }
                 }
@@ -130,7 +133,6 @@ public partial class Map
         playerSelectedPath.Clear();
         survivalSpaceTiles.Clear();
 
-        // [新增] 清理可视化显示
         ClearSurvivalSpaceVisuals();
 
         startTile = new Vector2i(-1, -1);
@@ -204,7 +206,6 @@ public partial class Map
 
         currentPhase = GamePhase.TrialPlay;
 
-        // [新增] 试玩开始时显示可视化
         ShowSurvivalSpaceVisuals();
 
         if (director != null)
