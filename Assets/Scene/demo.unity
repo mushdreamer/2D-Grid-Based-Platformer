@@ -523,9 +523,16 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
-  generationSegments: 4
+  targetValidLevels: 50
+  maxTotalAttempts: 7500
   blockDensity: 0.45
   noiseScale: 0.15
+  finishLinePrefab: {fileID: 0}
+  enableIWBTGBaking: 1
+  hardcoreDeviationTolerance: 1.5
+  enableSearchVisuals: 1
+  successDisplayTime: 0.15
+  searchDisplayTime: 0.02
 --- !u!1 &448407002
 GameObject:
   m_ObjectHideFlags: 0
@@ -2836,6 +2843,8 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   predictionWindow: 0.6
   cooldown: 3
+  ignoreIdlePlayer: 1
+  spawnProtectionTime: 2
   terrainCooldown: 4
   trapLibrary:
   - name: Falling Apple
@@ -2858,6 +2867,8 @@ MonoBehaviour:
       type: 3}
     strategy: 0
     weight: 1
+  isIWBTGSculptingMode: 0
+  deviationTolerance: 1.5
 --- !u!4 &1973834182
 Transform:
   m_ObjectHideFlags: 0
@@ -3271,6 +3282,7 @@ MonoBehaviour:
   levelGenerator: {fileID: 415122243}
   guideLineRenderer: {fileID: 2106156358}
   director: {fileID: 1973834181}
+  currentSurvivalStrokeIndex: 0
   mapRoomSimple: {fileID: 0}
   mapRoomOneWay: {fileID: 11400000, guid: 2d6365466254ab14894fd8ce8735f75f, type: 2}
   gameCamera: {fileID: 1799959646}
@@ -3308,6 +3320,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 22c039020ced5db48a90c1457fb475b2, type: 3}
   - {fileID: 21300000, guid: 4795c96a5cc891842bd66d559b49b72a, type: 3}
   - {fileID: 21300000, guid: d5fad697da1fc484a99063c9dc58a113, type: 3}
+  heatmapSprite: {fileID: 0}
+  safeColor: {r: 0, g: 1, b: 0, a: 0.3}
+  dangerColor: {r: 1, g: 0, b: 0, a: 0.7}
 --- !u!4 &2106156356
 Transform:
   m_ObjectHideFlags: 0
@@ -3338,9 +3353,16 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 0}
-  generationSegments: 4
+  targetValidLevels: 500
+  maxTotalAttempts: 7500
   blockDensity: 0.45
   noiseScale: 0.15
+  finishLinePrefab: {fileID: 0}
+  enableIWBTGBaking: 1
+  hardcoreDeviationTolerance: 1.5
+  enableSearchVisuals: 1
+  successDisplayTime: 0.15
+  searchDisplayTime: 0.02
 --- !u!120 &2106156358
 LineRenderer:
   serializedVersion: 2

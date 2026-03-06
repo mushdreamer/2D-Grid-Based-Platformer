@@ -12,7 +12,6 @@ public enum TileType
     Danger
 }
 
-// 这是一个分部类，与 Map_Utils, Map_Drawing, Map_IO 共同组成 Map 类
 [System.Serializable]
 public partial class Map : MonoBehaviour
 {
@@ -24,7 +23,6 @@ public partial class Map : MonoBehaviour
     public PathFinderFast mPathFinder;
     [HideInInspector] public byte[,] mGrid;
 
-    // 道具占用网格
     private bool[,] mItemGrid;
 
     [HideInInspector] private TileType[,] tiles;
@@ -93,14 +91,10 @@ public partial class Map : MonoBehaviour
 
     private HashSet<Vector2i> playerSelectedPath = new HashSet<Vector2i>();
 
-    // 生存空间集合
     public HashSet<Vector2i> survivalSpaceTiles = new HashSet<Vector2i>();
-
-    // [新增] 记录生存空间的绘制批次（Stroke），用于区分规划的先后顺序
     public Dictionary<Vector2i, int> survivalSpaceStrokeOrder = new Dictionary<Vector2i, int>();
     public int currentSurvivalStrokeIndex = 0;
 
-    // [新增] 可视化对象列表
     private List<GameObject> debugSafeZoneVisuals = new List<GameObject>();
 
     public HashSet<int> safeLandingColumns = new HashSet<int>();
@@ -123,7 +117,6 @@ public partial class Map : MonoBehaviour
     public List<Sprite> mDirtSprites;
     System.Random mRandomNumber;
 
-    // 地图状态备份，用于死亡回溯
     private TileType[,] initialTilesBackup;
 
     public void Start()
@@ -155,7 +148,7 @@ public partial class Map : MonoBehaviour
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
             mItemGrid = new bool[mWidth, mHeight];
 
-            InitPathFinder(); // 调用 Map_Utils
+            InitPathFinder();
 
             Camera.main.orthographicSize = Camera.main.pixelHeight / 2;
 
@@ -198,7 +191,7 @@ public partial class Map : MonoBehaviour
             mGrid = new byte[Mathf.NextPowerOfTwo((int)mWidth), Mathf.NextPowerOfTwo((int)mHeight)];
             mItemGrid = new bool[mWidth, mHeight];
 
-            InitPathFinder(); // 调用 Map_Utils
+            InitPathFinder();
 
             for (int y = 0; y < mHeight; ++y)
             {
@@ -211,7 +204,6 @@ public partial class Map : MonoBehaviour
             }
             player.gameObject.SetActive(false);
 
-            // 调用 Map_Drawing 中的方法
             ResetToDrawingMode();
         }
 
@@ -297,7 +289,7 @@ public partial class Map : MonoBehaviour
         if (pythonScriptsFinished)
         {
             pythonScriptsFinished = false;
-            LoadGeneratedLevel(); // 调用 Map_IO.cs
+            LoadGeneratedLevel();
         }
 
         switch (currentPhase)
@@ -307,14 +299,14 @@ public partial class Map : MonoBehaviour
                 else if (Input.GetKeyDown(KeyCode.Alpha2)) { currentBrush = BrushType.Path; Debug.Log("Brush: Path"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha3)) { currentBrush = BrushType.EndPoint; Debug.Log("Brush: End Point"); }
                 else if (Input.GetKeyDown(KeyCode.Alpha4)) { currentBrush = BrushType.SurvivalSpace; Debug.Log("Brush: Survival Space"); }
-                else if (Input.GetKeyDown(KeyCode.Return)) { HandleEnterKeySave(); } // 调用 Map_IO.cs
+                else if (Input.GetKeyDown(KeyCode.Return)) { HandleEnterKeySave(); }
 
-                HandleDrawingInput(); // 调用 Map_Drawing.cs
+                HandleDrawingInput();
 
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     if (startTile.x == -1 || endTile.x == -1) Debug.LogError("无法开始：请先设置 起点(1) 和 终点(3)！");
-                    else StartTrialMode(); // 调用 Map_Drawing.cs
+                    else StartTrialMode();
                 }
 
                 if (Input.GetKeyDown(KeyCode.G))
@@ -327,22 +319,23 @@ public partial class Map : MonoBehaviour
 
                     Debug.Log("生成 MAP-Elites 关卡库中...");
                     ClearMapToEmpty();
-                    levelGenerator.GenerateMapElitesLibrary(startTile, endTile, 50);
+
+                    // 【绝对解耦】不再强行塞硬编码的值，将权限完全交给可视化面板设置的参数！
+                    levelGenerator.GenerateMapElitesLibrary(startTile, endTile);
                 }
                 break;
 
             case GamePhase.TrialPlay:
-                HandlePlayingInput(); // 调用 Map_Drawing.cs
-                if (Input.GetKeyDown(KeyCode.Backspace)) ReturnToDrawingMode(); // Map_Drawing.cs
-                else if (Input.GetKeyDown(KeyCode.R)) ResetToDrawingMode(); // Map_Drawing.cs
+                HandlePlayingInput();
+                if (Input.GetKeyDown(KeyCode.Backspace)) ReturnToDrawingMode();
+                else if (Input.GetKeyDown(KeyCode.R)) ResetToDrawingMode();
                 break;
         }
     }
 
-    // [新增] 显示生存空间 (半透明绿色)
     public void ShowSurvivalSpaceVisuals()
     {
-        ClearSurvivalSpaceVisuals(); // 防止重复
+        ClearSurvivalSpaceVisuals();
 
         if (mDirtSprites == null || mDirtSprites.Count == 0) return;
 
@@ -353,15 +346,14 @@ public partial class Map : MonoBehaviour
             vis.transform.parent = transform;
 
             SpriteRenderer sr = vis.AddComponent<SpriteRenderer>();
-            sr.sprite = mDirtSprites[0]; // 复用砖块图片
-            sr.color = new Color(0f, 1f, 0f, 0.3f); // 半透明绿色
-            sr.sortingOrder = 15; // 显示在地形之上，玩家之下(20)
+            sr.sprite = mDirtSprites[0];
+            sr.color = new Color(0f, 1f, 0f, 0.3f);
+            sr.sortingOrder = 15;
 
             debugSafeZoneVisuals.Add(vis);
         }
     }
 
-    // [新增] 清理显示
     public void ClearSurvivalSpaceVisuals()
     {
         foreach (var obj in debugSafeZoneVisuals)
@@ -378,7 +370,7 @@ public partial class Map : MonoBehaviour
         {
             for (int y = 0; y < mHeight; y++)
             {
-                initialTilesBackup[x, y] = GetTile(x, y); // Map_Utils
+                initialTilesBackup[x, y] = GetTile(x, y);
             }
         }
         Debug.Log("Map: 初始状态已备份。");
@@ -506,7 +498,6 @@ public partial class Map : MonoBehaviour
         currentPhase = GamePhase.TrialPlay;
         if (player != null) player.StartReplay(replay);
 
-        // [新增] 生成关卡后，显示生存空间的可视化
         ShowSurvivalSpaceVisuals();
 
         if (director != null)
@@ -732,7 +723,7 @@ public partial class Map : MonoBehaviour
         }
         else
         {
-            ResetToDrawingMode(); // 调用 Map_Drawing.cs
+            ResetToDrawingMode();
         }
     }
 
