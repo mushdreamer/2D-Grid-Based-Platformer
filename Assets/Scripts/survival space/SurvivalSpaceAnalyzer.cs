@@ -7,6 +7,15 @@ using System.Linq;
 /// </summary>
 public static class SurvivalSpaceAnalyzer
 {
+    public enum ZoneGeometry
+    {
+        SmallSpot,          // 极小空间（不进行特殊限制）
+        HorizontalCorridor, // 横向走廊（适合左右移动、远跳）
+        VerticalShaft,      // 纵向天井（适合高跳、下落）
+        SquareRoom,         // 方形房间（适合综合跳跃）
+        OrganicShape        // 不规则形状
+    }
+
     [System.Serializable]
     public class SurvivalZone
     {
@@ -14,6 +23,7 @@ public static class SurvivalSpaceAnalyzer
         public List<Vector2i> tiles;            // 包含的所有瓦片坐标
         public Rect bounds;                     // 区域的包围盒
         public Vector2 center;                  // 区域中心点（世界坐标）
+        public ZoneGeometry geometryType;       // 空间的几何类型
 
         public SurvivalZone(int id)
         {
@@ -37,8 +47,28 @@ public static class SurvivalSpaceAnalyzer
                 if (pos.y > maxY) maxY = pos.y;
             }
 
-            bounds = new Rect(minX, minY, maxX - minX, maxY - minY);
+            // 加上一个基础的瓦片尺寸，防止单排/单列区域出现宽度或高度为0的情况
+            float width = (maxX - minX) + Map.cTileSize;
+            float height = (maxY - minY) + Map.cTileSize;
+
+            bounds = new Rect(minX, minY, width, height);
             center = bounds.center;
+
+            // 自动计算并赋予几何类型
+            geometryType = IdentifyGeometryType(width, height, tiles.Count);
+        }
+
+        private ZoneGeometry IdentifyGeometryType(float width, float height, int tileCount)
+        {
+            if (tileCount < 5) return ZoneGeometry.SmallSpot;
+
+            float aspect = width / height;
+
+            if (aspect > 2.5f) return ZoneGeometry.HorizontalCorridor;
+            if (aspect < 0.4f) return ZoneGeometry.VerticalShaft;
+            if (aspect >= 0.8f && aspect <= 1.2f) return ZoneGeometry.SquareRoom;
+
+            return ZoneGeometry.OrganicShape;
         }
     }
 

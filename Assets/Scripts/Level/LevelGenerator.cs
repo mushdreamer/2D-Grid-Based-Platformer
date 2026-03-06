@@ -232,6 +232,10 @@ public partial class LevelGenerator : MonoBehaviour
         }
         BuildSurvivalGradient(endTile);
 
+        List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
+        LevelGenerationPlanner planner = new LevelGenerationPlanner();
+        planner.PlanGlobalRoute(map, zones);
+
         Debug.Log($">>> 开始生成全向引力关卡，完全读取面板参数控制规模...");
 
         while (validLevelsFound < targetValidLevels && attempts < maxTotalAttempts)
@@ -240,7 +244,7 @@ public partial class LevelGenerator : MonoBehaviour
             string failReason = "";
             Vector2 failPos = Vector2.zero;
 
-            if (RunGuidedSimulation(startTile, endTile, out failReason, out failPos))
+            if (RunGuidedSimulation(startTile, endTile, planner.plannedRoute, out failReason, out failPos))
             {
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, startTile, endTile);
 
@@ -343,11 +347,17 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, out string finalReason, out Vector2 failPos)
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos)
     {
         int microAttempts = 200;
         finalReason = "";
         failPos = Vector2.zero;
+
+        if (route == null || route.Count == 0)
+        {
+            finalReason = "RouteEmpty_规划路线为空";
+            return false;
+        }
 
         for (int i = 0; i < microAttempts; i++)
         {
@@ -364,7 +374,6 @@ public partial class LevelGenerator : MonoBehaviour
             }
 
             Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, characterPrefab.mAABB.HalfSizeY + 1f);
-            Vector2 endWorldPos = map.GetMapTilePosition(endTile);
 
             ghostAgent.mPosition = startWorldPos;
             ghostAgent.mSpeed = Vector2.zero;
@@ -373,12 +382,22 @@ public partial class LevelGenerator : MonoBehaviour
 
             currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize * 5f;
 
-            if (SimulateGuidedPath(endWorldPos, out finalReason, out failPos)) return true;
+            bool routeSuccess = true;
+            foreach (var step in route)
+            {
+                if (!SimulateGuidedPath(step.endPoint, step.associatedZone, out finalReason, out failPos))
+                {
+                    routeSuccess = false;
+                    break;
+                }
+            }
+
+            if (routeSuccess) return true;
         }
         return false;
     }
 
-    bool SimulateGuidedPath(Vector2 finalDest, out string reason, out Vector2 failPos)
+    bool SimulateGuidedPath(Vector2 finalDest, SurvivalSpaceAnalyzer.SurvivalZone currentZone, out string reason, out Vector2 failPos)
     {
         int framesLimit = 1500;
         int currentFrames = 0;
@@ -399,7 +418,7 @@ public partial class LevelGenerator : MonoBehaviour
             if (Vector2.Distance(ghostAgent.mPosition, lastProgressPos) < 2.0f) stagnationCount++;
             else { stagnationCount = 0; lastProgressPos = ghostAgent.mPosition; }
 
-            ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount);
+            ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone);
             if (stagnationCount > 8) stagnationCount = 0;
 
             currentFrames += ExecuteGhostAction(nextAction);
@@ -472,7 +491,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (map.GetTile(x, y) == TileType.Empty) map.SetTile(x, y, TileType.Danger);
     }
 
-    ActionType PickAction(Vector2 currentPos, Vector2 endPos, int stagnationCount)
+    ActionType PickAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
         Vector2i curTile = map.GetMapTileAtPoint(currentPos);
         float weightRight = 1f, weightLeft = 1f, weightUp = 1f, weightDown = 1f;
@@ -551,28 +570,57 @@ public partial class LevelGenerator : MonoBehaviour
             if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
         }
 
+        ActionType pickedAction = ActionType.Drop;
+
         if (stagnationCount > 8)
         {
-            if (weightUp >= weightRight && weightUp >= weightLeft) return (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-            if (weightRight >= weightLeft) return ActionType.LongJumpRight;
-            return ActionType.LongJumpLeft;
+            if (weightUp >= weightRight && weightUp >= weightLeft) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
+            else if (weightRight >= weightLeft) pickedAction = ActionType.LongJumpRight;
+            else pickedAction = ActionType.LongJumpLeft;
         }
-
-        float totalWeight = weightRight + weightLeft + weightUp + weightDown;
-        float r = Random.Range(0, totalWeight);
-
-        if (r < weightRight) return (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
-        r -= weightRight;
-        if (r < weightLeft) return (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
-        r -= weightLeft;
-        if (r < weightUp)
+        else
         {
-            float upR = Random.value;
-            if (upR < 0.33f) return (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-            else if (upR < 0.66f) return (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
-            else return (Random.value > 0.5f) ? ActionType.JumpRight : ActionType.JumpLeft;
+            float totalWeight = weightRight + weightLeft + weightUp + weightDown;
+            float r = Random.Range(0, totalWeight);
+
+            if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
+            else
+            {
+                r -= weightRight;
+                if (r < weightLeft) pickedAction = (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
+                else
+                {
+                    r -= weightLeft;
+                    if (r < weightUp)
+                    {
+                        float upR = Random.value;
+                        if (upR < 0.33f) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
+                        else if (upR < 0.66f) pickedAction = (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
+                        else pickedAction = (Random.value > 0.5f) ? ActionType.JumpRight : ActionType.JumpLeft;
+                    }
+                    else pickedAction = ActionType.Drop;
+                }
+            }
         }
-        return ActionType.Drop;
+
+        SurvivalSpaceAnalyzer.ZoneGeometry geometry = zone != null ? zone.geometryType : SurvivalSpaceAnalyzer.ZoneGeometry.OrganicShape;
+
+        if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.HorizontalCorridor)
+        {
+            if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.LongJumpRight;
+            if (pickedAction == ActionType.HighJumpLeft) pickedAction = ActionType.LongJumpLeft;
+            if (pickedAction == ActionType.JumpRight) pickedAction = ActionType.MoveRight;
+            if (pickedAction == ActionType.JumpLeft) pickedAction = ActionType.MoveLeft;
+        }
+        else if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.VerticalShaft)
+        {
+            if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.HighJumpRight;
+            if (pickedAction == ActionType.LongJumpLeft) pickedAction = ActionType.HighJumpLeft;
+            if (pickedAction == ActionType.MoveRight) pickedAction = ActionType.JumpRight;
+            if (pickedAction == ActionType.MoveLeft) pickedAction = ActionType.JumpLeft;
+        }
+
+        return pickedAction;
     }
 
     int ExecuteGhostAction(ActionType action)
