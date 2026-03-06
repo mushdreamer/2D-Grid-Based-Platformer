@@ -391,6 +391,7 @@
 "Assets/Scripts/Setting/HUDFPS.cs"
 "Assets/Scripts/Setting/MovingObject.cs"
 "Assets/Scripts/Setting/Vector2i.cs"
+"Assets/Scripts/survival space/LevelGenerationPlanner.cs"
 "Assets/Scripts/survival space/SurvivalSpaceAnalyzer.cs"
 "Assets/Scripts/survival space/SurvivalSpaceVisualizer.cs"
 -langversion:9.0

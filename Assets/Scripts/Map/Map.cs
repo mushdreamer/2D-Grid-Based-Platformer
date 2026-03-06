@@ -46,8 +46,8 @@ public partial class Map : MonoBehaviour
 
     [Header("Brushes")]
     public BrushType currentBrush = BrushType.Path;
-    private Vector2i startTile = new Vector2i(-1, -1);
-    private Vector2i endTile = new Vector2i(-1, -1);
+    public Vector2i startTile = new Vector2i(-1, -1);
+    public Vector2i endTile = new Vector2i(-1, -1);
 
     [Header("Gameplay State")]
     public GamePhase currentPhase = GamePhase.Drawing;
