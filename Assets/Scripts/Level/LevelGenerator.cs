@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System;
 using Random = UnityEngine.Random;
 
@@ -51,7 +50,8 @@ public class GhostSnapshot
     }
 }
 
-public class LevelGenerator : MonoBehaviour
+// 注意这里加了 partial 关键字，以便和视觉、日志文件合并
+public partial class LevelGenerator : MonoBehaviour
 {
     public Map map;
     public Bot characterPrefab;
@@ -173,14 +173,11 @@ public class LevelGenerator : MonoBehaviour
         int failVerifyDieCount = 0;
         int failVerifyTimeoutCount = 0;
 
-        string logFilePath = Path.Combine(Application.dataPath, "../LevelGeneratorLog.txt");
-        File.WriteAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] 系统启动：开始生成全向引力关卡库 (可视化进程版)\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] 目标有效样本数: {iterations}，安全熔断最大尝试次数: {maxAttempts}\n");
-        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
+        // 调用日志文件的初始化接口
+        InitLog("分离可视化与日志模块版本", iterations, maxAttempts);
 
         BuildSurvivalGradient(endTile);
-
-        Debug.Log($">>> 开始生成全向引力关卡 (目标: {iterations} 个样本, 最大尝试: {maxAttempts} 次)... 请查看项目根目录下的 LevelGeneratorLog.txt 了解实时进度！");
+        Debug.Log($">>> 开始生成全向引力关卡 (目标: {iterations} 个样本, 最大尝试: {maxAttempts} 次)...");
 
         while (validLevelsFound < iterations && attempts < maxAttempts)
         {
@@ -191,14 +188,8 @@ public class LevelGenerator : MonoBehaviour
             {
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, startTile, endTile);
 
-                if (map.guideLineRenderer != null && ghostTrajectory.Count > 0)
-                {
-                    map.guideLineRenderer.positionCount = ghostTrajectory.Count;
-                    map.guideLineRenderer.SetPositions(ghostTrajectory.ToArray());
-                    map.guideLineRenderer.enabled = true;
-                }
-
-                yield return null;
+                // 调用可视化文件的接口展示成功前的一瞥
+                yield return StartCoroutine(ShowSearchVisualsRoutine(ghostTrajectory));
 
                 if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason))
                 {
@@ -224,10 +215,12 @@ public class LevelGenerator : MonoBehaviour
                         eliteGrid[x, y] = newInd;
                         validLevelsFound++;
 
-                        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] [成功入库] 找到有效关卡！当前进度: {validLevelsFound} / {iterations} (已耗费尝试次数: {attempts})\n");
+                        // 调用日志接口记录成功
+                        LogSuccess(validLevelsFound, iterations, attempts);
                         Debug.Log($"进度: {validLevelsFound}/{iterations} (尝试 {attempts} 次)");
 
-                        yield return new WaitForSeconds(0.15f);
+                        // 调用可视化文件的接口展示最终通过路线
+                        yield return StartCoroutine(ShowSuccessVisualsRoutine(verifiedTrajectory));
                     }
                 }
                 else
@@ -238,7 +231,7 @@ public class LevelGenerator : MonoBehaviour
                 }
 
                 map.ClearMapToEmpty();
-                if (map.guideLineRenderer != null) map.guideLineRenderer.enabled = false;
+                ClearVisuals();
             }
             else
             {
@@ -247,20 +240,15 @@ public class LevelGenerator : MonoBehaviour
 
                 if (attempts % 15 == 0)
                 {
-                    if (map.guideLineRenderer != null && ghostTrajectory.Count > 0)
-                    {
-                        map.guideLineRenderer.positionCount = ghostTrajectory.Count;
-                        map.guideLineRenderer.SetPositions(ghostTrajectory.ToArray());
-                        map.guideLineRenderer.enabled = true;
-                    }
-                    yield return null;
+                    // 调用可视化文件展示失败挣扎线路
+                    yield return StartCoroutine(ShowSearchVisualsRoutine(ghostTrajectory));
                 }
             }
 
             if (attempts % 100 == 0)
             {
-                File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] [状态播报] 当前总尝试次数: {attempts}，已入库: {validLevelsFound}\n");
-                File.AppendAllText(logFilePath, $"   -> 最近100次失败原因：鬼魂卡死({failTimeoutCount}) | 鬼魂坠崖({failFallCount}) | 验证坠落({failVerifyFallCount}) | 验证死亡({failVerifyDieCount}) | 验证卡墙({failVerifyTimeoutCount})\n");
+                // 调用日志接口播报阶段性状态
+                LogStatus(attempts, validLevelsFound, failTimeoutCount, failFallCount, failVerifyFallCount, failVerifyDieCount, failVerifyTimeoutCount);
 
                 failTimeoutCount = 0;
                 failFallCount = 0;
@@ -270,10 +258,8 @@ public class LevelGenerator : MonoBehaviour
             }
         }
 
-        if (map.guideLineRenderer != null) map.guideLineRenderer.enabled = false;
-        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] 生成工作全部结束！\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] 最终统计 -> 总尝试: {attempts} 次，成功生成: {validLevelsFound} 个关卡。\n");
+        ClearVisuals();
+        LogFinish(attempts, validLevelsFound);
         Debug.Log($">>> 生成完毕! 总尝试: {attempts} 次，成功: {validLevelsFound} 个。");
 
         SelectAndLoadLevel(5, 5);
