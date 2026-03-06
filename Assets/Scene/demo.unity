@@ -486,6 +486,7 @@ GameObject:
   m_Component:
   - component: {fileID: 415122242}
   - component: {fileID: 415122243}
+  - component: {fileID: 415122244}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -533,6 +534,23 @@ MonoBehaviour:
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
+--- !u!114 &415122244
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 415122241}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af777cf478ff9d74ba5f1f6177e4ff62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetMap: {fileID: 2106156355}
+  showVisuals: 1
+  areaColor: {r: 0, g: 1, b: 1, a: 0.3}
+  flowLineColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  labelHeightOffset: 1.5
 --- !u!1 &448407002
 GameObject:
   m_ObjectHideFlags: 0
