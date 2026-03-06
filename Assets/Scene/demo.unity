@@ -523,8 +523,8 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
-  targetValidLevels: 50
-  maxTotalAttempts: 7500
+  targetValidLevels: 10
+  maxTotalAttempts: 50
   blockDensity: 0.45
   noiseScale: 0.15
   finishLinePrefab: {fileID: 0}
@@ -3353,8 +3353,8 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 0}
-  targetValidLevels: 500
-  maxTotalAttempts: 7500
+  targetValidLevels: 10
+  maxTotalAttempts: 50
   blockDensity: 0.45
   noiseScale: 0.15
   finishLinePrefab: {fileID: 0}
