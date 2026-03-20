@@ -63,6 +63,7 @@
     <Compile Include="Assets\2D Platformer\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\Setting\GameCamera.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceVisualizer.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_GA.cs" />
     <Compile Include="Assets\Scripts\Map\Map_Utils.cs" />
     <Compile Include="Assets\Scripts\Setting\MovingObject.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\EnemyAI.cs" />
@@ -87,8 +88,8 @@
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Log.cs" />
     <Compile Include="Assets\Scripts\Item\SmartTrap.cs" />
     <Compile Include="Assets\Scripts\Character\KeyInput.cs" />
-    <Compile Include="Assets\Scripts\Setting\Constants.cs" />
     <Compile Include="Assets\Scripts\survival space\LevelGenerationPlanner.cs" />
+    <Compile Include="Assets\Scripts\Setting\Constants.cs" />
     <Compile Include="Assets\Scripts\DDA\AdversarialDirector.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerDeathState.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Visuals.cs" />

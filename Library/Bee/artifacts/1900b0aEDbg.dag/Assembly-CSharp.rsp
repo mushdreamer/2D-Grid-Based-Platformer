@@ -375,6 +375,7 @@
 "Assets/Scripts/Item/KillerObject.cs"
 "Assets/Scripts/Item/SmartTrap.cs"
 "Assets/Scripts/Level/LevelGenerator.cs"
+"Assets/Scripts/Level/LevelGenerator_GA.cs"
 "Assets/Scripts/Level/LevelGenerator_Log.cs"
 "Assets/Scripts/Level/LevelGenerator_Visuals.cs"
 "Assets/Scripts/Level/LevelMetrics.cs"

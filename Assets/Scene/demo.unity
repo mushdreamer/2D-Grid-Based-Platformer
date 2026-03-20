@@ -525,12 +525,15 @@ MonoBehaviour:
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
   targetValidLevels: 10
-  maxTotalAttempts: 50
+  maxTotalAttempts: 200
   blockDensity: 0.45
   noiseScale: 0.15
   finishLinePrefab: {fileID: 0}
   enableIWBTGBaking: 1
   hardcoreDeviationTolerance: 1.5
+  gaPopulationSize: 20
+  gaMaxGenerations: 10
+  gaMutationRate: 0.3
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
@@ -3246,6 +3249,12 @@ MonoBehaviour:
   manualWidth: 80
   manualHeight: 50
   currentBrush: 0
+  startTile:
+    x: -1
+    y: -1
+  endTile:
+    x: -1
+    y: -1
   currentPhase: 0
   spikePrefab: {fileID: 7738998779214056495, guid: 721a41a8d0511724888dafb378fe81f8,
     type: 3}
@@ -3378,6 +3387,9 @@ MonoBehaviour:
   finishLinePrefab: {fileID: 0}
   enableIWBTGBaking: 1
   hardcoreDeviationTolerance: 1.5
+  gaPopulationSize: 20
+  gaMaxGenerations: 10
+  gaMutationRate: 0.3
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02

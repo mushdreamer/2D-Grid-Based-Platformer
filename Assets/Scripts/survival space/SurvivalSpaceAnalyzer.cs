@@ -121,7 +121,7 @@ public static class SurvivalSpaceAnalyzer
             zones.Add(newZone);
         }
 
-        Debug.Log($"[SurvivalAnalyzer] 识别完成，共发现 {zones.Count} 个独立生存空间。");
+        //Debug.Log($"[SurvivalAnalyzer] 识别完成，共发现 {zones.Count} 个独立生存空间。");
         return zones;
     }
 }
