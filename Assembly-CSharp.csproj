@@ -67,6 +67,7 @@
     <Compile Include="Assets\Scripts\Map\Map_Utils.cs" />
     <Compile Include="Assets\Scripts\Setting\MovingObject.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\EnemyAI.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_Ghost.cs" />
     <Compile Include="Assets\Scripts\Character\Bot.cs" />
     <Compile Include="Assets\Scripts\Setting\Vector2i.cs" />
     <Compile Include="Assets\Scripts\Level\LevelMetrics.cs" />

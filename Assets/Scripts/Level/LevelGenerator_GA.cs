@@ -29,6 +29,12 @@ public partial class LevelGenerator : MonoBehaviour
         if (startTile.x != -1 && endTile.x != -1) AutoConnectStartAndEndToSurvivalSpace(startTile, endTile);
         BuildSurvivalGradient(endTile);
 
+        // ==========================================
+        // 新增：显示生存空间可视化方块，并清空旧的统计数据
+        ShowSurvivalSpaceInGame();
+        failureStatistics.Clear();
+        // ==========================================
+
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
         LevelGenerationPlanner planner = new LevelGenerationPlanner();
         planner.PlanGlobalRoute(map, zones);
@@ -54,9 +60,24 @@ public partial class LevelGenerator : MonoBehaviour
                     initialCount++;
                     LogAttemptResult(initialAttempts, "初代个体生成成功", $"当前进度: {initialCount}/{gaPopulationSize}");
                 }
+                else
+                {
+                    // 记录：物理验证失败原因
+                    RecordFailure(failReason);
+                }
+            }
+            else
+            {
+                // 记录：幽灵代理试跑失败原因
+                RecordFailure(failReason);
             }
             yield return null;
         }
+
+        // ==========================================
+        // 新增：打印第一阶段（盲搜探索阶段）的死因统计报告
+        PrintFailureStats("演化型 MAP-Elites 阶段 1 (初代探索)");
+        // ==========================================
 
         Debug.Log($">>> [阶段 2] 初始网格构建完成，启动由遗传算法驱动的内部进化循环，总代数：{gaMaxGenerations}...");
 
@@ -97,8 +118,18 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
+        // ==========================================
+        // 新增：打印第二阶段（基因交叉变异阶段）的死因统计报告
+        PrintFailureStats("演化型 MAP-Elites 阶段 2 (基因交叉与突变)");
+        // ==========================================
+
         List<LevelIndividual> finalElites = GetAllElitesFromGrid();
         LogFinish(gaMaxGenerations, finalElites.Count);
+
+        // ==========================================
+        // 新增：生成结束后自动清理生存空间的绿色可视化方块
+        ClearSurvivalVisuals();
+        // ==========================================
 
         LevelIndividual absoluteBest = finalElites.OrderByDescending(p => p.fitness).FirstOrDefault();
         if (absoluteBest != null)
@@ -211,6 +242,13 @@ public partial class LevelGenerator : MonoBehaviour
             LevelIndividual child = CreateIndividualFromGhost(startTile, endTile);
             child.safePlatforms = childSafePlatforms;
             return child;
+        }
+        else
+        {
+            // ==========================================
+            // 新增：记录基因交叉拼接时的验证失败原因
+            RecordFailure(failReason);
+            // ==========================================
         }
 
         return null;

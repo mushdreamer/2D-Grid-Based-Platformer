@@ -90,6 +90,9 @@ public partial class LevelGenerator : MonoBehaviour
     private List<Vector3> verifiedTrajectory = new List<Vector3>();
     private Dictionary<Vector2i, int> survivalGradient = new Dictionary<Vector2i, int>();
 
+    private Dictionary<string, int> failureStatistics = new Dictionary<string, int>();
+    private List<GameObject> survivalVisuals = new List<GameObject>();
+
     enum ActionType { MoveRight, MoveLeft, JumpRight, JumpLeft, LongJumpRight, LongJumpLeft, HighJumpRight, HighJumpLeft, Drop }
 
     public void Initialize()
@@ -111,6 +114,47 @@ public partial class LevelGenerator : MonoBehaviour
             validatorAgent.mMap = map;
             validatorAgent.BotInit(new bool[(int)KeyInput.Count], new bool[(int)KeyInput.Count]);
         }
+    }
+
+    private void RecordFailure(string reason)
+    {
+        if (string.IsNullOrEmpty(reason)) return;
+        if (failureStatistics.ContainsKey(reason)) failureStatistics[reason]++;
+        else failureStatistics[reason] = 1;
+    }
+
+    private void PrintFailureStats(string phaseName)
+    {
+        if (failureStatistics.Count == 0) return;
+        Debug.Log($"=== {phaseName} 失败原因诊断报告 ===");
+        foreach (var kvp in failureStatistics.OrderByDescending(k => k.Value))
+        {
+            Debug.Log($"死因: {kvp.Key} | 累计次数: {kvp.Value}");
+        }
+        Debug.Log("======================================");
+        failureStatistics.Clear();
+    }
+
+    private void ShowSurvivalSpaceInGame()
+    {
+        ClearSurvivalVisuals();
+        if (map.survivalSpaceTiles == null) return;
+        foreach (var tile in map.survivalSpaceTiles)
+        {
+            Vector2 pos = map.GetMapTilePosition(tile.x, tile.y);
+            GameObject go = new GameObject("SurvivalVis");
+            go.transform.position = new Vector3(pos.x, pos.y, -3f);
+            SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
+            if (map.tilePrefab != null) sr.sprite = map.tilePrefab.sprite;
+            sr.color = new Color(0f, 1f, 0f, 0.25f);
+            survivalVisuals.Add(go);
+        }
+    }
+
+    private void ClearSurvivalVisuals()
+    {
+        foreach (var go in survivalVisuals) { if (go != null) Destroy(go); }
+        survivalVisuals.Clear();
     }
 
     private void AutoConnectStartAndEndToSurvivalSpace(Vector2i startTile, Vector2i endTile)
@@ -231,6 +275,8 @@ public partial class LevelGenerator : MonoBehaviour
             AutoConnectStartAndEndToSurvivalSpace(startTile, endTile);
         }
         BuildSurvivalGradient(endTile);
+        ShowSurvivalSpaceInGame();
+        failureStatistics.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
         LevelGenerationPlanner planner = new LevelGenerationPlanner();
@@ -283,6 +329,7 @@ public partial class LevelGenerator : MonoBehaviour
                 }
                 else
                 {
+                    RecordFailure(failReason);
                     LogAttemptResult(attempts, "验证失败", failReason);
                     yield return StartCoroutine(ShowSearchVisualsRoutine(verifiedTrajectory));
                 }
@@ -292,11 +339,14 @@ public partial class LevelGenerator : MonoBehaviour
             }
             else
             {
+                RecordFailure(failReason);
                 LogAttemptResult(attempts, "鬼魂卡死", failReason);
                 yield return StartCoroutine(ShowSearchVisualsRoutine(ghostTrajectory));
             }
         }
 
+        PrintFailureStats("旧版 MAP-Elites 全局生成");
+        ClearSurvivalVisuals();
         ClearVisuals();
         LogFinish(attempts, validLevelsFound);
         Debug.Log($">>> 生成完毕! 总尝试: {attempts} 次，成功: {validLevelsFound} 个。");
@@ -347,98 +397,6 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos)
-    {
-        int microAttempts = 200;
-        finalReason = "";
-        failPos = Vector2.zero;
-
-        if (route == null || route.Count == 0)
-        {
-            finalReason = "RouteEmpty_规划路线为空";
-            return false;
-        }
-
-        for (int i = 0; i < microAttempts; i++)
-        {
-            ClearGhostData();
-            map.ClearMapToEmpty();
-
-            if (startTile.x != -1)
-            {
-                for (int dx = -2; dx <= 2; dx++)
-                {
-                    map.SetTile(startTile.x + dx, startTile.y - 1, TileType.Block);
-                    ghostSafePlatforms.Add(new Vector2i(startTile.x + dx, startTile.y - 1));
-                }
-            }
-
-            Vector2 startWorldPos = map.GetMapTilePosition(startTile) + new Vector2(0, characterPrefab.mAABB.HalfSizeY + 1f);
-
-            ghostAgent.mPosition = startWorldPos;
-            ghostAgent.mSpeed = Vector2.zero;
-            ghostAgent.mCurrentState = Character.CharacterState.Stand;
-            ghostAgent.mOnGround = false;
-
-            currentVirtualFloorY = map.GetMapTilePosition(startTile).y - Map.cTileSize * 5f;
-
-            bool routeSuccess = true;
-            foreach (var step in route)
-            {
-                if (!SimulateGuidedPath(step.endPoint, step.associatedZone, out finalReason, out failPos))
-                {
-                    routeSuccess = false;
-                    break;
-                }
-            }
-
-            if (routeSuccess) return true;
-        }
-        return false;
-    }
-
-    bool SimulateGuidedPath(Vector2 finalDest, SurvivalSpaceAnalyzer.SurvivalZone currentZone, out string reason, out Vector2 failPos)
-    {
-        int framesLimit = 1500;
-        int currentFrames = 0;
-        int stagnationCount = 0;
-        Vector2 lastProgressPos = ghostAgent.mPosition;
-
-        while (currentFrames < framesLimit)
-        {
-            if (Vector2.Distance(ghostAgent.mPosition, finalDest) < Map.cTileSize * 3)
-            {
-                reason = "Success"; failPos = ghostAgent.mPosition; return true;
-            }
-            if (ghostAgent.mPosition.y < map.position.y - 100f)
-            {
-                reason = "FallOut_跌出边界"; failPos = ghostAgent.mPosition; return false;
-            }
-
-            if (Vector2.Distance(ghostAgent.mPosition, lastProgressPos) < 2.0f) stagnationCount++;
-            else { stagnationCount = 0; lastProgressPos = ghostAgent.mPosition; }
-
-            ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone);
-            if (stagnationCount > 8) stagnationCount = 0;
-
-            currentFrames += ExecuteGhostAction(nextAction);
-        }
-
-        reason = "Timeout_耗尽1500帧陷入死循环";
-        failPos = ghostAgent.mPosition;
-        return false;
-    }
-
-    void ClearGhostData()
-    {
-        ghostPath.Clear();
-        ghostPathSet.Clear();
-        ghostReplay.Clear();
-        ghostTrajectory.Clear();
-        ghostSafeColumns.Clear();
-        ghostSafePlatforms.Clear();
-    }
-
     bool VerifyLevelWithRealPhysics(Vector2i startTile, Vector2i endTile, out string reason, out Vector2 failPos)
     {
         verifiedTrajectory.Clear();
@@ -463,12 +421,37 @@ public partial class LevelGenerator : MonoBehaviour
 
             if (validatorAgent.mPosition.y < map.position.y)
             {
-                reason = $"VerifyFall_第{frameIndex}帧坠落深渊"; failPos = validatorAgent.mPosition; return false;
+                reason = $"VerifyFall_坠落深渊"; failPos = validatorAgent.mPosition; return false;
             }
             if (validatorAgent.mCurrentState == Character.CharacterState.Die)
             {
-                reason = $"VerifyDie_第{frameIndex}帧撞击致死"; failPos = validatorAgent.mPosition; return false;
+                reason = $"VerifyDie_撞击致死"; failPos = validatorAgent.mPosition; return false;
             }
+
+            if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
+            {
+                Vector2i currentTile = map.GetMapTileAtPoint(validatorAgent.mPosition);
+                bool isInside = false;
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    for (int dy = -1; dy <= 1; dy++)
+                    {
+                        if (map.survivalSpaceTiles.Contains(new Vector2i(currentTile.x + dx, currentTile.y + dy)))
+                        {
+                            isInside = true;
+                            break;
+                        }
+                    }
+                    if (isInside) break;
+                }
+                if (!isInside)
+                {
+                    reason = $"VerifyOutOfBounds_物理验证阶段脱离生存空间";
+                    failPos = validatorAgent.mPosition;
+                    return false;
+                }
+            }
+
             if (Vector2.Distance(validatorAgent.mPosition, endWorldPos) < Map.cTileSize * 3)
             {
                 reason = "Success"; failPos = validatorAgent.mPosition; return true;
@@ -489,256 +472,6 @@ public partial class LevelGenerator : MonoBehaviour
     void SpawnSpike(int x, int y, bool flipped)
     {
         if (map.GetTile(x, y) == TileType.Empty) map.SetTile(x, y, TileType.Danger);
-    }
-
-    ActionType PickAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone)
-    {
-        Vector2i curTile = map.GetMapTileAtPoint(currentPos);
-        float weightRight = 1f, weightLeft = 1f, weightUp = 1f, weightDown = 1f;
-
-        if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
-        {
-            int bestRight = int.MaxValue, bestLeft = int.MaxValue, bestUp = int.MaxValue, bestDown = int.MaxValue;
-            int currentDist = int.MaxValue;
-            int currentStroke = -1;
-
-            for (int dx = -2; dx <= 2; dx++)
-            {
-                for (int dy = -2; dy <= 2; dy++)
-                {
-                    Vector2i targetTile = new Vector2i(curTile.x + dx, curTile.y + dy);
-                    if (survivalGradient.TryGetValue(targetTile, out int d))
-                    {
-                        if (d < currentDist) currentDist = d;
-                        if (map.survivalSpaceStrokeOrder != null && map.survivalSpaceStrokeOrder.TryGetValue(targetTile, out int s) && s > currentStroke) currentStroke = s;
-                    }
-                }
-            }
-
-            int scanRadius = 3;
-            for (int dx = -scanRadius; dx <= scanRadius; dx++)
-            {
-                for (int dy = -scanRadius; dy <= scanRadius; dy++)
-                {
-                    Vector2i targetTile = new Vector2i(curTile.x + dx, curTile.y + dy);
-                    if (map.survivalSpaceTiles.Contains(targetTile))
-                    {
-                        float baseWeight = 2f;
-                        if (map.survivalSpaceStrokeOrder != null && map.survivalSpaceStrokeOrder.TryGetValue(targetTile, out int targetStroke))
-                        {
-                            if (targetStroke > currentStroke && targetStroke != -1) baseWeight += 50f;
-                        }
-                        if (dx > 0) weightRight += baseWeight;
-                        if (dx < 0) weightLeft += baseWeight;
-                        if (dy > 0) weightUp += baseWeight;
-                        if (dy < 0) weightDown += baseWeight;
-                    }
-                    if (survivalGradient.TryGetValue(targetTile, out int dist))
-                    {
-                        if (dx > 0 && dist < bestRight) bestRight = dist;
-                        if (dx < 0 && dist < bestLeft) bestLeft = dist;
-                        if (dy > 0 && dist < bestUp) bestUp = dist;
-                        if (dy < 0 && dist < bestDown) bestDown = dist;
-                    }
-                }
-            }
-
-            if (currentDist == int.MaxValue)
-            {
-                float minScore = float.MaxValue;
-                Vector2i bestRescueTile = curTile;
-                foreach (var t in map.survivalSpaceTiles)
-                {
-                    float physicalDist = Mathf.Abs(t.x - curTile.x) + Mathf.Abs(t.y - curTile.y);
-                    if (physicalDist < minScore) { minScore = physicalDist; bestRescueTile = t; }
-                }
-
-                if (bestRescueTile.y > curTile.y) return (bestRescueTile.x >= curTile.x) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-                else return (bestRescueTile.x >= curTile.x) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
-            }
-            else
-            {
-                if (bestRight < currentDist) weightRight += 30f;
-                if (bestLeft < currentDist) weightLeft += 30f;
-                if (bestUp < currentDist) weightUp += 30f;
-                if (bestDown < currentDist) weightDown += 30f;
-            }
-        }
-        else
-        {
-            if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
-            if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
-        }
-
-        ActionType pickedAction = ActionType.Drop;
-
-        if (stagnationCount > 8)
-        {
-            if (weightUp >= weightRight && weightUp >= weightLeft) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-            else if (weightRight >= weightLeft) pickedAction = ActionType.LongJumpRight;
-            else pickedAction = ActionType.LongJumpLeft;
-        }
-        else
-        {
-            float totalWeight = weightRight + weightLeft + weightUp + weightDown;
-            float r = Random.Range(0, totalWeight);
-
-            if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
-            else
-            {
-                r -= weightRight;
-                if (r < weightLeft) pickedAction = (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
-                else
-                {
-                    r -= weightLeft;
-                    if (r < weightUp)
-                    {
-                        float upR = Random.value;
-                        if (upR < 0.33f) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-                        else if (upR < 0.66f) pickedAction = (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
-                        else pickedAction = (Random.value > 0.5f) ? ActionType.JumpRight : ActionType.JumpLeft;
-                    }
-                    else pickedAction = ActionType.Drop;
-                }
-            }
-        }
-
-        SurvivalSpaceAnalyzer.ZoneGeometry geometry = zone != null ? zone.geometryType : SurvivalSpaceAnalyzer.ZoneGeometry.OrganicShape;
-
-        if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.HorizontalCorridor)
-        {
-            if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.LongJumpRight;
-            if (pickedAction == ActionType.HighJumpLeft) pickedAction = ActionType.LongJumpLeft;
-            if (pickedAction == ActionType.JumpRight) pickedAction = ActionType.MoveRight;
-            if (pickedAction == ActionType.JumpLeft) pickedAction = ActionType.MoveLeft;
-        }
-        else if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.VerticalShaft)
-        {
-            if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.HighJumpRight;
-            if (pickedAction == ActionType.LongJumpLeft) pickedAction = ActionType.HighJumpLeft;
-            if (pickedAction == ActionType.MoveRight) pickedAction = ActionType.JumpRight;
-            if (pickedAction == ActionType.MoveLeft) pickedAction = ActionType.JumpLeft;
-        }
-
-        return pickedAction;
-    }
-
-    int ExecuteGhostAction(ActionType action)
-    {
-        int frames = 0;
-        bool right = false, left = false, jump = false, drop = false;
-        int jumpHoldFrames = 0;
-
-        switch (action)
-        {
-            case ActionType.MoveRight: frames = 15; right = true; break;
-            case ActionType.MoveLeft: frames = 15; left = true; break;
-            case ActionType.JumpRight: frames = 25; right = true; jump = true; jumpHoldFrames = 10; break;
-            case ActionType.JumpLeft: frames = 25; left = true; jump = true; jumpHoldFrames = 10; break;
-            case ActionType.LongJumpRight: frames = 40; right = true; jump = true; jumpHoldFrames = 15; break;
-            case ActionType.LongJumpLeft: frames = 40; left = true; jump = true; jumpHoldFrames = 15; break;
-            case ActionType.HighJumpRight: frames = 45; right = true; jump = true; jumpHoldFrames = 20; break;
-            case ActionType.HighJumpLeft: frames = 45; left = true; jump = true; jumpHoldFrames = 20; break;
-            case ActionType.Drop: frames = 20; drop = true; break;
-        }
-
-        for (int i = 0; i < frames; i++)
-        {
-            bool[] inputs = new bool[(int)KeyInput.Count];
-            if (!drop) { inputs[(int)KeyInput.GoRight] = right; inputs[(int)KeyInput.GoLeft] = left; }
-            if (jump && i < jumpHoldFrames) inputs[(int)KeyInput.Jump] = true;
-
-            EnsureVirtualFloorRealtime();
-
-            ghostAgent.SimulationUpdate(SIM_STEP, inputs);
-            RecordGhostTrajectory();
-            ghostReplay.Add(new ReplayFrame(inputs));
-            ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
-        }
-        return frames;
-    }
-
-    void EnsureVirtualFloorRealtime()
-    {
-        if (ghostAgent.mSpeed.y > 0.1f) return;
-
-        Vector2i centerTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
-        bool inSafeZone = false;
-
-        if (map.survivalSpaceTiles != null)
-        {
-            for (int dx = -1; dx <= 1; dx++)
-            {
-                for (int dy = -2; dy <= 2; dy++)
-                {
-                    if (map.survivalSpaceTiles.Contains(new Vector2i(centerTile.x + dx, centerTile.y + dy)))
-                    {
-                        inSafeZone = true;
-                        break;
-                    }
-                }
-                if (inSafeZone) break;
-            }
-        }
-
-        if (inSafeZone || ghostAgent.mPosition.y <= currentVirtualFloorY)
-        {
-            float feetY = ghostAgent.mPosition.y - ghostAgent.mAABB.HalfSizeY;
-            Vector2i feetTile = map.GetMapTileAtPoint(new Vector2(ghostAgent.mPosition.x, feetY));
-
-            int blockY = feetTile.y - 1;
-            float targetFeetY = map.GetMapTilePosition(feetTile.x, blockY).y + (Map.cTileSize / 2.0f);
-
-            if (feetY <= targetFeetY + Map.cTileSize)
-            {
-                ghostAgent.mPosition.y = targetFeetY + ghostAgent.mAABB.HalfSizeY;
-                ghostAgent.mSpeed.y = 0;
-                ghostAgent.mOnGround = true;
-
-                float leftEdge = ghostAgent.mPosition.x - ghostAgent.mAABB.HalfSizeX - Map.cTileSize * 1.5f;
-                float rightEdge = ghostAgent.mPosition.x + ghostAgent.mAABB.HalfSizeX + Map.cTileSize * 1.5f;
-
-                int minX = map.GetMapTileAtPoint(new Vector2(leftEdge, ghostAgent.mPosition.y)).x;
-                int maxX = map.GetMapTileAtPoint(new Vector2(rightEdge, ghostAgent.mPosition.y)).x;
-
-                for (int bx = minX; bx <= maxX; bx++)
-                {
-                    if (bx >= 0 && bx < map.mWidth && blockY >= 0 && blockY < map.mHeight)
-                    {
-                        map.SetTile(bx, blockY, TileType.Block);
-                        ghostSafePlatforms.Add(new Vector2i(bx, blockY));
-                        ghostSafeColumns.Add(bx);
-                    }
-                }
-
-                if (inSafeZone) currentVirtualFloorY = targetFeetY - Map.cTileSize * 5f;
-            }
-        }
-    }
-
-    void RecordGhostTrajectory()
-    {
-        AABB box = ghostAgent.mAABB;
-        float padding = 6.0f;
-        Vector2 min = box.Center - box.HalfSize - Vector2.one * padding;
-        Vector2 max = box.Center + box.HalfSize + Vector2.one * padding;
-        Vector2i bl = map.GetMapTileAtPoint(min);
-        Vector2i tr = map.GetMapTileAtPoint(max);
-        for (int x = bl.x; x <= tr.x; x++)
-        {
-            for (int y = bl.y; y <= tr.y; y++)
-            {
-                if (x >= 0 && x < map.mWidth && y >= 0 && y < map.mHeight)
-                {
-                    Vector2i pos = new Vector2i(x, y);
-                    if (!ghostPathSet.Contains(pos))
-                    {
-                        ghostPathSet.Add(pos);
-                        ghostPath.Add(pos);
-                    }
-                }
-            }
-        }
     }
 
     void BakeLevelToMapDataOnly(List<Vector3> trajectory, HashSet<Vector2i> safePlatforms, Vector2i start, Vector2i end)

@@ -324,21 +324,6 @@ public partial class Map : MonoBehaviour
                     levelGenerator.GenerateEvolutionaryMapElitesLibrary(startTile, endTile);
                 }
 
-                if (Input.GetKeyDown(KeyCode.H))
-                {
-                    if (levelGenerator == null) { Debug.LogError("未绑定 LevelGenerator！"); break; }
-                    if (startTile.x == -1) startTile = new Vector2i(2, 5);
-                    if (endTile.x == -1) endTile = new Vector2i(mWidth - 5, 5);
-
-                    RandomizeTheme();
-
-                    Debug.Log("生成 MAP-Elites 关卡库中...");
-                    ClearMapToEmpty();
-
-                    // 【绝对解耦】不再强行塞硬编码的值，将权限完全交给可视化面板设置的参数！
-                    levelGenerator.GenerateMapElitesLibrary(startTile, endTile);
-                }
-
                 break;
 
             case GamePhase.TrialPlay:
