@@ -2689,6 +2689,7 @@ m_ResolvedPackages:
     - 5.0.3
     - 5.1.0
     - 5.1.1
+    - 6.0.0
     compatible:
     - 5.0.3
     - 5.1.0
@@ -3437,6 +3438,7 @@ m_ResolvedPackages:
     - 1.1.8
     - 1.1.9
     - 1.1.10
+    - 1.1.11
     - 1.2.0
     - 1.2.1
     - 1.2.2
@@ -3461,7 +3463,8 @@ m_ResolvedPackages:
     - 1.1.8
     - 1.1.9
     - 1.1.10
-    recommended: 1.1.10
+    - 1.1.11
+    recommended: 1.1.11
     deprecated: []
   dependencies:
   - name: com.unity.2d.common
@@ -4188,6 +4191,7 @@ m_ResolvedPackages:
     - 1.8.26
     - 1.8.27
     - 1.8.28
+    - 1.8.29
     compatible:
     - 1.8.17
     - 1.8.18
@@ -4201,7 +4205,8 @@ m_ResolvedPackages:
     - 1.8.26
     - 1.8.27
     - 1.8.28
-    recommended: 1.8.28
+    - 1.8.29
+    recommended: 1.8.29
     deprecated: []
   dependencies:
   - name: com.unity.mathematics
