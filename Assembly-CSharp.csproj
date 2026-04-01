@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\2D Platformer\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Level\ThreatDistributor.cs" />
     <Compile Include="Assets\Scripts\Setting\GameCamera.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_GA.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceVisualizer.cs" />
