@@ -15,131 +15,190 @@ public partial class LevelGenerator : MonoBehaviour
 
     public void GenerateEvolutionaryMapElitesLibrary(Vector2i startTile, Vector2i endTile)
     {
-        StartCoroutine(GenerateEvolutionaryMapElitesRoutine(startTile, endTile));
+        StartCoroutine(GenerateSegmentedEvolutionaryRoutine(startTile, endTile));
     }
 
-    private IEnumerator GenerateEvolutionaryMapElitesRoutine(Vector2i startTile, Vector2i endTile)
+    private IEnumerator GenerateSegmentedEvolutionaryRoutine(Vector2i globalStart, Vector2i globalEnd)
     {
         Initialize();
         if (director != null) director.SetRunning(false);
-        System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
         ClearVisuals();
-        InitLog("正统演化型 MAP-Elites (GA驱动)", gaPopulationSize, gaMaxGenerations);
-
-        if (startTile.x != -1 && endTile.x != -1) AutoConnectStartAndEndToSurvivalSpace(startTile, endTile);
-        BuildSurvivalGradient(endTile);
-
-        // ==========================================
-        // 新增：显示生存空间可视化方块，并清空旧的统计数据
-        ShowSurvivalSpaceInGame();
+        InitLog("多空间独立分段生成 MAP-Elites (GA驱动)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
-        // ==========================================
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
-        LevelGenerationPlanner planner = new LevelGenerationPlanner();
-        planner.PlanGlobalRoute(map, zones);
-
-        Debug.Log($">>> [阶段 1] 初始种群生成：使用模拟器创建 {gaPopulationSize} 个初代个体并置入特征网格...");
-        int initialCount = 0;
-        int initialAttempts = 0;
-
-        while (initialCount < gaPopulationSize && initialAttempts < maxTotalAttempts)
+        if (zones.Count == 0)
         {
-            initialAttempts++;
-            string failReason;
-            Vector2 failPos;
+            Debug.LogError("未能识别到任何生存空间，生成终止。");
+            yield break;
+        }
 
-            if (RunGuidedSimulation(startTile, endTile, planner.plannedRoute, out failReason, out failPos))
+        zones = zones.OrderBy(z => z.center.x).ToList();
+        HashSet<Vector2i> originalGlobalSurvivalSpace = new HashSet<Vector2i>(map.survivalSpaceTiles);
+        List<LevelIndividual> globalBestIndividuals = new List<LevelIndividual>();
+
+        for (int zIndex = 0; zIndex < zones.Count; zIndex++)
+        {
+            SurvivalSpaceAnalyzer.SurvivalZone currentZone = zones[zIndex];
+            Vector2i localStart = DetermineZoneEntry(currentZone, zIndex == 0 ? null : zones[zIndex - 1], globalStart);
+            Vector2i localEnd = DetermineZoneExit(currentZone, zIndex == zones.Count - 1 ? null : zones[zIndex + 1], globalEnd);
+
+            HashSet<Vector2i> localSafeTiles = new HashSet<Vector2i>(currentZone.tiles);
+            for (int dx = -2; dx <= 2; dx++)
             {
-                BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, startTile, endTile);
-                if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason, out failPos))
+                for (int dy = -1; dy <= 1; dy++)
                 {
-                    LevelIndividual newInd = CreateIndividualFromGhost(startTile, endTile);
-                    CalculateFitness(newInd);
-                    TryPlaceIndividualInGrid(newInd);
-                    initialCount++;
-                    LogAttemptResult(initialAttempts, "初代个体生成成功", $"当前进度: {initialCount}/{gaPopulationSize}");
+                    localSafeTiles.Add(new Vector2i(localStart.x + dx, localStart.y + dy));
+                    localSafeTiles.Add(new Vector2i(localEnd.x + dx, localEnd.y + dy));
                 }
-                else
+            }
+            map.survivalSpaceTiles = localSafeTiles;
+
+            BuildSurvivalGradient(localEnd);
+            ShowSurvivalSpaceInGame();
+
+            System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
+
+            List<LevelGenerationPlanner.GenerationStep> localRoute = new List<LevelGenerationPlanner.GenerationStep>();
+            localRoute.Add(new LevelGenerationPlanner.GenerationStep
+            {
+                description = $"Local Zone {zIndex} Internal Navigation",
+                startPoint = map.GetMapTilePosition(localStart.x, localStart.y),
+                endPoint = map.GetMapTilePosition(localEnd.x, localEnd.y),
+                associatedZone = currentZone
+            });
+
+            int initialCount = 0;
+            int initialAttempts = 0;
+            while (initialCount < gaPopulationSize && initialAttempts < maxTotalAttempts)
+            {
+                initialAttempts++;
+                string failReason;
+                Vector2 failPos;
+                if (RunGuidedSimulation(localStart, localEnd, localRoute, out failReason, out failPos))
                 {
-                    // 记录：物理验证失败原因
-                    RecordFailure(failReason);
+                    BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, localStart, localEnd);
+                    if (VerifyLevelWithRealPhysics(localStart, localEnd, out failReason, out failPos))
+                    {
+                        LevelIndividual newInd = CreateIndividualFromGhost(localStart, localEnd);
+                        CalculateFitness(newInd);
+                        TryPlaceIndividualInGrid(newInd);
+                        initialCount++;
+                    }
+                    else RecordFailure(failReason);
                 }
+                else RecordFailure(failReason);
+                yield return null;
+            }
+
+            for (int generation = 1; generation <= gaMaxGenerations; generation++)
+            {
+                List<LevelIndividual> currentElites = GetAllElitesFromGrid();
+                if (currentElites.Count < 2) break;
+
+                int offspringProduced = 0;
+                int maxOffspringAttempts = gaPopulationSize;
+                while (offspringProduced < gaPopulationSize && maxOffspringAttempts > 0)
+                {
+                    maxOffspringAttempts--;
+                    LevelIndividual parentA = TournamentSelection(currentElites);
+                    LevelIndividual parentB = TournamentSelection(currentElites);
+                    LevelIndividual offspring = CrossoverAndMutate(parentA, parentB, localStart, localEnd);
+
+                    if (offspring != null)
+                    {
+                        CalculateFitness(offspring);
+                        if (TryPlaceIndividualInGrid(offspring)) offspringProduced++;
+                    }
+                    yield return null;
+                }
+            }
+
+            LevelIndividual bestInZone = GetAllElitesFromGrid().OrderByDescending(p => p.fitness).FirstOrDefault();
+            if (bestInZone != null)
+            {
+                globalBestIndividuals.Add(bestInZone);
+                BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
             }
             else
             {
-                // 记录：幽灵代理试跑失败原因
-                RecordFailure(failReason);
-            }
-            yield return null;
-        }
-
-        // ==========================================
-        // 新增：打印第一阶段（盲搜探索阶段）的死因统计报告
-        PrintFailureStats("演化型 MAP-Elites 阶段 1 (初代探索)");
-        // ==========================================
-
-        Debug.Log($">>> [阶段 2] 初始网格构建完成，启动由遗传算法驱动的内部进化循环，总代数：{gaMaxGenerations}...");
-
-        for (int generation = 1; generation <= gaMaxGenerations; generation++)
-        {
-            List<LevelIndividual> currentElites = GetAllElitesFromGrid();
-
-            if (currentElites.Count < 2)
-            {
-                Debug.LogWarning("精英网格中可用于交叉的个体不足，进化提前终止。");
-                break;
-            }
-
-            LogAttemptResult(generation, $"=== 进化第 {generation} 代 ===", $"当前网格中共有 {currentElites.Count} 个独立精英");
-
-            int offspringProduced = 0;
-            int maxOffspringAttempts = gaPopulationSize;
-
-            while (offspringProduced < gaPopulationSize && maxOffspringAttempts > 0)
-            {
-                maxOffspringAttempts--;
-                LevelIndividual parentA = TournamentSelection(currentElites);
-                LevelIndividual parentB = TournamentSelection(currentElites);
-                LevelIndividual offspring = CrossoverAndMutate(parentA, parentB, startTile, endTile);
-
-                if (offspring != null)
-                {
-                    CalculateFitness(offspring);
-                    bool placed = TryPlaceIndividualInGrid(offspring);
-                    offspringProduced++;
-
-                    if (placed)
-                    {
-                        yield return StartCoroutine(ShowSuccessVisualsRoutine(offspring.trajectory));
-                    }
-                }
-                yield return null;
+                Debug.LogError($"区域 {zIndex} 生成失败，未能收敛出合法地形拓扑。");
             }
         }
 
-        // ==========================================
-        // 新增：打印第二阶段（基因交叉变异阶段）的死因统计报告
-        PrintFailureStats("演化型 MAP-Elites 阶段 2 (基因交叉与突变)");
-        // ==========================================
-
-        List<LevelIndividual> finalElites = GetAllElitesFromGrid();
-        LogFinish(gaMaxGenerations, finalElites.Count);
-
-        // ==========================================
-        // 新增：生成结束后自动清理生存空间的绿色可视化方块
+        map.survivalSpaceTiles = originalGlobalSurvivalSpace;
         ClearSurvivalVisuals();
-        // ==========================================
+        ShowSurvivalSpaceInGame();
 
-        LevelIndividual absoluteBest = finalElites.OrderByDescending(p => p.fitness).FirstOrDefault();
-        if (absoluteBest != null)
+        if (globalBestIndividuals.Count == zones.Count)
         {
-            Debug.Log($">>> 演化型 MAP-Elites 运行完毕！网格内共沉淀 {finalElites.Count} 个独特关卡，全局最高适应度: {absoluteBest.fitness}");
-            LoadBestGAIndividual(absoluteBest, startTile, endTile);
+            StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
         }
-        else
+    }
+
+    private Vector2i DetermineZoneEntry(SurvivalSpaceAnalyzer.SurvivalZone current, SurvivalSpaceAnalyzer.SurvivalZone previous, Vector2i globalStart)
+    {
+        if (previous == null) return FindClosestTile(current.tiles, globalStart);
+        return FindClosestTileToZone(current.tiles, previous.tiles);
+    }
+
+    private Vector2i DetermineZoneExit(SurvivalSpaceAnalyzer.SurvivalZone current, SurvivalSpaceAnalyzer.SurvivalZone next, Vector2i globalEnd)
+    {
+        if (next == null) return FindClosestTile(current.tiles, globalEnd);
+        return FindClosestTileToZone(current.tiles, next.tiles);
+    }
+
+    private Vector2i FindClosestTile(List<Vector2i> zoneTiles, Vector2i target)
+    {
+        Vector2i best = zoneTiles[0];
+        float minDist = float.MaxValue;
+        foreach (var t in zoneTiles)
         {
-            Debug.LogError("生成失败，特征网格最终为空。");
+            float dist = Vector2.Distance(new Vector2(t.x, t.y), new Vector2(target.x, target.y));
+            if (dist < minDist) { minDist = dist; best = t; }
+        }
+        return best;
+    }
+
+    private Vector2i FindClosestTileToZone(List<Vector2i> sourceTiles, List<Vector2i> targetTiles)
+    {
+        Vector2i bestSource = sourceTiles[0];
+        float minDist = float.MaxValue;
+        foreach (var s in sourceTiles)
+        {
+            foreach (var t in targetTiles)
+            {
+                float dist = Vector2.Distance(new Vector2(s.x, s.y), new Vector2(t.x, t.y));
+                if (dist < minDist) { minDist = dist; bestSource = s; }
+            }
+        }
+        return bestSource;
+    }
+
+    private void StitchAndLoadGlobalLevel(List<LevelIndividual> zoneIndividuals, Vector2i globalStart, Vector2i globalEnd)
+    {
+        map.ClearMapToEmpty();
+        HashSet<Vector2i> globalSafePlatforms = new HashSet<Vector2i>();
+        List<Vector3> globalTrajectory = new List<Vector3>();
+
+        foreach (var ind in zoneIndividuals)
+        {
+            foreach (var p in ind.safePlatforms) globalSafePlatforms.Add(p);
+            globalTrajectory.AddRange(ind.trajectory);
+        }
+
+        BakeLevelToMapDataOnly(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
+
+        if (finishLinePrefab != null)
+        {
+            Vector2 endWorldPos = map.GetMapTilePosition(globalEnd);
+            Instantiate(finishLinePrefab, new Vector3(endWorldPos.x, endWorldPos.y, -5f), Quaternion.identity);
+        }
+
+        foreach (var ind in zoneIndividuals)
+        {
+            map.ApplyGeneratedPath(ind.path, ind.replay, ind.trajectory, ind.safeColumns);
+            if (enableIWBTGBaking) BakeIWBTGLevel(ind);
         }
     }
 
@@ -190,7 +249,6 @@ public partial class LevelGenerator : MonoBehaviour
         float targetDensity = 0.8f;
         float densityScore = 1.0f - Mathf.Abs(targetDensity - ind.inputDensity);
         float linearityScore = 1.0f - ind.linearity;
-
         ind.fitness = (densityScore * 0.6f) + (linearityScore * 0.4f) + (ind.trajectory.Count * 0.01f);
     }
 
@@ -201,10 +259,7 @@ public partial class LevelGenerator : MonoBehaviour
         for (int i = 0; i < tournamentSize; i++)
         {
             LevelIndividual candidate = population[Random.Range(0, population.Count)];
-            if (best == null || candidate.fitness > best.fitness)
-            {
-                best = candidate;
-            }
+            if (best == null || candidate.fitness > best.fitness) best = candidate;
         }
         return best;
     }
@@ -236,20 +291,13 @@ public partial class LevelGenerator : MonoBehaviour
 
         string failReason;
         Vector2 failPos;
-
         if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason, out failPos))
         {
             LevelIndividual child = CreateIndividualFromGhost(startTile, endTile);
             child.safePlatforms = childSafePlatforms;
             return child;
         }
-        else
-        {
-            // ==========================================
-            // 新增：记录基因交叉拼接时的验证失败原因
-            RecordFailure(failReason);
-            // ==========================================
-        }
+        else RecordFailure(failReason);
 
         return null;
     }

@@ -157,29 +157,28 @@ public partial class LevelGenerator : MonoBehaviour
         survivalVisuals.Clear();
     }
 
-    private void AutoConnectStartAndEndToSurvivalSpace(Vector2i startTile, Vector2i endTile)
+    private void AutoConnectAllSurvivalZones(Vector2i startTile, Vector2i endTile)
     {
         if (map.survivalSpaceTiles == null) map.survivalSpaceTiles = new HashSet<Vector2i>();
 
-        if (map.survivalSpaceTiles.Count > 0)
-        {
-            Vector2i nearestToStart = startTile;
-            float minDist = float.MaxValue;
-            foreach (var t in map.survivalSpaceTiles)
-            {
-                float d = Vector2.Distance(new Vector2(startTile.x, startTile.y), new Vector2(t.x, t.y));
-                if (d < minDist) { minDist = d; nearestToStart = t; }
-            }
-            DrawSurvivalLine(startTile, nearestToStart);
+        List<SurvivalSpaceAnalyzer.SurvivalZone> islands = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
 
-            Vector2i nearestToEnd = endTile;
-            minDist = float.MaxValue;
-            foreach (var t in map.survivalSpaceTiles)
+        if (islands.Count > 0)
+        {
+            islands = islands.OrderBy(z => z.center.x).ToList();
+
+            Vector2i firstZoneEntry = islands.First().tiles.OrderBy(t => t.x).First();
+            DrawSurvivalLine(startTile, firstZoneEntry);
+
+            for (int i = 0; i < islands.Count - 1; i++)
             {
-                float d = Vector2.Distance(new Vector2(endTile.x, endTile.y), new Vector2(t.x, t.y));
-                if (d < minDist) { minDist = d; nearestToEnd = t; }
+                Vector2i currentZoneExit = islands[i].tiles.OrderByDescending(t => t.x).First();
+                Vector2i nextZoneEntry = islands[i + 1].tiles.OrderBy(t => t.x).First();
+                DrawSurvivalLine(currentZoneExit, nextZoneEntry);
             }
-            DrawSurvivalLine(endTile, nearestToEnd);
+
+            Vector2i lastZoneExit = islands.Last().tiles.OrderByDescending(t => t.x).First();
+            DrawSurvivalLine(lastZoneExit, endTile);
         }
         else
         {
@@ -272,7 +271,7 @@ public partial class LevelGenerator : MonoBehaviour
 
         if (startTile.x != -1 && endTile.x != -1)
         {
-            AutoConnectStartAndEndToSurvivalSpace(startTile, endTile);
+            AutoConnectAllSurvivalZones(startTile, endTile);
         }
         BuildSurvivalGradient(endTile);
         ShowSurvivalSpaceInGame();
