@@ -87,7 +87,6 @@ public class AdversarialDirector : MonoBehaviour
         if (!isRunning || targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy) return;
 
         // --- 1. 出生保护期 ---
-        // 游戏刚开始的几秒内，导演强制挂机，避免玩家刚出生还没看清地图就暴毙
         if (Time.time < runStartTime + spawnProtectionTime)
         {
             lastTrapTime = Time.time;
@@ -96,28 +95,23 @@ public class AdversarialDirector : MonoBehaviour
         }
 
         // --- 2. 静止摸鱼保护 ---
-        // 只要玩家不在死亡状态，且在地面上没有明显的水平移动，导演就不会发动攻击
-        // 注意：在 IWBTG 自动烘焙模式下，我们不需要保护，让 Bot 接受严苛测试
         if (ignoreIdlePlayer && targetPlayer.mCurrentState != Character.CharacterState.Die && !isIWBTGSculptingMode)
         {
             bool isIdle = targetPlayer.mOnGround && Mathf.Abs(targetPlayer.mSpeed.x) < 0.1f;
             if (isIdle)
             {
-                // 玩家挂机，导演的冷却计时器也跟着冻结
                 lastTrapTime = Time.time;
                 lastTerrainTime = Time.time;
                 return;
             }
         }
 
-        // 如果处于极限难度雕刻模式，则执行严格的轨迹约束，跳过常规的随机陷阱逻辑
         if (isIWBTGSculptingMode && targetPlayer.mCurrentState != Character.CharacterState.Die)
         {
             CheckDeviationAndEnforceConstraint();
             return;
         }
 
-        // 清理空对象
         for (int i = activeTraps.Count - 1; i >= 0; i--)
             if (activeTraps[i] == null) activeTraps.RemoveAt(i);
 
@@ -147,21 +141,18 @@ public class AdversarialDirector : MonoBehaviour
         // --- 5. 安全区逻辑分支 ---
         if (inSafeZone)
         {
-            // 在安全区内：休眠，不生成新陷阱，重置冷却时间防止出圈瞬间被秒杀
             lastTrapTime = Time.time;
             return;
         }
 
         // --- 6. 危险区逻辑 (暴走模式) ---
-        float effectiveCooldown = 0.5f; // 极速攻击
+        float effectiveCooldown = 0.5f;
 
-        // 普通陷阱
         if (Time.time > lastTrapTime + effectiveCooldown)
         {
             AttemptLethalTrap();
         }
 
-        // 地形变动 
         if (Time.time > lastTerrainTime + terrainCooldown)
         {
             if (targetPlayer.mOnGround && Random.value < 0.1f)
@@ -283,7 +274,7 @@ public class AdversarialDirector : MonoBehaviour
         {
             Vector2 killZone = futurePath[futurePath.Count - 1];
             SpawnTrap(config, spawnPos.Value, killZone, false);
-            lastTrapTime = Time.time; // 攻击后重置计时器
+            lastTrapTime = Time.time;
         }
     }
 
@@ -296,9 +287,46 @@ public class AdversarialDirector : MonoBehaviour
     }
 
     public void ClearTraps() { foreach (var t in activeTraps) if (t != null) Destroy(t); activeTraps.Clear(); }
-    TrapConfig GetRandomTrapConfig() { float totalWeight = 0f; foreach (var c in trapLibrary) totalWeight += c.weight; float r = Random.Range(0, totalWeight); float cur = 0f; foreach (var c in trapLibrary) { cur += c.weight; if (r <= cur) return c; } return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig(); }
-    Vector2? CalculateLethalSpawnPosition(TrapConfig c, List<Vector2> p) { Vector2 k = p[p.Count - 1]; if (c.strategy == TrapStrategy.DropFromAbove) return new Vector2(k.x, k.y + 150f); if (c.strategy == TrapStrategy.RiseFromBelow) return k + Vector2.down * 50f; return k + Vector2.left * 200f; }
-    List<Vector2> SimulatePlayerPath(float t) { List<Vector2> path = new List<Vector2>(); Vector2 p = targetPlayer.mPosition; Vector2 v = targetPlayer.mSpeed; for (int i = 0; i < 30; i++) { if (!targetPlayer.mOnGround) v.y += Constants.cGravity * 0.02f; p += v * 0.02f; path.Add(p); } return path; }
+
+    TrapConfig GetRandomTrapConfig()
+    {
+        float totalWeight = 0f;
+        foreach (var c in trapLibrary) totalWeight += c.weight;
+        if (totalWeight <= 0f) return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig();
+        float r = Random.Range(0, totalWeight);
+        float cur = 0f;
+        foreach (var c in trapLibrary) { cur += c.weight; if (r <= cur) return c; }
+        return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig();
+    }
+
+    Vector2? CalculateLethalSpawnPosition(TrapConfig c, List<Vector2> p)
+    {
+        if (p == null || p.Count == 0) return targetPlayer.mPosition;
+        Vector2 k = p[p.Count - 1];
+        if (c.strategy == TrapStrategy.DropFromAbove) return new Vector2(k.x, k.y + Map.cTileSize * 15f);
+        if (c.strategy == TrapStrategy.RiseFromBelow) return k + Vector2.down * Map.cTileSize * 15f;
+        if (c.strategy == TrapStrategy.SniperIntercept) return targetPlayer.mPosition + new Vector2(Random.value > 0.5f ? 1 : -1, 1).normalized * Map.cTileSize * 20f;
+        if (c.strategy == TrapStrategy.FakeBlockSurprise) return k;
+        return k + Vector2.up * Map.cTileSize * 10f;
+    }
+
+    List<Vector2> SimulatePlayerPath(float t)
+    {
+        List<Vector2> path = new List<Vector2>();
+        Vector2 p = targetPlayer.mPosition;
+        Vector2 v = targetPlayer.mSpeed;
+        float step = 0.02f;
+        float timeSimulated = 0f;
+        while (timeSimulated < t)
+        {
+            v.y += Constants.cGravity * step;
+            p += v * step;
+            path.Add(p);
+            timeSimulated += step;
+        }
+        return path;
+    }
+
     bool IsPositionValid(Vector2 p) { return true; }
     bool HasWallBetween(Vector2 s, Vector2 e) { return false; }
 }
