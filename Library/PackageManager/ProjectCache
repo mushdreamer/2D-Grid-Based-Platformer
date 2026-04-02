@@ -13,14 +13,14 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638962503230007860
-    m_Hash: 2653524969
+      ticks: 639107643098969781
+    m_Hash: 3550639600
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:
   m_LocalFileStatus: []
 m_ProjectPath: C:/GitHub/2D-Grid-Based-Platformer/Packages
-m_EditorVersion: 2022.3.42f1 (2dcb6a0abc42)
+m_EditorVersion: 2022.3.62f3 (96770f904ca7)
 m_ResolvedPackages:
 - packageId: com.unity.feature.2d@2.0.1
   testable: 0
@@ -70,11 +70,11 @@ m_ResolvedPackages:
     version: default
   resolvedDependencies:
   - name: com.unity.2d.animation
-    version: 9.1.1
+    version: 9.2.0
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -96,11 +96,11 @@ m_ResolvedPackages:
   - name: com.unity.ext.nunit
     version: 1.0.6
   - name: com.unity.2d.pixel-perfect
-    version: 5.0.3
+    version: 5.1.0
   - name: com.unity.2d.psdimporter
-    version: 8.0.5
+    version: 8.1.0
   - name: com.unity.2d.spriteshape
-    version: 9.0.4
+    version: 9.1.0
   - name: com.unity.modules.physics2d
     version: 1.0.0
   - name: com.unity.2d.tilemap
@@ -108,11 +108,11 @@ m_ResolvedPackages:
   - name: com.unity.modules.tilemap
     version: 1.0.0
   - name: com.unity.2d.tilemap.extras
-    version: 3.1.2
+    version: 3.1.3
   - name: com.unity.ugui
     version: 1.0.0
   - name: com.unity.2d.aseprite
-    version: 1.1.4
+    version: 1.1.9
   keywords: []
   registry:
     id: main
@@ -2390,12 +2390,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.animation@9.1.1
+- packageId: com.unity.2d.animation@9.2.0
   testable: 0
   isDirectDependency: 0
-  version: 9.1.1
+  version: 9.2.0
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.animation@9.1.1
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.animation@9.2.0
   assetPath: Packages/com.unity.2d.animation
   name: com.unity.2d.animation
   displayName: 2D Animation
@@ -2404,7 +2404,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: 2D Animation provides all the necessary tooling and runtime components
     for skeletal animation using Sprites.
   status: 0
@@ -2567,17 +2567,14 @@ m_ResolvedPackages:
     - 15.0.2
     - 15.0.3
     compatible:
-    - 9.1.1
-    - 9.1.2
-    - 9.1.3
     - 9.2.0
     - 9.2.1
     - 9.2.2
-    recommended: 9.1.3
+    recommended: 9.2.2
     deprecated: []
   dependencies:
   - name: com.unity.2d.common
-    version: 8.0.2
+    version: 8.1.0
   - name: com.unity.2d.sprite
     version: 1.0.0
   - name: com.unity.collections
@@ -2588,9 +2585,9 @@ m_ResolvedPackages:
     version: 1.0.0
   resolvedDependencies:
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -2624,16 +2621,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638515171890000000
-  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.animation@9.1/manual/index.html
+  datePublishedTicks: 638786485509930000
+  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.animation@9.2/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/2d.git
-    revision: c76edf174a772eda3d3152a9d38ad8c364cce43e
+    revision: 854e7c330168787e9d4ea0311c42dadc256cb889
     path: 
   unityLifecycle:
-    version: 9.1.1
+    version: 9.2.0
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -2641,12 +2638,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.pixel-perfect@5.0.3
+- packageId: com.unity.2d.pixel-perfect@5.1.0
   testable: 0
   isDirectDependency: 0
-  version: 5.0.3
+  version: 5.1.0
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.pixel-perfect@5.0.3
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.pixel-perfect@5.1.0
   assetPath: Packages/com.unity.2d.pixel-perfect
   name: com.unity.2d.pixel-perfect
   displayName: 2D Pixel Perfect
@@ -2655,7 +2652,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 
-  type: tool
+  type: 
   description: 'The 2D Pixel Perfect package contains the Pixel Perfect Camera component
     which ensures your pixel art remains crisp and clear at different resolutions,
     and stable in motion.
@@ -2691,13 +2688,16 @@ m_ResolvedPackages:
     - 5.1.1
     - 6.0.0
     compatible:
-    - 5.0.3
     - 5.1.0
     - 5.1.1
-    recommended: 5.0.3
+    recommended: 5.1.1
     deprecated: []
-  dependencies: []
-  resolvedDependencies: []
+  dependencies:
+  - name: com.unity.modules.imgui
+    version: 1.0.0
+  resolvedDependencies:
+  - name: com.unity.modules.imgui
+    version: 1.0.0
   keywords:
   - pixel
   - perfect
@@ -2713,16 +2713,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638023910590000000
-  documentationUrl: 
+  datePublishedTicks: 638775664687690000
+  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.pixel-perfect@5.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/2d.git
-    revision: 6dea8ac5bd6953acd64f1ac9d470912954b0c015
+    revision: 9ead9de91ee9fdb290bfcc223d793a449e7f8370
     path: 
   unityLifecycle:
-    version: 5.0.3
+    version: 5.1.0
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -2730,12 +2730,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.psdimporter@8.0.5
+- packageId: com.unity.2d.psdimporter@8.1.0
   testable: 0
   isDirectDependency: 0
-  version: 8.0.5
+  version: 8.1.0
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.psdimporter@8.0.5
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.psdimporter@8.1.0
   assetPath: Packages/com.unity.2d.psdimporter
   name: com.unity.2d.psdimporter
   displayName: 2D PSD Importer
@@ -2744,7 +2744,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: A ScriptedImporter for importing Adobe Photoshop PSB (Photoshop Big)
     file format. The ScriptedImporter is currently targeted for users who wants to
     create multi Sprite character animation using Unity 2D Animation Package.
@@ -2852,24 +2852,23 @@ m_ResolvedPackages:
     - 14.0.1
     - 14.0.2
     compatible:
-    - 8.0.5
     - 8.1.0
     - 8.1.1
     - 8.1.2
-    recommended: 8.0.5
+    recommended: 8.1.2
     deprecated: []
   dependencies:
   - name: com.unity.2d.common
-    version: 8.0.2
+    version: 8.1.0
   - name: com.unity.2d.sprite
     version: 1.0.0
   - name: com.unity.2d.animation
-    version: 9.1.1
+    version: 9.2.0
   resolvedDependencies:
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -2885,7 +2884,7 @@ m_ResolvedPackages:
   - name: com.unity.modules.imgui
     version: 1.0.0
   - name: com.unity.2d.animation
-    version: 9.1.1
+    version: 9.2.0
   - name: com.unity.collections
     version: 1.2.4
   - name: com.unity.test-framework
@@ -2906,16 +2905,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638515171920000000
-  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.psdimporter@8.0/manual/index.html
+  datePublishedTicks: 638786485526070000
+  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.psdimporter@8.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/2d.git
-    revision: c76edf174a772eda3d3152a9d38ad8c364cce43e
+    revision: 854e7c330168787e9d4ea0311c42dadc256cb889
     path: 
   unityLifecycle:
-    version: 8.0.5
+    version: 8.1.0
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -2982,12 +2981,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.spriteshape@9.0.4
+- packageId: com.unity.2d.spriteshape@9.1.0
   testable: 0
   isDirectDependency: 0
-  version: 9.0.4
+  version: 9.1.0
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.spriteshape@9.0.4
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.spriteshape@9.1.0
   assetPath: Packages/com.unity.2d.spriteshape
   name: com.unity.2d.spriteshape
   displayName: 2D SpriteShape
@@ -2996,7 +2995,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: SpriteShape Runtime & Editor Package contains the tooling and the
     runtime component that allows you to create very organic looking spline based
     2D worlds. It comes with intuitive configurator and a highly performant renderer.
@@ -3109,24 +3108,22 @@ m_ResolvedPackages:
     - 15.0.1
     - 15.0.2
     compatible:
-    - 9.0.4
-    - 9.0.5
     - 9.1.0
     - 9.1.1
-    recommended: 9.0.5
+    recommended: 9.1.1
     deprecated: []
   dependencies:
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.mathematics
     version: 1.1.0
   - name: com.unity.modules.physics2d
     version: 1.0.0
   resolvedDependencies:
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -3160,16 +3157,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638567250110000000
-  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.spriteshape@9.0/manual/index.html
+  datePublishedTicks: 638786485546140000
+  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.spriteshape@9.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/2d.git
-    revision: 317cb5a2d84ec8711e66cbcce61bc6179da9d791
+    revision: 854e7c330168787e9d4ea0311c42dadc256cb889
     path: 
   unityLifecycle:
-    version: 9.0.4
+    version: 9.1.0
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -3251,12 +3248,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.tilemap.extras@3.1.2
+- packageId: com.unity.2d.tilemap.extras@3.1.3
   testable: 0
   isDirectDependency: 0
-  version: 3.1.2
+  version: 3.1.3
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.tilemap.extras@3.1.2
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.tilemap.extras@3.1.3
   assetPath: Packages/com.unity.2d.tilemap.extras
   name: com.unity.2d.tilemap.extras
   displayName: 2D Tilemap Extras
@@ -3265,7 +3262,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: '2D Tilemap Extras is a package that contains extra scripts for use
     with 2D Tilemap features in Unity. These include custom Tiles and Brushes for
     the Tilemap feature.
@@ -3341,7 +3338,6 @@ m_ResolvedPackages:
     - 8.0.2
     - 8.88.0-exp.1
     compatible:
-    - 3.1.2
     - 3.1.3
     recommended: 3.1.3
     deprecated: []
@@ -3383,16 +3379,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638320873890000000
+  datePublishedTicks: 638647709245980000
   documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.tilemap.extras@3.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.com/Unity-Technologies/2d-extras.git
-    revision: 741b52ca8bcd71b4e016208dbfe792374ca334c8
+    revision: 8338e2715a3f0921b8c4cf9c90823fb2a21c10b5
     path: 
   unityLifecycle:
-    version: 3.1.2
+    version: 3.1.3
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -3400,12 +3396,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.aseprite@1.1.4
+- packageId: com.unity.2d.aseprite@1.1.9
   testable: 0
   isDirectDependency: 0
-  version: 1.1.4
+  version: 1.1.9
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.aseprite@1.1.4
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.aseprite@1.1.9
   assetPath: Packages/com.unity.2d.aseprite
   name: com.unity.2d.aseprite
   displayName: 2D Aseprite Importer
@@ -3414,7 +3410,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: 2D Aseprite Importer is a package which enables the import of .aseprite
     files from the Pixel Art tool Aseprite.
   status: 0
@@ -3456,11 +3452,6 @@ m_ResolvedPackages:
     - 5.0.1
     - 5.0.2
     compatible:
-    - 1.1.4
-    - 1.1.5
-    - 1.1.6
-    - 1.1.7
-    - 1.1.8
     - 1.1.9
     - 1.1.10
     - 1.1.11
@@ -3477,9 +3468,9 @@ m_ResolvedPackages:
     version: 1.0.0
   resolvedDependencies:
   - name: com.unity.2d.common
-    version: 8.0.3
+    version: 8.1.0
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -3510,16 +3501,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638509289520000000
+  datePublishedTicks: 638796223739820000
   documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git
-    revision: 331d65bad3469b434c81f625682efc587a1e9258
+    revision: b3f5769982eceb8fffc54aaa15576646bb8dc938
     path: 
   unityLifecycle:
-    version: 1.1.4
+    version: 1.1.9
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -3599,12 +3590,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.2d.common@8.0.3
+- packageId: com.unity.2d.common@8.1.0
   testable: 0
   isDirectDependency: 0
-  version: 8.0.3
+  version: 8.1.0
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.common@8.0.3
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.2d.common@8.1.0
   assetPath: Packages/com.unity.2d.common
   name: com.unity.2d.common
   displayName: 2D Common
@@ -3613,7 +3604,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 2D
-  type: assets
+  type: 
   description: 2D Common is a package that contains shared functionalities that are
     used by most of the other 2D packages.
   status: 0
@@ -3695,11 +3686,9 @@ m_ResolvedPackages:
     - 13.0.1
     - 14.0.0
     compatible:
-    - 8.0.3
-    - 8.0.4
     - 8.1.0
     - 8.1.1
-    recommended: 8.0.4
+    recommended: 8.1.1
     deprecated: []
   dependencies:
   - name: com.unity.burst
@@ -3714,7 +3703,7 @@ m_ResolvedPackages:
     version: 1.0.0
   resolvedDependencies:
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -3741,16 +3730,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638567250090000000
-  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.common@8.0/manual/index.html
+  datePublishedTicks: 638786485477740000
+  documentationUrl: https://docs.unity3d.com/Packages/com.unity.2d.common@8.1/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/2d.git
-    revision: 317cb5a2d84ec8711e66cbcce61bc6179da9d791
+    revision: 854e7c330168787e9d4ea0311c42dadc256cb889
     path: 
   unityLifecycle:
-    version: 8.0.3
+    version: 8.1.0
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -3985,7 +3974,7 @@ m_ResolvedPackages:
     version: 1.1.31
   resolvedDependencies:
   - name: com.unity.burst
-    version: 1.8.17
+    version: 1.8.21
   - name: com.unity.mathematics
     version: 1.2.6
   - name: com.unity.modules.jsonserialize
@@ -4027,12 +4016,12 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-- packageId: com.unity.burst@1.8.17
+- packageId: com.unity.burst@1.8.21
   testable: 0
   isDirectDependency: 0
-  version: 1.8.17
+  version: 1.8.21
   source: 1
-  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.burst@1.8.17
+  resolvedPath: C:\GitHub\2D-Grid-Based-Platformer\Library\PackageCache\com.unity.burst@1.8.21
   assetPath: Packages/com.unity.burst
   name: com.unity.burst
   displayName: Burst
@@ -4041,7 +4030,7 @@ m_ResolvedPackages:
     email: 
     url: 
   category: 
-  type: assets
+  type: 
   description: Burst is a compiler that translates from IL/.NET bytecode to highly
     optimized native code using LLVM.
   status: 0
@@ -4193,10 +4182,6 @@ m_ResolvedPackages:
     - 1.8.28
     - 1.8.29
     compatible:
-    - 1.8.17
-    - 1.8.18
-    - 1.8.19
-    - 1.8.20
     - 1.8.21
     - 1.8.22
     - 1.8.23
@@ -4229,16 +4214,16 @@ m_ResolvedPackages:
     configSource: 0
   hideInEditor: 1
   isAssetStorePackage: 0
-  datePublishedTicks: 638573293750000000
+  datePublishedTicks: 638797336625580000
   documentationUrl: https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html
   hasRepository: 1
   repository:
     type: git
     url: https://github.cds.internal.unity3d.com/unity/burst.git
-    revision: 234303811291ae524719609ac4e9ca24be4b58dd
+    revision: 941bff0925baa46012a2eff522313c170bf36c7a
     path: 
   unityLifecycle:
-    version: 1.8.17
+    version: 1.8.21
     nextVersion: 
     recommendedVersion: 
     isDeprecated: 0
@@ -4246,4 +4231,4 @@ m_ResolvedPackages:
   isDeprecated: 0
   deprecationMessage: 
   fingerprint: 
-m_BuiltInPackagesHash: aee274f1cc3a449a7bcb0ab99baf64c1bcf18ae8
+m_BuiltInPackagesHash: 589add9c3ae0bc06545f5c61253b1928f3e64fad
