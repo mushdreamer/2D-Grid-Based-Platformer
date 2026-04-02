@@ -95,9 +95,9 @@ public partial class LevelGenerator : MonoBehaviour
                         TryPlaceIndividualInGrid(newInd);
                         initialCount++;
                     }
-                    else RecordFailure(failReason);
+                    else RecordFailure("Init_Verify_" + failReason);
                 }
-                else RecordFailure(failReason);
+                else RecordFailure("Init_Sim_" + failReason);
                 yield return null;
             }
 
@@ -320,15 +320,30 @@ public partial class LevelGenerator : MonoBehaviour
 
         BakeLevelToMapDataOnly(new List<Vector3>(), childSafePlatforms, startTile, endTile);
 
+        List<LevelGenerationPlanner.GenerationStep> evalRoute = new List<LevelGenerationPlanner.GenerationStep>();
+        evalRoute.Add(new LevelGenerationPlanner.GenerationStep
+        {
+            description = "GA Mutated Topology Evaluation",
+            startPoint = map.GetMapTilePosition(startTile.x, startTile.y),
+            endPoint = map.GetMapTilePosition(endTile.x, endTile.y),
+            associatedZone = null
+        });
+
         string failReason;
         Vector2 failPos;
-        if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason, out failPos))
+
+        if (RunGuidedSimulation(startTile, endTile, evalRoute, out failReason, out failPos, false, localSafeTiles))
         {
-            LevelIndividual child = CreateIndividualFromGhost(startTile, endTile);
-            child.safePlatforms = childSafePlatforms;
-            return child;
+            BakeLevelToMapDataOnly(ghostTrajectory, childSafePlatforms, startTile, endTile);
+            if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason, out failPos))
+            {
+                LevelIndividual child = CreateIndividualFromGhost(startTile, endTile);
+                child.safePlatforms = childSafePlatforms;
+                return child;
+            }
+            else RecordFailure("GA_Verify_" + failReason);
         }
-        else RecordFailure(failReason);
+        else RecordFailure("GA_Sim_" + failReason);
 
         return null;
     }
