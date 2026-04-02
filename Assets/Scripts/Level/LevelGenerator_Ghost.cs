@@ -5,9 +5,34 @@ using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos)
+    // [新增] 轻量级状态快照，用于动作失败时的瞬间回档
+    public struct GhostCheckpoint
     {
-        int microAttempts = 200;
+        public Vector2 position;
+        public Vector2 speed;
+        public Character.CharacterState currentState;
+        public bool onGround;
+        public float virtualFloorY;
+        public int replayCount;
+        public int trajectoryCount;
+        public int pathCount;
+
+        public GhostCheckpoint(Bot agent, float vFloor, int rCount, int tCount, int pCount)
+        {
+            position = agent.mPosition;
+            speed = agent.mSpeed;
+            currentState = agent.mCurrentState;
+            onGround = agent.mOnGround;
+            virtualFloorY = vFloor;
+            replayCount = rCount;
+            trajectoryCount = tCount;
+            pathCount = pCount;
+        }
+    }
+
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null)
+    {
+        int microAttempts = 5; // 引入回溯后，整体宏观重试次数可以大幅降低
         finalReason = "";
         failPos = Vector2.zero;
 
@@ -22,7 +47,11 @@ public partial class LevelGenerator : MonoBehaviour
             ClearGhostData();
             map.ClearMapToEmpty();
 
-            if (startTile.x != -1)
+            if (injectBaseline && localSafeTiles != null)
+            {
+                GenerateKinematicBaseline(startTile, endTile, localSafeTiles);
+            }
+            else if (startTile.x != -1)
             {
                 for (int dx = -2; dx <= 2; dx++)
                 {
@@ -55,9 +84,52 @@ public partial class LevelGenerator : MonoBehaviour
         return false;
     }
 
+    void GenerateKinematicBaseline(Vector2i startTile, Vector2i endTile, HashSet<Vector2i> safeTiles)
+    {
+        int curX = startTile.x;
+        int curY = startTile.y - 1;
+        int dirX = endTile.x > startTile.x ? 1 : -1;
+
+        map.SetTile(curX, curY, TileType.Block);
+        ghostSafePlatforms.Add(new Vector2i(curX, curY));
+
+        int failsafe = 0;
+        while (Mathf.Abs(endTile.x - curX) > 2 && failsafe < 100)
+        {
+            failsafe++;
+            int nextX = curX + dirX * Random.Range(2, 5);
+            int nextY = curY;
+            if (endTile.y > curY) nextY += Random.Range(0, 3);
+            else if (endTile.y < curY) nextY -= Random.Range(0, 3);
+
+            if (safeTiles.Contains(new Vector2i(nextX, nextY + 1)))
+            {
+                curX = nextX;
+                curY = nextY;
+                map.SetTile(curX, curY, TileType.Block);
+                ghostSafePlatforms.Add(new Vector2i(curX, curY));
+            }
+            else
+            {
+                curX += dirX * 1;
+            }
+        }
+
+        map.SetTile(endTile.x, endTile.y - 1, TileType.Block);
+        ghostSafePlatforms.Add(new Vector2i(endTile.x, endTile.y - 1));
+
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            map.SetTile(startTile.x + dx, startTile.y - 1, TileType.Block);
+            ghostSafePlatforms.Add(new Vector2i(startTile.x + dx, startTile.y - 1));
+            map.SetTile(endTile.x + dx, endTile.y - 1, TileType.Block);
+            ghostSafePlatforms.Add(new Vector2i(endTile.x + dx, endTile.y - 1));
+        }
+    }
+
     bool SimulateGuidedPath(Vector2 finalDest, SurvivalSpaceAnalyzer.SurvivalZone currentZone, out string reason, out Vector2 failPos)
     {
-        int framesLimit = 1500;
+        int framesLimit = 2500;
         int currentFrames = 0;
         int stagnationCount = 0;
         Vector2 lastProgressPos = ghostAgent.mPosition;
@@ -68,51 +140,59 @@ public partial class LevelGenerator : MonoBehaviour
             {
                 reason = "Success"; failPos = ghostAgent.mPosition; return true;
             }
-            if (ghostAgent.mPosition.y < map.position.y - 100f)
+
+            // [核心机制] 记录动作前的物理状态与轨迹索引快照
+            GhostCheckpoint cp = new GhostCheckpoint(ghostAgent, currentVirtualFloorY, ghostReplay.Count, ghostTrajectory.Count, ghostPath.Count);
+
+            int maxRetries = 12; // 允许在同一点进行多达12次的不同动作试错
+            bool stepSuccess = false;
+            int framesTaken = 0;
+
+            for (int r = 0; r < maxRetries; r++)
             {
-                reason = "FallOut_跌出地图底线"; failPos = ghostAgent.mPosition; return false;
+                ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone);
+
+                bool actionFailed = false;
+                framesTaken = ExecuteGhostAction(nextAction, out actionFailed);
+
+                // 严苛的死线检测
+                if (ghostAgent.mPosition.y < map.position.y - 100f) actionFailed = true;
+
+                if (!actionFailed)
+                {
+                    stepSuccess = true;
+                    break;
+                }
+                else
+                {
+                    // [回溯触发] 当前动作导致越界或坠落，执行 O(1) 状态回滚并换个动作再试
+                    ghostAgent.mPosition = cp.position;
+                    ghostAgent.mSpeed = cp.speed;
+                    ghostAgent.mCurrentState = cp.currentState;
+                    ghostAgent.mOnGround = cp.onGround;
+                    currentVirtualFloorY = cp.virtualFloorY;
+
+                    // 截断失败的录像与轨迹，保证记录的绝对纯洁性
+                    if (ghostReplay.Count > cp.replayCount) ghostReplay.RemoveRange(cp.replayCount, ghostReplay.Count - cp.replayCount);
+                    if (ghostTrajectory.Count > cp.trajectoryCount) ghostTrajectory.RemoveRange(cp.trajectoryCount, ghostTrajectory.Count - cp.trajectoryCount);
+                    if (ghostPath.Count > cp.pathCount) ghostPath.RemoveRange(cp.pathCount, ghostPath.Count - cp.pathCount);
+                }
             }
 
-            if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
+            if (!stepSuccess)
             {
-                Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
-                bool isInside = false;
-                for (int dx = -1; dx <= 1; dx++)
-                {
-                    for (int dy = -1; dy <= 1; dy++)
-                    {
-                        if (map.survivalSpaceTiles.Contains(new Vector2i(currentTile.x + dx, currentTile.y + dy)))
-                        {
-                            isInside = true;
-                            break;
-                        }
-                    }
-                    if (isInside) break;
-                }
-                if (!isInside)
-                {
-                    string dir = "未知方向";
-                    if (ghostAgent.mSpeed.x > 5f) dir = "向右冲出";
-                    else if (ghostAgent.mSpeed.x < -5f) dir = "向左冲出";
-                    else if (ghostAgent.mSpeed.y > 5f) dir = "向上飞出";
-                    else if (ghostAgent.mSpeed.y < -5f) dir = "向下坠落";
-
-                    reason = $"Out_Of_Bounds_脱离生存空间 ({dir})";
-                    failPos = ghostAgent.mPosition;
-                    return false;
-                }
+                reason = "All_Retries_Failed_At_Step";
+                failPos = ghostAgent.mPosition;
+                return false;
             }
+
+            currentFrames += framesTaken;
 
             if (Vector2.Distance(ghostAgent.mPosition, lastProgressPos) < 2.0f) stagnationCount++;
             else { stagnationCount = 0; lastProgressPos = ghostAgent.mPosition; }
-
-            ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone);
-            if (stagnationCount > 8) stagnationCount = 0;
-
-            currentFrames += ExecuteGhostAction(nextAction);
         }
 
-        reason = "Timeout_耗尽1500帧陷入死循环";
+        reason = "Timeout_耗尽2500帧陷入死循环";
         failPos = ghostAgent.mPosition;
         return false;
     }
@@ -269,9 +349,10 @@ public partial class LevelGenerator : MonoBehaviour
         return pickedAction;
     }
 
-    int ExecuteGhostAction(ActionType action)
+    int ExecuteGhostAction(ActionType action, out bool actionFailed)
     {
         int frames = 0;
+        actionFailed = false;
         bool right = false, left = false, jump = false, drop = false;
         int jumpHoldFrames = 0;
 
@@ -296,18 +377,14 @@ public partial class LevelGenerator : MonoBehaviour
 
             EnsureVirtualFloorRealtime();
 
-            // 记录进入物理更新前的合法状态，用于绝对防穿透钳制
-            Vector2 oldPos = ghostAgent.mPosition;
-
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
-            // 绝对物理空气墙：一旦物理引擎把特工推出安全区，立刻执行时光倒流
+            // [修改] 彻底废弃空气墙和时光倒流，越界直接判定动作失败
             if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
             {
                 Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
                 bool isInside = false;
 
-                // 给一个 3x3 的宽容判定区，防止踩在平台边缘被误判
                 for (int dx = -1; dx <= 1; dx++)
                 {
                     for (int dy = -1; dy <= 1; dy++)
@@ -323,22 +400,20 @@ public partial class LevelGenerator : MonoBehaviour
 
                 if (!isInside)
                 {
-                    // 强行把特工拉回越界前的位置，形成不可穿透的屏障
-                    ghostAgent.mPosition = oldPos;
-                    Vector2i oldTile = map.GetMapTileAtPoint(oldPos);
-
-                    // 精准消除越界方向的动能，同时保留合法的滑动动能
-                    if (ghostAgent.mSpeed.x > 0 && currentTile.x > oldTile.x) ghostAgent.mSpeed.x = 0f;
-                    if (ghostAgent.mSpeed.x < 0 && currentTile.x < oldTile.x) ghostAgent.mSpeed.x = 0f;
-
-                    // 向上跳出界没收垂直动能，变成撞天花板直接下落
-                    if (ghostAgent.mSpeed.y > 0 && currentTile.y > oldTile.y) ghostAgent.mSpeed.y = 0f;
+                    actionFailed = true;
                 }
+            }
+
+            if (ghostAgent.mCurrentState == Character.CharacterState.Die)
+            {
+                actionFailed = true;
             }
 
             RecordGhostTrajectory();
             ghostReplay.Add(new ReplayFrame(inputs));
             ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
+
+            if (actionFailed) break; // 若中途失败，立刻打断动作，交还给外层进行回溯
         }
         return frames;
     }
@@ -352,7 +427,6 @@ public partial class LevelGenerator : MonoBehaviour
 
         if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
         {
-            // 探地雷达：检测脚底下两格内是否存在安全区，如果没有，说明特工正踩在安全区的绝对底线上
             if (!map.survivalSpaceTiles.Contains(new Vector2i(centerTile.x, centerTile.y - 1)) &&
                 !map.survivalSpaceTiles.Contains(new Vector2i(centerTile.x, centerTile.y - 2)))
             {
@@ -360,7 +434,6 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
-        // 动态收网：一旦到达底线边缘，不等掉下去就强行铺路
         if (isBottomEdge || ghostAgent.mPosition.y <= currentVirtualFloorY)
         {
             float feetY = ghostAgent.mPosition.y - ghostAgent.mAABB.HalfSizeY;

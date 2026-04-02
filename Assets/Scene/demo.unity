@@ -525,7 +525,7 @@ MonoBehaviour:
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
   targetValidLevels: 10
-  maxTotalAttempts: 200
+  maxTotalAttempts: 2000
   blockDensity: 0.45
   noiseScale: 0.15
   finishLinePrefab: {fileID: 0}

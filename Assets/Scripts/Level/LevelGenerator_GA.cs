@@ -23,7 +23,7 @@ public partial class LevelGenerator : MonoBehaviour
         Initialize();
         if (director != null) director.SetRunning(false);
         ClearVisuals();
-        InitLog("多空间独立分段生成 MAP-Elites (GA驱动)", gaPopulationSize, gaMaxGenerations);
+        InitLog("多空间独立分段生成 MAP-Elites (运动学约束版)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
@@ -70,12 +70,22 @@ public partial class LevelGenerator : MonoBehaviour
 
             int initialCount = 0;
             int initialAttempts = 0;
+            bool baselineInjected = false;
+
             while (initialCount < gaPopulationSize && initialAttempts < maxTotalAttempts)
             {
                 initialAttempts++;
                 string failReason;
                 Vector2 failPos;
-                if (RunGuidedSimulation(localStart, localEnd, localRoute, out failReason, out failPos))
+
+                bool triggerGreedyRepair = (initialAttempts > 50 && initialCount == 0 && !baselineInjected);
+                if (triggerGreedyRepair)
+                {
+                    Debug.LogWarning($"区域 {zIndex} 常规盲搜陷入拓扑死锁，触发运动学贪心修复机制铺设基准桥梁...");
+                    baselineInjected = true;
+                }
+
+                if (RunGuidedSimulation(localStart, localEnd, localRoute, out failReason, out failPos, triggerGreedyRepair, localSafeTiles))
                 {
                     BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, localStart, localEnd);
                     if (VerifyLevelWithRealPhysics(localStart, localEnd, out failReason, out failPos))
@@ -103,7 +113,7 @@ public partial class LevelGenerator : MonoBehaviour
                     maxOffspringAttempts--;
                     LevelIndividual parentA = TournamentSelection(currentElites);
                     LevelIndividual parentB = TournamentSelection(currentElites);
-                    LevelIndividual offspring = CrossoverAndMutate(parentA, parentB, localStart, localEnd);
+                    LevelIndividual offspring = CrossoverAndMutate(parentA, parentB, localStart, localEnd, localSafeTiles);
 
                     if (offspring != null)
                     {
@@ -264,30 +274,51 @@ public partial class LevelGenerator : MonoBehaviour
         return best;
     }
 
-    private LevelIndividual CrossoverAndMutate(LevelIndividual parentA, LevelIndividual parentB, Vector2i startTile, Vector2i endTile)
+    private LevelIndividual CrossoverAndMutate(LevelIndividual parentA, LevelIndividual parentB, Vector2i startTile, Vector2i endTile, HashSet<Vector2i> localSafeTiles)
     {
-        int midX = map.mWidth / 2;
+        int midX = (startTile.x + endTile.x) / 2;
         HashSet<Vector2i> childSafePlatforms = new HashSet<Vector2i>();
 
         foreach (var p in parentA.safePlatforms) if (p.x <= midX) childSafePlatforms.Add(p);
         foreach (var p in parentB.safePlatforms) if (p.x > midX) childSafePlatforms.Add(p);
 
-        List<Vector3> mixedTrajectory = new List<Vector3>();
-        mixedTrajectory.AddRange(parentA.trajectory.Where(pos => map.GetMapTileAtPoint(pos).x <= midX));
-        mixedTrajectory.AddRange(parentB.trajectory.Where(pos => map.GetMapTileAtPoint(pos).x > midX));
+        int maxKinematicJumpX = 5;
+        int maxKinematicJumpY = 3;
 
         if (Random.value < gaMutationRate)
         {
             List<Vector2i> platformsList = childSafePlatforms.ToList();
             if (platformsList.Count > 0)
             {
-                Vector2i randomPlatform = platformsList[Random.Range(0, platformsList.Count)];
-                childSafePlatforms.Remove(randomPlatform);
-                childSafePlatforms.Add(new Vector2i(randomPlatform.x, randomPlatform.y + Random.Range(-1, 2)));
+                Vector2i target = platformsList[Random.Range(0, platformsList.Count)];
+                childSafePlatforms.Remove(target);
+
+                int mutX = target.x + Random.Range(-2, 3);
+                int mutY = target.y + Random.Range(-2, 3);
+
+                bool isKinematicallyReachable = false;
+                foreach (var p in childSafePlatforms)
+                {
+                    if (Mathf.Abs(p.x - mutX) <= maxKinematicJumpX && Mathf.Abs(p.y - mutY) <= maxKinematicJumpY)
+                    {
+                        isKinematicallyReachable = true;
+                        break;
+                    }
+                }
+
+                Vector2i mutatedPos = new Vector2i(mutX, mutY);
+                if (isKinematicallyReachable && localSafeTiles.Contains(new Vector2i(mutX, mutY + 1)))
+                {
+                    childSafePlatforms.Add(mutatedPos);
+                }
+                else
+                {
+                    childSafePlatforms.Add(target);
+                }
             }
         }
 
-        BakeLevelToMapDataOnly(mixedTrajectory, childSafePlatforms, startTile, endTile);
+        BakeLevelToMapDataOnly(new List<Vector3>(), childSafePlatforms, startTile, endTile);
 
         string failReason;
         Vector2 failPos;
