@@ -80,6 +80,7 @@
     <Compile Include="Assets\Scripts\Setting\HUDFPS.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Character\AABB.cs" />
+    <Compile Include="Assets\Scripts\Level\TopologyEvaluator.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\Scripts\Map\MapRoomData.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />

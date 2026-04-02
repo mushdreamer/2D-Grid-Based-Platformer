@@ -91,7 +91,7 @@ public partial class LevelGenerator : MonoBehaviour
                     if (VerifyLevelWithRealPhysics(localStart, localEnd, out failReason, out failPos))
                     {
                         LevelIndividual newInd = CreateIndividualFromGhost(localStart, localEnd);
-                        CalculateFitness(newInd);
+                        CalculateFitness(newInd, currentZone);
                         TryPlaceIndividualInGrid(newInd);
                         initialCount++;
                     }
@@ -117,7 +117,7 @@ public partial class LevelGenerator : MonoBehaviour
 
                     if (offspring != null)
                     {
-                        CalculateFitness(offspring);
+                        CalculateFitness(offspring, currentZone);
                         if (TryPlaceIndividualInGrid(offspring)) offspringProduced++;
                     }
                     yield return null;
@@ -254,12 +254,9 @@ public partial class LevelGenerator : MonoBehaviour
         return ind;
     }
 
-    private void CalculateFitness(LevelIndividual ind)
+    private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        float targetDensity = 0.8f;
-        float densityScore = 1.0f - Mathf.Abs(targetDensity - ind.inputDensity);
-        float linearityScore = 1.0f - ind.linearity;
-        ind.fitness = (densityScore * 0.6f) + (linearityScore * 0.4f) + (ind.trajectory.Count * 0.01f);
+        TopologyEvaluator.EvaluateIndividual(ind, zone);
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)

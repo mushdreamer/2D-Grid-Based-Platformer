@@ -381,6 +381,7 @@
 "Assets/Scripts/Level/LevelGenerator_Visuals.cs"
 "Assets/Scripts/Level/LevelMetrics.cs"
 "Assets/Scripts/Level/ThreatDistributor.cs"
+"Assets/Scripts/Level/TopologyEvaluator.cs"
 "Assets/Scripts/Map/Map.cs"
 "Assets/Scripts/Map/MapRoomData.cs"
 "Assets/Scripts/Map/Map_Drawing.cs"
