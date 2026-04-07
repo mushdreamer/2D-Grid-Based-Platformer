@@ -256,7 +256,7 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        TopologyEvaluator.EvaluateIndividual(ind, zone);
+        TopologyEvaluator.EvaluateIndividual(ind, zone, riskFieldSolver);
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)

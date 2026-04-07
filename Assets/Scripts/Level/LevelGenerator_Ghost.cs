@@ -1,11 +1,11 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    // [����] ������״̬���գ����ڶ���ʧ��ʱ��˲��ص�
+    // [ÐÂÔö] ÇáÁ¿¼¶×´Ì¬¿ìÕÕ£¬ÓÃÓÚ¶¯×÷Ê§°ÜÊ±µÄË²¼ä»Øµµ
     public struct GhostCheckpoint
     {
         public Vector2 position;
@@ -32,13 +32,13 @@ public partial class LevelGenerator : MonoBehaviour
 
     bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null)
     {
-        int microAttempts = 5; // ������ݺ����������Դ������Դ������
+        int microAttempts = 5; // ÒýÈë»ØËÝºó£¬ÕûÌåºê¹ÛÖØÊÔ´ÎÊý¿ÉÒÔ´ó·ù½µµÍ
         finalReason = "";
         failPos = Vector2.zero;
 
         if (route == null || route.Count == 0)
         {
-            finalReason = "RouteEmpty_�滮·��Ϊ��";
+            finalReason = "RouteEmpty_¹æ»®Â·ÏßÎª¿Õ";
             return false;
         }
 
@@ -141,10 +141,10 @@ public partial class LevelGenerator : MonoBehaviour
                 reason = "Success"; failPos = ghostAgent.mPosition; return true;
             }
 
-            // [���Ļ���] ��¼����ǰ������״̬��켣��������
+            // [ºËÐÄ»úÖÆ] ¼ÇÂ¼¶¯×÷Ç°µÄÎïÀí×´Ì¬Óë¹ì¼£Ë÷Òý¿ìÕÕ
             GhostCheckpoint cp = new GhostCheckpoint(ghostAgent, currentVirtualFloorY, ghostReplay.Count, ghostTrajectory.Count, ghostPath.Count);
 
-            int maxRetries = 12; // ������ͬһ����ж��12�εĲ�ͬ�����Դ�
+            int maxRetries = 12; // ÔÊÐíÔÚÍ¬Ò»µã½øÐÐ¶à´ï12´ÎµÄ²»Í¬¶¯×÷ÊÔ´í
             bool stepSuccess = false;
             int framesTaken = 0;
 
@@ -155,7 +155,7 @@ public partial class LevelGenerator : MonoBehaviour
                 bool actionFailed = false;
                 framesTaken = ExecuteGhostAction(nextAction, out actionFailed);
 
-                // �Ͽ������߼��
+                // ÑÏ¿ÁµÄËÀÏß¼ì²â
                 if (ghostAgent.mPosition.y < map.position.y - 100f) actionFailed = true;
 
                 if (!actionFailed)
@@ -165,14 +165,14 @@ public partial class LevelGenerator : MonoBehaviour
                 }
                 else
                 {
-                    // [���ݴ���] ��ǰ��������Խ���׹�䣬ִ�� O(1) ״̬�ع���������������
+                    // [»ØËÝ´¥·¢] µ±Ç°¶¯×÷µ¼ÖÂÔ½½ç»ò×¹Âä£¬Ö´ÐÐ O(1) ×´Ì¬»Ø¹ö²¢»»¸ö¶¯×÷ÔÙÊÔ
                     ghostAgent.mPosition = cp.position;
                     ghostAgent.mSpeed = cp.speed;
                     ghostAgent.mCurrentState = cp.currentState;
                     ghostAgent.mOnGround = cp.onGround;
                     currentVirtualFloorY = cp.virtualFloorY;
 
-                    // �ض�ʧ�ܵ�¼����켣����֤��¼�ľ��Դ�����
+                    // ½Ø¶ÏÊ§°ÜµÄÂ¼ÏñÓë¹ì¼££¬±£Ö¤¼ÇÂ¼µÄ¾ø¶Ô´¿½àÐÔ
                     if (ghostReplay.Count > cp.replayCount) ghostReplay.RemoveRange(cp.replayCount, ghostReplay.Count - cp.replayCount);
                     if (ghostTrajectory.Count > cp.trajectoryCount) ghostTrajectory.RemoveRange(cp.trajectoryCount, ghostTrajectory.Count - cp.trajectoryCount);
                     if (ghostPath.Count > cp.pathCount) ghostPath.RemoveRange(cp.pathCount, ghostPath.Count - cp.pathCount);
@@ -192,7 +192,7 @@ public partial class LevelGenerator : MonoBehaviour
             else { stagnationCount = 0; lastProgressPos = ghostAgent.mPosition; }
         }
 
-        reason = "Timeout_�ľ�2500֡������ѭ��";
+        reason = "Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·";
         failPos = ghostAgent.mPosition;
         return false;
     }
@@ -209,88 +209,50 @@ public partial class LevelGenerator : MonoBehaviour
 
     ActionType PickAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        Vector2i curTile = map.GetMapTileAtPoint(currentPos);
         float weightRight = 0f, weightLeft = 0f, weightUp = 0f, weightDown = 0f;
-        float safeRightCount = 0f, safeLeftCount = 0f, safeUpCount = 0f, safeDownCount = 0f;
 
-        if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
+        // --- 1. 基础方向权重 (向着终点进发) ---
+        if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
+        if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
+
+        // --- 2. 连续风险张量场介入 (核心动力学重构) ---
+        if (riskFieldSolver != null)
         {
-            int bestRight = int.MaxValue, bestLeft = int.MaxValue, bestUp = int.MaxValue, bestDown = int.MaxValue;
-            int currentDist = int.MaxValue;
-            int currentStroke = -1;
+            float delta = Map.cTileSize; // 采样步长
 
-            for (int dx = -2; dx <= 2; dx++)
+            // 亚像素级连续场采样
+            float currentRisk = riskFieldSolver.GetRiskAtContinuousPosition(currentPos);
+            float riskRight = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.right * delta);
+            float riskLeft = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.left * delta);
+            float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
+            float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
+
+            // 计算空间风险梯度向量 (Gradient Vector ∇R)
+            float gradX = (riskRight - riskLeft) / (2f * delta);
+            float gradY = (riskUp - riskDown) / (2f * delta);
+            Vector2 riskGradient = new Vector2(gradX, gradY);
+
+            // 如果处于高危区域 (当前死亡率较高)，启用强效逃逸机制
+            if (currentRisk > 0.1f)
             {
-                for (int dy = -2; dy <= 2; dy++)
-                {
-                    Vector2i targetTile = new Vector2i(curTile.x + dx, curTile.y + dy);
-                    if (survivalGradient.TryGetValue(targetTile, out int d))
-                    {
-                        if (d < currentDist) currentDist = d;
-                        if (map.survivalSpaceStrokeOrder != null && map.survivalSpaceStrokeOrder.TryGetValue(targetTile, out int s) && s > currentStroke) currentStroke = s;
-                    }
-                }
+                // 负梯度方向即为“最速逃离风险”的绝对安全方向
+                Vector2 escapeVector = -riskGradient.normalized;
+
+                // 将逃逸向量的投影分量直接转化为动作权重奖励 (权重呈指数级增长)
+                if (escapeVector.x > 0) weightRight += escapeVector.x * 50f * currentRisk;
+                if (escapeVector.x < 0) weightLeft += Mathf.Abs(escapeVector.x) * 50f * currentRisk;
+                if (escapeVector.y > 0) weightUp += escapeVector.y * 50f * currentRisk;
+                if (escapeVector.y < 0) weightDown += Mathf.Abs(escapeVector.y) * 50f * currentRisk;
             }
 
-            int scanRadius = 3;
-            for (int dx = -scanRadius; dx <= scanRadius; dx++)
-            {
-                for (int dy = -scanRadius; dy <= scanRadius; dy++)
-                {
-                    Vector2i targetTile = new Vector2i(curTile.x + dx, curTile.y + dy);
-                    if (map.survivalSpaceTiles.Contains(targetTile))
-                    {
-                        float baseWeight = 2f;
-                        if (map.survivalSpaceStrokeOrder != null && map.survivalSpaceStrokeOrder.TryGetValue(targetTile, out int targetStroke))
-                        {
-                            if (targetStroke > currentStroke && targetStroke != -1) baseWeight += 50f;
-                        }
-                        if (dx > 0) { weightRight += baseWeight; safeRightCount++; }
-                        if (dx < 0) { weightLeft += baseWeight; safeLeftCount++; }
-                        if (dy > 0) { weightUp += baseWeight; safeUpCount++; }
-                        if (dy < 0) { weightDown += baseWeight; safeDownCount++; }
-
-                        if (survivalGradient.TryGetValue(targetTile, out int dist))
-                        {
-                            if (dx > 0 && dist < bestRight) bestRight = dist;
-                            if (dx < 0 && dist < bestLeft) bestLeft = dist;
-                            if (dy > 0 && dist < bestUp) bestUp = dist;
-                            if (dy < 0 && dist < bestDown) bestDown = dist;
-                        }
-                    }
-                }
-            }
-
-            if (safeRightCount == 0) weightRight = 0f;
-            if (safeLeftCount == 0) weightLeft = 0f;
-
-            if (currentDist == int.MaxValue)
-            {
-                float minScore = float.MaxValue;
-                Vector2i bestRescueTile = curTile;
-                foreach (var t in map.survivalSpaceTiles)
-                {
-                    float physicalDist = Mathf.Abs(t.x - curTile.x) + Mathf.Abs(t.y - curTile.y);
-                    if (physicalDist < minScore) { minScore = physicalDist; bestRescueTile = t; }
-                }
-
-                if (bestRescueTile.y > curTile.y) return (bestRescueTile.x >= curTile.x) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-                else return (bestRescueTile.x >= curTile.x) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
-            }
-            else
-            {
-                if (bestRight < currentDist && safeRightCount > 0) weightRight += 30f;
-                if (bestLeft < currentDist && safeLeftCount > 0) weightLeft += 30f;
-                if (bestUp < currentDist) weightUp += 30f;
-                if (bestDown < currentDist) weightDown += 30f;
-            }
-        }
-        else
-        {
-            if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
-            if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
+            // 绝对风险惩罚：切断通向绝对死亡区域 (Risk > 0.8) 的路径
+            if (riskRight > 0.8f) weightRight = 0f;
+            if (riskLeft > 0.8f) weightLeft = 0f;
+            if (riskUp > 0.8f) weightUp = 0f;
+            if (riskDown > 0.8f) weightDown = 0f;
         }
 
+        // --- 3. 兜底策略 ---
         if (weightRight <= 0 && weightLeft <= 0 && weightUp <= 0 && weightDown <= 0)
         {
             return ActionType.Drop;
@@ -298,6 +260,7 @@ public partial class LevelGenerator : MonoBehaviour
 
         ActionType pickedAction = ActionType.Drop;
 
+        // --- 4. 动作坍缩与空间几何约束 ---
         if (stagnationCount > 8)
         {
             if (weightUp >= weightRight && weightUp >= weightLeft) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
@@ -329,8 +292,8 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
+        // 几何学动作修剪 (保留原有逻辑)
         SurvivalSpaceAnalyzer.ZoneGeometry geometry = zone != null ? zone.geometryType : SurvivalSpaceAnalyzer.ZoneGeometry.OrganicShape;
-
         if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.HorizontalCorridor)
         {
             if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.LongJumpRight;
@@ -379,7 +342,7 @@ public partial class LevelGenerator : MonoBehaviour
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
-            // [�޸�] ���׷�������ǽ��ʱ�⵹����Խ��ֱ���ж�����ʧ��
+            // [ÐÞ¸Ä] ³¹µ×·ÏÆú¿ÕÆøÇ½ºÍÊ±¹âµ¹Á÷£¬Ô½½çÖ±½ÓÅÐ¶¨¶¯×÷Ê§°Ü
             if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
             {
                 Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
@@ -413,7 +376,7 @@ public partial class LevelGenerator : MonoBehaviour
             ghostReplay.Add(new ReplayFrame(inputs));
             ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
 
-            if (actionFailed) break; // ����;ʧ�ܣ����̴�϶����������������л���
+            if (actionFailed) break; // ÈôÖÐÍ¾Ê§°Ü£¬Á¢¿Ì´ò¶Ï¶¯×÷£¬½»»¹¸øÍâ²ã½øÐÐ»ØËÝ
         }
         return frames;
     }

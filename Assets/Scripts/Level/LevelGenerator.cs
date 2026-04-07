@@ -57,6 +57,9 @@ public partial class LevelGenerator : MonoBehaviour
     public Bot characterPrefab;
     public AdversarialDirector director;
 
+    [Header("Tensor Field Solver")]
+    public RiskFieldSolver riskFieldSolver;
+
     [Header("Generation Limits (生成规模限制)")]
     public int targetValidLevels = 5;
     public int maxTotalAttempts = 250;
