@@ -81,10 +81,12 @@
     <Compile Include="Assets\Scripts\Level\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Character\AABB.cs" />
     <Compile Include="Assets\Scripts\Level\TopologyEvaluator.cs" />
+    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldDebugger.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\Scripts\Map\MapRoomData.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\Item\KillerObject.cs" />
+    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldSolver.cs" />
     <Compile Include="Assets\Scripts\Map\Map_IO.cs" />
     <Compile Include="Assets\Scripts\Item\Collectible.cs" />
     <Compile Include="Assets\Scripts\Map\Map.cs" />
@@ -98,6 +100,9 @@
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Visuals.cs" />
     <Compile Include="Assets\Scripts\DDA\DynamicTerrain.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerController.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\RiskDiffusion.compute" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

@@ -979,6 +979,70 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 614781791}
   m_CullTransparentMesh: 1
+--- !u!1 &629766502
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 629766504}
+  - component: {fileID: 629766503}
+  - component: {fileID: 629766505}
+  m_Layer: 0
+  m_Name: RiskFieldManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &629766503
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629766502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 958460d3f1e41e747a75409d9ce58405, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  diffusionShader: {fileID: 7200000, guid: 44ea03ffe74107d429569d4928c963c3, type: 3}
+  targetMap: {fileID: 2106156355}
+  iterationsPerFrame: 10
+--- !u!4 &629766504
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629766502}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &629766505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629766502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6608a32335d3b5f43b16cc75d773e7a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testDangerSource:
+    x: 10
+    y: 10
+  showDebugGizmos: 1
 --- !u!1 &704588797
 GameObject:
   m_ObjectHideFlags: 0
@@ -1308,7 +1372,7 @@ MonoBehaviour:
   m_MinValue: 1
   m_MaxValue: 6
   m_WholeNumbers: 1
-  m_Value: 5
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls:
@@ -3596,3 +3660,4 @@ SceneRoots:
   - {fileID: 1476967210}
   - {fileID: 415122242}
   - {fileID: 1973834182}
+  - {fileID: 629766504}

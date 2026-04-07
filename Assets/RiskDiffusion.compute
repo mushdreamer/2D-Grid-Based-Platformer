@@ -1,0 +1,50 @@
+﻿#pragma kernel JacobiIterate
+
+uint _MapWidth;
+uint _MapHeight;
+
+StructuredBuffer<float> _ReadRisk;
+RWStructuredBuffer<float> _WriteRisk;
+StructuredBuffer<int> _SourceMask;
+StructuredBuffer<float> _SourceValue;
+StructuredBuffer<float2> _DiffusionTensor;
+
+[numthreads(8, 8, 1)]
+void JacobiIterate (uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= _MapWidth || id.y >= _MapHeight) return;
+
+    uint index = id.y * _MapWidth + id.x;
+
+    if (_SourceMask[index] == 1)
+    {
+        _WriteRisk[index] = _SourceValue[index];
+        return;
+    }
+
+    uint leftIndex = (id.x > 0) ? index - 1 : index;
+    uint rightIndex = (id.x < _MapWidth - 1) ? index + 1 : index;
+    uint bottomIndex = (id.y > 0) ? index - _MapWidth : index;
+    uint topIndex = (id.y < _MapHeight - 1) ? index + _MapWidth : index;
+
+    float2 tensor = _DiffusionTensor[index];
+    float dx = tensor.x;
+    float dy = tensor.y;
+
+    float valLeft = _ReadRisk[leftIndex];
+    float valRight = _ReadRisk[rightIndex];
+    float valBottom = _ReadRisk[bottomIndex];
+    float valTop = _ReadRisk[topIndex];
+
+    float weightSum = 2.0 * (dx + dy);
+    
+    if (weightSum <= 0.0001)
+    {
+        _WriteRisk[index] = _ReadRisk[index];
+        return;
+    }
+
+    float nextRisk = (dx * valLeft + dx * valRight + dy * valBottom + dy * valTop) / weightSum;
+    
+    _WriteRisk[index] = nextRisk;
+}
