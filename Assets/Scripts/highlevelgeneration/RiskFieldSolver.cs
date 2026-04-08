@@ -92,6 +92,25 @@ public class RiskFieldSolver : MonoBehaviour
         diffusionTensorBuffer.SetData(tensorData);
     }
 
+    public void SolveImmediate(int iterations)
+    {
+        for (int i = 0; i < iterations; i++)
+        {
+            diffusionShader.SetBuffer(kernelIndex, "_ReadRisk", readRiskBuffer);
+            diffusionShader.SetBuffer(kernelIndex, "_WriteRisk", writeRiskBuffer);
+            diffusionShader.SetBuffer(kernelIndex, "_SourceMask", sourceMaskBuffer);
+            diffusionShader.SetBuffer(kernelIndex, "_SourceValue", sourceValueBuffer);
+            diffusionShader.SetBuffer(kernelIndex, "_DiffusionTensor", diffusionTensorBuffer);
+
+            diffusionShader.Dispatch(kernelIndex, threadGroupsX, threadGroupsY, 1);
+
+            ComputeBuffer temp = readRiskBuffer;
+            readRiskBuffer = writeRiskBuffer;
+            writeRiskBuffer = temp;
+        }
+        readRiskBuffer.GetData(localRiskData);
+    }
+
     void Update()
     {
         if (!isSolving) return;
@@ -143,6 +162,11 @@ public class RiskFieldSolver : MonoBehaviour
         float bottom = Mathf.Lerp(v00, v10, tx);
         float top = Mathf.Lerp(v01, v11, tx);
         return Mathf.Lerp(bottom, top, ty);
+    }
+
+    public float[] GetLocalRiskData()
+    {
+        return localRiskData;
     }
 
     void OnDestroy()

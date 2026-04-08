@@ -524,6 +524,7 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 1973834181}
+  riskFieldSolver: {fileID: 629766503}
   targetValidLevels: 10
   maxTotalAttempts: 2000
   blockDensity: 0.45
@@ -990,6 +991,7 @@ GameObject:
   - component: {fileID: 629766504}
   - component: {fileID: 629766503}
   - component: {fileID: 629766505}
+  - component: {fileID: 629766506}
   m_Layer: 0
   m_Name: RiskFieldManager
   m_TagString: Untagged
@@ -1043,6 +1045,19 @@ MonoBehaviour:
     x: 10
     y: 10
   showDebugGizmos: 1
+--- !u!114 &629766506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 629766502}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84dc8762fce97164880ae03b7613e0dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  folderName: SavedHeatmaps
 --- !u!1 &704588797
 GameObject:
   m_ObjectHideFlags: 0
@@ -3444,6 +3459,7 @@ MonoBehaviour:
   map: {fileID: 2106156355}
   characterPrefab: {fileID: 600731197}
   director: {fileID: 0}
+  riskFieldSolver: {fileID: 0}
   targetValidLevels: 10
   maxTotalAttempts: 50
   blockDensity: 0.45

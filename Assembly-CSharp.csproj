@@ -92,6 +92,7 @@
     <Compile Include="Assets\Scripts\Map\Map.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Log.cs" />
     <Compile Include="Assets\Scripts\Item\SmartTrap.cs" />
+    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldExporter.cs" />
     <Compile Include="Assets\Scripts\Character\KeyInput.cs" />
     <Compile Include="Assets\Scripts\survival space\LevelGenerationPlanner.cs" />
     <Compile Include="Assets\Scripts\Setting\Constants.cs" />

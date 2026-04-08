@@ -1,27 +1,63 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.IO;
 using System;
 
 public partial class LevelGenerator : MonoBehaviour
 {
     private string logFilePath => Path.Combine(Application.dataPath, "../LevelGeneratorLog.txt");
+    private StreamWriter logWriter;
 
     public void InitLog(string modeName, int targetLevels, int maxAttempts)
     {
-        File.WriteAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] ÏµÍ³Æô¶¯£º{modeName}\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] Ä¿±êÓĞĞ§Ñù±¾Êı: {targetLevels}£¬×î´óÈİÈÌ³¢ÊÔ´ÎÊı: {maxAttempts}\n");
-        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
+        if (logWriter != null)
+        {
+            logWriter.Close();
+        }
+
+        logWriter = new StreamWriter(logFilePath, false);
+        logWriter.AutoFlush = true;
+
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ç³»ç»Ÿå¯åŠ¨ï¼š{modeName}");
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ç›®æ ‡æœ‰æ•ˆæ ·æœ¬æ•°: {targetLevels}ï¼Œæœ€å¤§å®¹å¿å°è¯•æ¬¡æ•°: {maxAttempts}");
+        logWriter.WriteLine(new string('-', 50));
     }
 
     public void LogAttemptResult(int attempt, string status, string details)
     {
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] [³¢ÊÔ {attempt}] {status} - {details}\n");
+        if (logWriter == null) return;
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [å°è¯• {attempt}] {status} - {details}");
+    }
+
+    public void LogPhaseTransition(string phaseName)
+    {
+        if (logWriter == null) return;
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [é˜¶æ®µè½¬æ¢] >>> å¼€å§‹æ‰§è¡Œ: {phaseName}");
+    }
+
+    public void LogDeepDiagnostic(string module, string details)
+    {
+        if (logWriter == null) return;
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [è¯Šæ–­ - {module}] {details}");
     }
 
     public void LogFinish(int attempts, int validLevelsFound)
     {
-        File.AppendAllText(logFilePath, new string('-', 50) + "\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] Éú³É¹¤×÷È«²¿½áÊø£¡\n");
-        File.AppendAllText(logFilePath, $"[{DateTime.Now:HH:mm:ss}] ×îÖÕÍ³¼Æ -> ×Ü³¢ÊÔ: {attempts} ´Î£¬³É¹¦Éú³É: {validLevelsFound} ¸ö¹Ø¿¨¡£\n");
+        if (logWriter == null) return;
+        logWriter.WriteLine(new string('-', 50));
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] ç”Ÿæˆå·¥ä½œå…¨éƒ¨ç»“æŸï¼");
+        logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] æœ€ç»ˆç»Ÿè®¡ -> æ€»å°è¯•: {attempts} æ¬¡ï¼ŒæˆåŠŸç”Ÿæˆ: {validLevelsFound} ä¸ªå…³å¡ã€‚");
+
+        logWriter.Close();
+        logWriter = null;
+    }
+
+    void OnDestroy()
+    {
+        if (logWriter != null)
+        {
+            logWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.fff}] [ç”Ÿå‘½å‘¨æœŸ] LevelGenerator å®ä¾‹è¢«é”€æ¯ï¼Œå¼ºåˆ¶å…³é—­æ—¥å¿—æµã€‚");
+            logWriter.Close();
+            logWriter = null;
+        }
     }
 }

@@ -30,6 +30,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (zones.Count == 0)
         {
             Debug.LogError("未能识别到任何生存空间，生成终止。");
+            LogDeepDiagnostic("System", "致命错误：未能识别到任何生存空间。");
             yield break;
         }
 
@@ -39,6 +40,7 @@ public partial class LevelGenerator : MonoBehaviour
 
         for (int zIndex = 0; zIndex < zones.Count; zIndex++)
         {
+            LogPhaseTransition($"区域 {zIndex} 地形演算");
             SurvivalSpaceAnalyzer.SurvivalZone currentZone = zones[zIndex];
             Vector2i localStart = DetermineZoneEntry(currentZone, zIndex == 0 ? null : zones[zIndex - 1], globalStart);
             Vector2i localEnd = DetermineZoneExit(currentZone, zIndex == zones.Count - 1 ? null : zones[zIndex + 1], globalEnd);
@@ -54,7 +56,7 @@ public partial class LevelGenerator : MonoBehaviour
             }
             map.survivalSpaceTiles = localSafeTiles;
 
-            InitializeRiskFieldForSegment(localStart, localEnd);
+            InitializeRiskFieldForSegment(localStart, localEnd, zIndex);
 
             BuildSurvivalGradient(localEnd);
             ShowSurvivalSpaceInGame();
@@ -84,6 +86,7 @@ public partial class LevelGenerator : MonoBehaviour
                 if (triggerGreedyRepair)
                 {
                     Debug.LogWarning($"区域 {zIndex} 常规盲搜陷入拓扑死锁，触发运动学贪心修复机制铺设基准桥梁...");
+                    LogDeepDiagnostic("GreedyRepair", $"区域 {zIndex} 连续失败超过 50 次，开始铺设基准桥梁。");
                     baselineInjected = true;
                 }
 
@@ -96,15 +99,25 @@ public partial class LevelGenerator : MonoBehaviour
                         CalculateFitness(newInd, currentZone);
                         TryPlaceIndividualInGrid(newInd);
                         initialCount++;
+                        LogAttemptResult(initialAttempts, "验证成功", $"区域 {zIndex} 找到合法样本 ({initialCount}/{gaPopulationSize})");
                     }
-                    else RecordFailure("Init_Verify_" + failReason);
+                    else
+                    {
+                        RecordFailure("Init_Verify_" + failReason);
+                        LogAttemptResult(initialAttempts, "物理验证失败", failReason);
+                    }
                 }
-                else RecordFailure("Init_Sim_" + failReason);
-                yield return null;
+                else
+                {
+                    RecordFailure("Init_Sim_" + failReason);
+                    LogAttemptResult(initialAttempts, "特工寻路卡死", failReason);
+                }
+                yield return null; // 确保每尝试一次都让出 CPU，防止引擎假死
             }
 
             for (int generation = 1; generation <= gaMaxGenerations; generation++)
             {
+                LogDeepDiagnostic("GA_Phase", $"区域 {zIndex} 进入第 {generation} 代遗传演化。");
                 List<LevelIndividual> currentElites = GetAllElitesFromGrid();
                 if (currentElites.Count < 2) break;
 
@@ -131,10 +144,12 @@ public partial class LevelGenerator : MonoBehaviour
             {
                 globalBestIndividuals.Add(bestInZone);
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                LogDeepDiagnostic("Zone_Complete", $"区域 {zIndex} 演化完成，已选出最优个体。");
             }
             else
             {
                 Debug.LogError($"区域 {zIndex} 生成失败，未能收敛出合法地形拓扑。");
+                LogDeepDiagnostic("Zone_Failed", $"区域 {zIndex} 在穷尽尝试后依然未能收敛，生成管线断裂。");
             }
         }
 
@@ -146,29 +161,44 @@ public partial class LevelGenerator : MonoBehaviour
         {
             StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
         }
+
+        LogFinish(maxTotalAttempts, globalBestIndividuals.Count);
     }
 
-    private void InitializeRiskFieldForSegment(Vector2i localStart, Vector2i localEnd)
+    private void InitializeRiskFieldForSegment(Vector2i localStart, Vector2i localEnd, int zIndex)
     {
-        if (riskFieldSolver == null) return;
+        if (riskFieldSolver == null)
+        {
+            Debug.LogWarning("LevelGenerator: riskFieldSolver 未绑定，风险场机制已禁用。");
+            LogDeepDiagnostic("RiskField", "警告：RiskFieldSolver组件未挂载，张量场运算被跳过。");
+            return;
+        }
+
         riskFieldSolver.ResetToInitialState();
 
         Vector2 direction = new Vector2(localEnd.x - localStart.x, localEnd.y - localStart.y).normalized;
-        float anisotropyStrength = 2.0f;
-        float baseDiffusion = 0.1f;
+
+        // 降低各向异性强度，使张量场的扩散更均匀，防止形成割裂的“风墙”
+        float anisotropyStrength = 0.5f;
+        float baseDiffusion = 0.2f;
         Vector2 dynamicTensor = new Vector2(
             baseDiffusion + anisotropyStrength * Mathf.Abs(direction.x),
             baseDiffusion + anisotropyStrength * Mathf.Abs(direction.y)
         );
 
         riskFieldSolver.SetGlobalDiffusionTensor(dynamicTensor);
+
+        // 终点是绝对的安全区 (风险值 0.0)
         riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
 
+        // 【关键修改】将底部的“绝对死亡线(1.0)”降级为“轻微警告线(0.35)”
+        // 这样特工会尽量避免贴地飞行，但不会被吓得一直起跳撞天花板
         for (int x = 0; x < map.mWidth; x++)
         {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 0.35f);
         }
 
+        // 【关键修改】将背后的“推力墙(0.9)”大幅削弱为“防后退提示(0.25)”
         int pushDirection = Math.Sign(direction.x);
         if (pushDirection != 0)
         {
@@ -177,9 +207,21 @@ public partial class LevelGenerator : MonoBehaviour
             {
                 for (int y = 0; y < map.mHeight; y++)
                 {
-                    riskFieldSolver.SetDirichletBoundary(new Vector2i(penaltyX, y), 0.9f);
+                    riskFieldSolver.SetDirichletBoundary(new Vector2i(penaltyX, y), 0.25f);
                 }
             }
+        }
+
+        LogDeepDiagnostic("RiskField", "正在向 GPU 派发雅可比扩散迭代任务...");
+        riskFieldSolver.SolveImmediate(1000);
+        LogDeepDiagnostic("RiskField", "GPU 运算完毕，数据已回读至主存。");
+
+        RiskFieldExporter exporter = riskFieldSolver.GetComponent<RiskFieldExporter>();
+        if (exporter != null)
+        {
+            string fileName = $"Zone_{zIndex}_Start[{localStart.x}_{localStart.y}]_RiskField";
+            exporter.ExportRiskMap(riskFieldSolver.GetLocalRiskData(), map.mWidth, map.mHeight, fileName);
+            LogDeepDiagnostic("Export", $"风险热力图已生成: {fileName}.png");
         }
     }
 
@@ -375,9 +417,16 @@ public partial class LevelGenerator : MonoBehaviour
                 child.safePlatforms = childSafePlatforms;
                 return child;
             }
-            else RecordFailure("GA_Verify_" + failReason);
+            else
+            {
+                RecordFailure("GA_Verify_" + failReason);
+                LogDeepDiagnostic("Mutation_Failed", $"子代交叉突变后验证失败: {failReason}");
+            }
         }
-        else RecordFailure("GA_Sim_" + failReason);
+        else
+        {
+            RecordFailure("GA_Sim_" + failReason);
+        }
 
         return null;
     }
