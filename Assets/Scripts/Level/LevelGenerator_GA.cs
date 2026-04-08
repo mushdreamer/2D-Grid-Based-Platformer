@@ -170,7 +170,6 @@ public partial class LevelGenerator : MonoBehaviour
         if (riskFieldSolver == null)
         {
             Debug.LogWarning("LevelGenerator: riskFieldSolver 未绑定，风险场机制已禁用。");
-            LogDeepDiagnostic("RiskField", "警告：RiskFieldSolver组件未挂载，张量场运算被跳过。");
             return;
         }
 
@@ -178,7 +177,6 @@ public partial class LevelGenerator : MonoBehaviour
 
         Vector2 direction = new Vector2(localEnd.x - localStart.x, localEnd.y - localStart.y).normalized;
 
-        // 降低各向异性强度，使张量场的扩散更均匀，防止形成割裂的“风墙”
         float anisotropyStrength = 0.5f;
         float baseDiffusion = 0.2f;
         Vector2 dynamicTensor = new Vector2(
@@ -188,40 +186,34 @@ public partial class LevelGenerator : MonoBehaviour
 
         riskFieldSolver.SetGlobalDiffusionTensor(dynamicTensor);
 
-        // 终点是绝对的安全区 (风险值 0.0)
-        riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
-
-        // 【关键修改】将底部的“绝对死亡线(1.0)”降级为“轻微警告线(0.35)”
-        // 这样特工会尽量避免贴地飞行，但不会被吓得一直起跳撞天花板
         for (int x = 0; x < map.mWidth; x++)
         {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 0.35f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1.0f);
+        }
+        for (int y = 0; y < map.mHeight; y++)
+        {
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1.0f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1.0f);
         }
 
-        // 【关键修改】将背后的“推力墙(0.9)”大幅削弱为“防后退提示(0.25)”
-        int pushDirection = Math.Sign(direction.x);
-        if (pushDirection != 0)
+        if (map.survivalSpaceTiles != null)
         {
-            int penaltyX = localStart.x - pushDirection * 3;
-            if (penaltyX >= 0 && penaltyX < map.mWidth)
+            foreach (var safeTile in map.survivalSpaceTiles)
             {
-                for (int y = 0; y < map.mHeight; y++)
-                {
-                    riskFieldSolver.SetDirichletBoundary(new Vector2i(penaltyX, y), 0.25f);
-                }
+                riskFieldSolver.SetDirichletBoundary(safeTile, 0.0f);
             }
         }
 
-        LogDeepDiagnostic("RiskField", "正在向 GPU 派发雅可比扩散迭代任务...");
+        riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
+
         riskFieldSolver.SolveImmediate(1000);
-        LogDeepDiagnostic("RiskField", "GPU 运算完毕，数据已回读至主存。");
 
         RiskFieldExporter exporter = riskFieldSolver.GetComponent<RiskFieldExporter>();
         if (exporter != null)
         {
             string fileName = $"Zone_{zIndex}_Start[{localStart.x}_{localStart.y}]_RiskField";
             exporter.ExportRiskMap(riskFieldSolver.GetLocalRiskData(), map.mWidth, map.mHeight, fileName);
-            LogDeepDiagnostic("Export", $"风险热力图已生成: {fileName}.png");
         }
     }
 

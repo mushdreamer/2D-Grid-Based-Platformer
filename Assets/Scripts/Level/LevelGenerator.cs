@@ -559,36 +559,99 @@ public partial class LevelGenerator : MonoBehaviour
     public void BakeIWBTGLevel(LevelIndividual goldenLevel)
     {
         float safeDistance = Mathf.Max(hardcoreDeviationTolerance, 3.5f) * Map.cTileSize;
-        List<Vector2i> highRiskTiles = new List<Vector2i>();
+        List<Vector2i> baitEndpoints = new List<Vector2i>();
 
-        for (int x = 1; x < map.mWidth - 1; x++)
+        int numberOfBaitPaths = 12;
+        for (int i = 0; i < numberOfBaitPaths; i++)
         {
-            for (int y = 1; y < map.mHeight - 1; y++)
+            int rx = Random.Range(2, map.mWidth - 2);
+            int ry = Random.Range(2, map.mHeight - 2);
+            Vector2i randomPos = new Vector2i(rx, ry);
+
+            if (map.survivalSpaceTiles != null && !map.survivalSpaceTiles.Contains(randomPos))
             {
-                if (map.GetTile(x, y) == TileType.Empty)
+                float minDist = float.MaxValue;
+                foreach (var pos in goldenLevel.trajectory)
                 {
-                    if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Contains(new Vector2i(x, y)))
-                        continue;
+                    float dist = Vector2.Distance(map.GetMapTilePosition(randomPos), (Vector2)pos);
+                    if (dist < minDist) minDist = dist;
+                }
 
-                    Vector2 worldPos = map.GetMapTilePosition(x, y);
-                    float minDist = float.MaxValue;
-
-                    foreach (var pos in goldenLevel.trajectory)
-                    {
-                        float dist = Vector2.Distance(worldPos, (Vector2)pos);
-                        if (dist < minDist) minDist = dist;
-                    }
-
-                    if (minDist > safeDistance)
-                    {
-                        highRiskTiles.Add(new Vector2i(x, y));
-                    }
+                if (minDist > safeDistance)
+                {
+                    baitEndpoints.Add(randomPos);
                 }
             }
         }
 
-        List<Vector2> trapPositions = ThreatDistributor.ApplyPerlinNoiseDistribution(map, highRiskTiles, director, 0.25f, 0.55f);
-        map.GenerateHeatmap(trapPositions);
-        Debug.Log($">>> IWBTG 烘焙完成！全图共固化 {trapPositions.Count} 个永久陷阱，其余高危空域已预留给导播器进行动态猎杀。");
+        if (riskFieldSolver != null)
+        {
+            riskFieldSolver.ResetToInitialState();
+            riskFieldSolver.SetGlobalDiffusionTensor(new Vector2(0.85f, 0.85f));
+
+            for (int x = 0; x < map.mWidth; x++)
+            {
+                riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
+                riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1.0f);
+            }
+            for (int y = 0; y < map.mHeight; y++)
+            {
+                riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1.0f);
+                riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1.0f);
+            }
+
+            foreach (var bait in baitEndpoints)
+            {
+                riskFieldSolver.SetDirichletBoundary(bait, 1.0f);
+            }
+
+            if (map.survivalSpaceTiles != null)
+            {
+                foreach (var safeTile in map.survivalSpaceTiles)
+                {
+                    riskFieldSolver.SetDirichletBoundary(safeTile, 0.0f);
+                }
+            }
+            foreach (var pos in goldenLevel.trajectory)
+            {
+                Vector2i tile = map.GetMapTileAtPoint(pos);
+                riskFieldSolver.SetDirichletBoundary(tile, 0.0f);
+            }
+
+            riskFieldSolver.SolveImmediate(1000);
+            float[] trapRiskData = riskFieldSolver.GetLocalRiskData();
+
+            List<Vector2> rationalizedTrapPositions = new List<Vector2>();
+
+            for (int x = 1; x < map.mWidth - 1; x++)
+            {
+                for (int y = 1; y < map.mHeight - 1; y++)
+                {
+                    if (map.GetTile(x, y) == TileType.Empty)
+                    {
+                        if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Contains(new Vector2i(x, y)))
+                            continue;
+
+                        int index = y * map.mWidth + x;
+                        float localRisk = trapRiskData[index];
+
+                        if (localRisk > 0.35f && Random.value < (localRisk * 1.5f))
+                        {
+                            rationalizedTrapPositions.Add(map.GetMapTilePosition(x, y));
+                        }
+                    }
+                }
+            }
+
+            if (director != null)
+            {
+                map.GenerateHeatmap(rationalizedTrapPositions);
+            }
+            Debug.Log($">>> 对抗性拓扑与张量场二次扩散完成！全图基于死亡率梯度辐射固化了 {rationalizedTrapPositions.Count} 个环境逻辑陷阱。");
+        }
+        else
+        {
+            Debug.LogWarning("未挂载 RiskFieldSolver，环境威胁生成已跳过。");
+        }
     }
 }
