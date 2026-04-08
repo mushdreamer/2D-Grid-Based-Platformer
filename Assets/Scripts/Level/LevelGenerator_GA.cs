@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    [Header("Evolutionary MAP-Elites Settings (Ñİ»¯ĞÍÍø¸ñÉè¶¨)")]
+    [Header("Evolutionary MAP-Elites Settings (æ¼”åŒ–å‹ç½‘æ ¼è®¾å®š)")]
     public int gaPopulationSize = 20;
     public int gaMaxGenerations = 10;
     public float gaMutationRate = 0.3f;
@@ -23,13 +23,13 @@ public partial class LevelGenerator : MonoBehaviour
         Initialize();
         if (director != null) director.SetRunning(false);
         ClearVisuals();
-        InitLog("¶à¿Õ¼ä¶ÀÁ¢·Ö¶ÎÉú³É MAP-Elites (ÔË¶¯Ñ§Ô¼Êø°æ)", gaPopulationSize, gaMaxGenerations);
+        InitLog("å¤šç©ºé—´ç‹¬ç«‹åˆ†æ®µç”Ÿæˆ MAP-Elites (è¿åŠ¨å­¦çº¦æŸç‰ˆ)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
         if (zones.Count == 0)
         {
-            Debug.LogError("Î´ÄÜÊ¶±ğµ½ÈÎºÎÉú´æ¿Õ¼ä£¬Éú³ÉÖÕÖ¹¡£");
+            Debug.LogError("æœªèƒ½è¯†åˆ«åˆ°ä»»ä½•ç”Ÿå­˜ç©ºé—´ï¼Œç”Ÿæˆç»ˆæ­¢ã€‚");
             yield break;
         }
 
@@ -53,6 +53,8 @@ public partial class LevelGenerator : MonoBehaviour
                 }
             }
             map.survivalSpaceTiles = localSafeTiles;
+
+            InitializeRiskFieldForSegment(localStart, localEnd);
 
             BuildSurvivalGradient(localEnd);
             ShowSurvivalSpaceInGame();
@@ -81,7 +83,7 @@ public partial class LevelGenerator : MonoBehaviour
                 bool triggerGreedyRepair = (initialAttempts > 50 && initialCount == 0 && !baselineInjected);
                 if (triggerGreedyRepair)
                 {
-                    Debug.LogWarning($"ÇøÓò {zIndex} ³£¹æÃ¤ËÑÏİÈëÍØÆËËÀËø£¬´¥·¢ÔË¶¯Ñ§Ì°ĞÄĞŞ¸´»úÖÆÆÌÉè»ù×¼ÇÅÁº...");
+                    Debug.LogWarning($"åŒºåŸŸ {zIndex} å¸¸è§„ç›²æœé™·å…¥æ‹“æ‰‘æ­»é”ï¼Œè§¦å‘è¿åŠ¨å­¦è´ªå¿ƒä¿®å¤æœºåˆ¶é“ºè®¾åŸºå‡†æ¡¥æ¢...");
                     baselineInjected = true;
                 }
 
@@ -132,7 +134,7 @@ public partial class LevelGenerator : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"ÇøÓò {zIndex} Éú³ÉÊ§°Ü£¬Î´ÄÜÊÕÁ²³öºÏ·¨µØĞÎÍØÆË¡£");
+                Debug.LogError($"åŒºåŸŸ {zIndex} ç”Ÿæˆå¤±è´¥ï¼Œæœªèƒ½æ”¶æ•›å‡ºåˆæ³•åœ°å½¢æ‹“æ‰‘ã€‚");
             }
         }
 
@@ -143,6 +145,41 @@ public partial class LevelGenerator : MonoBehaviour
         if (globalBestIndividuals.Count == zones.Count)
         {
             StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
+        }
+    }
+
+    private void InitializeRiskFieldForSegment(Vector2i localStart, Vector2i localEnd)
+    {
+        if (riskFieldSolver == null) return;
+        riskFieldSolver.ResetToInitialState();
+
+        Vector2 direction = new Vector2(localEnd.x - localStart.x, localEnd.y - localStart.y).normalized;
+        float anisotropyStrength = 2.0f;
+        float baseDiffusion = 0.1f;
+        Vector2 dynamicTensor = new Vector2(
+            baseDiffusion + anisotropyStrength * Mathf.Abs(direction.x),
+            baseDiffusion + anisotropyStrength * Mathf.Abs(direction.y)
+        );
+
+        riskFieldSolver.SetGlobalDiffusionTensor(dynamicTensor);
+        riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
+
+        for (int x = 0; x < map.mWidth; x++)
+        {
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
+        }
+
+        int pushDirection = Math.Sign(direction.x);
+        if (pushDirection != 0)
+        {
+            int penaltyX = localStart.x - pushDirection * 3;
+            if (penaltyX >= 0 && penaltyX < map.mWidth)
+            {
+                for (int y = 0; y < map.mHeight; y++)
+                {
+                    riskFieldSolver.SetDirichletBoundary(new Vector2i(penaltyX, y), 0.9f);
+                }
+            }
         }
     }
 

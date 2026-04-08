@@ -1,5 +1,4 @@
-﻿// 文件名: RiskFieldSolver.cs
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
 
@@ -80,6 +79,17 @@ public class RiskFieldSolver : MonoBehaviour
         int index = tileCoords.y * targetMap.mWidth + tileCoords.x;
         Vector2[] tensorData = new Vector2[1] { diffusionCoefficients };
         diffusionTensorBuffer.SetData(tensorData, 0, index, 1);
+    }
+
+    public void SetGlobalDiffusionTensor(Vector2 diffusionCoefficients)
+    {
+        int totalCells = targetMap.mWidth * targetMap.mHeight;
+        Vector2[] tensorData = new Vector2[totalCells];
+        for (int i = 0; i < totalCells; i++)
+        {
+            tensorData[i] = diffusionCoefficients;
+        }
+        diffusionTensorBuffer.SetData(tensorData);
     }
 
     void Update()
