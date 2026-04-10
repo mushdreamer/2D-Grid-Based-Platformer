@@ -619,35 +619,67 @@ public partial class LevelGenerator : MonoBehaviour
             }
 
             riskFieldSolver.SolveImmediate(1000);
-            float[] trapRiskData = riskFieldSolver.GetLocalRiskData();
 
-            List<Vector2> rationalizedTrapPositions = new List<Vector2>();
+            float limitJumpDistanceX = 4.5f * Map.cTileSize;
+            float limitJumpDistanceY = 2.5f * Map.cTileSize;
 
-            for (int x = 1; x < map.mWidth - 1; x++)
+            foreach (var bait in baitEndpoints)
             {
-                for (int y = 1; y < map.mHeight - 1; y++)
+                List<Vector2> flowLine = new List<Vector2>();
+                Vector2 currentPos = map.GetMapTilePosition(bait);
+                flowLine.Add(currentPos);
+
+                int safeguard = 0;
+                while (safeguard++ < 300)
                 {
-                    if (map.GetTile(x, y) == TileType.Empty)
+                    float currentRisk = riskFieldSolver.GetRiskAtContinuousPosition(currentPos);
+                    if (currentRisk <= 0.05f) break;
+
+                    float delta = Map.cTileSize;
+                    float riskRight = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.right * delta);
+                    float riskLeft = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.left * delta);
+                    float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
+                    float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
+
+                    Vector2 gradient = new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
+                    if (gradient.sqrMagnitude < 0.001f) break;
+
+                    currentPos -= gradient * (Map.cTileSize * 0.4f);
+                    flowLine.Add(currentPos);
+                }
+
+                flowLine.Reverse();
+                if (flowLine.Count < 2) continue;
+
+                Vector2 lastPlatformPos = flowLine[0];
+                for (int i = 1; i < flowLine.Count; i++)
+                {
+                    Vector2 pos = flowLine[i];
+                    float localRisk = riskFieldSolver.GetRiskAtContinuousPosition(pos);
+
+                    float dynamicGap = Mathf.Lerp(1.5f * Map.cTileSize, limitJumpDistanceX, localRisk);
+
+                    if (Vector2.Distance(lastPlatformPos, pos) >= dynamicGap)
                     {
-                        if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Contains(new Vector2i(x, y)))
-                            continue;
-
-                        int index = y * map.mWidth + x;
-                        float localRisk = trapRiskData[index];
-
-                        if (localRisk > 0.35f && Random.value < (localRisk * 1.5f))
+                        if (localRisk > 0.85f)
                         {
-                            rationalizedTrapPositions.Add(map.GetMapTilePosition(x, y));
+                            pos = lastPlatformPos + (pos - lastPlatformPos).normalized * (limitJumpDistanceX + 1.2f * Map.cTileSize);
                         }
+
+                        Vector2i targetTile = map.GetMapTileAtPoint(pos);
+                        if (map.survivalSpaceTiles != null && !map.survivalSpaceTiles.Contains(targetTile))
+                        {
+                            map.SetTile(targetTile.x, targetTile.y, TileType.Block);
+                            if (map.GetTile(targetTile.x, targetTile.y - 1) == TileType.Empty)
+                            {
+                                map.SetTile(targetTile.x, targetTile.y - 1, TileType.Block);
+                            }
+                        }
+                        lastPlatformPos = pos;
                     }
                 }
             }
-
-            if (director != null)
-            {
-                map.GenerateHeatmap(rationalizedTrapPositions);
-            }
-            Debug.Log($">>> 对抗性拓扑与张量场二次扩散完成！全图基于死亡率梯度辐射固化了 {rationalizedTrapPositions.Count} 个环境逻辑陷阱。");
+            Debug.Log($">>> 梯度矢量流与运动学边缘侵蚀完成！已沿张量场非线性重构了极具欺骗性的连贯诱导平台架构。");
         }
         else
         {

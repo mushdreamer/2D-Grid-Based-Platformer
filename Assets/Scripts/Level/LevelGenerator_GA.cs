@@ -167,16 +167,10 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void InitializeRiskFieldForSegment(Vector2i localStart, Vector2i localEnd, int zIndex)
     {
-        if (riskFieldSolver == null)
-        {
-            Debug.LogWarning("LevelGenerator: riskFieldSolver 未绑定，风险场机制已禁用。");
-            return;
-        }
+        if (riskFieldSolver == null) return;
 
         riskFieldSolver.ResetToInitialState();
-
         Vector2 direction = new Vector2(localEnd.x - localStart.x, localEnd.y - localStart.y).normalized;
-
         float anisotropyStrength = 0.5f;
         float baseDiffusion = 0.2f;
         Vector2 dynamicTensor = new Vector2(
@@ -206,7 +200,6 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
-
         riskFieldSolver.SolveImmediate(1000);
 
         RiskFieldExporter exporter = riskFieldSolver.GetComponent<RiskFieldExporter>();

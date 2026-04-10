@@ -1,1308 +1,529 @@
-[14:18:24.310] 系统启动：多空间独立分段生成 MAP-Elites (运动学约束版)
-[14:18:24.315] 目标有效样本数: 20，最大容忍尝试次数: 10
+[17:33:28.871] 系统启动：多空间独立分段生成 MAP-Elites (运动学约束版)
+[17:33:28.877] 目标有效样本数: 20，最大容忍尝试次数: 10
 --------------------------------------------------
-[14:18:24.316] [阶段转换] >>> 开始执行: 区域 0 地形演算
-[14:18:24.342] [尝试 1] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.353] [尝试 2] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.369] [尝试 3] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.385] [尝试 4] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.407] [尝试 5] 验证成功 - 区域 0 找到合法样本 (1/20)
-[14:18:24.421] [尝试 6] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.431] [尝试 7] 验证成功 - 区域 0 找到合法样本 (2/20)
-[14:18:24.451] [尝试 8] 验证成功 - 区域 0 找到合法样本 (3/20)
-[14:18:24.469] [尝试 9] 验证成功 - 区域 0 找到合法样本 (4/20)
-[14:18:24.485] [尝试 10] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.504] [尝试 11] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.522] [尝试 12] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.533] [尝试 13] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.553] [尝试 14] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.571] [尝试 15] 验证成功 - 区域 0 找到合法样本 (5/20)
-[14:18:24.579] [尝试 16] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.603] [尝试 17] 验证成功 - 区域 0 找到合法样本 (6/20)
-[14:18:24.620] [尝试 18] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.636] [尝试 19] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.654] [尝试 20] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.664] [尝试 21] 验证成功 - 区域 0 找到合法样本 (7/20)
-[14:18:24.685] [尝试 22] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.702] [尝试 23] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.720] [尝试 24] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.738] [尝试 25] 验证成功 - 区域 0 找到合法样本 (8/20)
-[14:18:24.747] [尝试 26] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.768] [尝试 27] 验证成功 - 区域 0 找到合法样本 (9/20)
-[14:18:24.790] [尝试 28] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.798] [尝试 29] 验证成功 - 区域 0 找到合法样本 (10/20)
-[14:18:24.821] [尝试 30] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.837] [尝试 31] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.846] [尝试 32] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.871] [尝试 33] 验证成功 - 区域 0 找到合法样本 (11/20)
-[14:18:24.882] [尝试 34] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.904] [尝试 35] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.919] [尝试 36] 验证成功 - 区域 0 找到合法样本 (12/20)
-[14:18:24.939] [尝试 37] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.949] [尝试 38] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:24.969] [尝试 39] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:24.986] [尝试 40] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.003] [尝试 41] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.021] [尝试 42] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.032] [尝试 43] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.053] [尝试 44] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:25.072] [尝试 45] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.081] [尝试 46] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.104] [尝试 47] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.121] [尝试 48] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:25.131] [尝试 49] 验证成功 - 区域 0 找到合法样本 (13/20)
-[14:18:25.154] [尝试 50] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:25.171] [尝试 51] 验证成功 - 区域 0 找到合法样本 (14/20)
-[14:18:25.180] [尝试 52] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.203] [尝试 53] 验证成功 - 区域 0 找到合法样本 (15/20)
-[14:18:25.221] [尝试 54] 验证成功 - 区域 0 找到合法样本 (16/20)
-[14:18:25.237] [尝试 55] 验证成功 - 区域 0 找到合法样本 (17/20)
-[14:18:25.251] [尝试 56] 验证成功 - 区域 0 找到合法样本 (18/20)
-[14:18:25.271] [尝试 57] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.286] [尝试 58] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:25.305] [尝试 59] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.314] [尝试 60] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.340] [尝试 61] 验证成功 - 区域 0 找到合法样本 (19/20)
-[14:18:25.350] [尝试 62] 验证成功 - 区域 0 找到合法样本 (20/20)
-[14:18:25.364] [诊断 - GA_Phase] 区域 0 进入第 1 代遗传演化。
-[14:18:25.378] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.391] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.401] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.424] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.434] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.458] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.470] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.493] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.505] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.525] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.535] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.556] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.568] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.592] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.643] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.655] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.678] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.691] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.695] [诊断 - GA_Phase] 区域 0 进入第 2 代遗传演化。
-[14:18:25.702] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.724] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.735] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.757] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.771] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.792] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.824] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.858] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.868] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.891] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.902] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.925] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:25.940] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.953] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:25.974] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.008] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.020] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.033] [诊断 - GA_Phase] 区域 0 进入第 3 代遗传演化。
-[14:18:26.040] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.056] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.069] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.128] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.157] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.169] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.227] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.255] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.268] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.291] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.301] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.336] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.357] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.362] [诊断 - GA_Phase] 区域 0 进入第 4 代遗传演化。
-[14:18:26.391] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.402] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.425] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.458] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.470] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.490] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.502] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.524] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.536] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.557] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.591] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.635] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.697] [诊断 - GA_Phase] 区域 0 进入第 5 代遗传演化。
-[14:18:26.721] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.745] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.762] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.776] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.787] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.823] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.843] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.854] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.875] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.893] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.904] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.926] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:26.937] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.959] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.971] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:26.992] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.003] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.025] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.029] [诊断 - GA_Phase] 区域 0 进入第 6 代遗传演化。
-[14:18:27.036] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.071] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.095] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.106] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.129] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.153] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.187] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.212] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.224] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.243] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.256] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.277] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.290] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.327] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.339] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.364] [诊断 - GA_Phase] 区域 0 进入第 7 代遗传演化。
-[14:18:27.371] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.403] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.426] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.460] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.474] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.487] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.508] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.554] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.576] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.602] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.637] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.659] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.672] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.693] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.698] [诊断 - GA_Phase] 区域 0 进入第 8 代遗传演化。
-[14:18:27.704] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.727] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.742] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.754] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.775] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.790] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.830] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.876] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.888] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.909] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.922] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:27.955] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:27.994] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.005] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.027] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.032] [诊断 - GA_Phase] 区域 0 进入第 9 代遗传演化。
-[14:18:28.038] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.060] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.073] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.094] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.110] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.161] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.173] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.195] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.207] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.228] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.240] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.263] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.297] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.329] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.340] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.362] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.366] [诊断 - GA_Phase] 区域 0 进入第 10 代遗传演化。
-[14:18:28.373] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.396] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.407] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.430] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.473] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.495] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.506] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.529] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.541] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.597] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.608] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:28.629] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.640] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.663] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.675] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.705] [诊断 - Zone_Complete] 区域 0 演化完成，已选出最优个体。
-[14:18:28.705] [阶段转换] >>> 开始执行: 区域 1 地形演算
-[14:18:28.726] [尝试 1] 验证成功 - 区域 1 找到合法样本 (1/20)
-[14:18:28.739] [尝试 2] 验证成功 - 区域 1 找到合法样本 (2/20)
-[14:18:28.763] [尝试 3] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:28.773] [尝试 4] 验证成功 - 区域 1 找到合法样本 (3/20)
-[14:18:28.793] [尝试 5] 验证成功 - 区域 1 找到合法样本 (4/20)
-[14:18:28.809] [尝试 6] 验证成功 - 区域 1 找到合法样本 (5/20)
-[14:18:28.826] [尝试 7] 验证成功 - 区域 1 找到合法样本 (6/20)
-[14:18:28.846] [尝试 8] 验证成功 - 区域 1 找到合法样本 (7/20)
-[14:18:28.856] [尝试 9] 验证成功 - 区域 1 找到合法样本 (8/20)
-[14:18:28.878] [尝试 10] 验证成功 - 区域 1 找到合法样本 (9/20)
-[14:18:28.889] [尝试 11] 验证成功 - 区域 1 找到合法样本 (10/20)
-[14:18:28.911] [尝试 12] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:28.921] [尝试 13] 验证成功 - 区域 1 找到合法样本 (11/20)
-[14:18:28.942] [尝试 14] 验证成功 - 区域 1 找到合法样本 (12/20)
-[14:18:28.960] [尝试 15] 验证成功 - 区域 1 找到合法样本 (13/20)
-[14:18:28.980] [尝试 16] 特工寻路卡死 - All_Retries_Failed_At_Step
-[14:18:28.995] [尝试 17] 验证成功 - 区域 1 找到合法样本 (14/20)
-[14:18:29.010] [尝试 18] 验证成功 - 区域 1 找到合法样本 (15/20)
-[14:18:29.022] [尝试 19] 验证成功 - 区域 1 找到合法样本 (16/20)
-[14:18:29.042] [尝试 20] 验证成功 - 区域 1 找到合法样本 (17/20)
-[14:18:29.059] [尝试 21] 验证成功 - 区域 1 找到合法样本 (18/20)
-[14:18:29.077] [尝试 22] 验证成功 - 区域 1 找到合法样本 (19/20)
-[14:18:29.089] [尝试 23] 验证成功 - 区域 1 找到合法样本 (20/20)
-[14:18:29.104] [诊断 - GA_Phase] 区域 1 进入第 1 代遗传演化。
-[14:18:29.139] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.162] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.281] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.310] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:29.362] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.430] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.435] [诊断 - GA_Phase] 区域 1 进入第 2 代遗传演化。
-[14:18:29.458] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.495] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.663] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.745] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.757] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.772] [诊断 - GA_Phase] 区域 1 进入第 3 代遗传演化。
-[14:18:29.809] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.832] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.848] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.932] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.960] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:29.982] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:29.997] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.064] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.104] [诊断 - GA_Phase] 区域 1 进入第 4 代遗传演化。
-[14:18:30.133] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.200] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.209] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.332] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.398] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.437] [诊断 - GA_Phase] 区域 1 进入第 5 代遗传演化。
-[14:18:30.445] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:30.512] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.602] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.662] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:30.749] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.775] [诊断 - GA_Phase] 区域 1 进入第 6 代遗传演化。
-[14:18:30.932] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.984] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:30.998] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.012] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.034] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.100] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.105] [诊断 - GA_Phase] 区域 1 进入第 7 代遗传演化。
-[14:18:31.230] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.312] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.347] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.359] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.398] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:31.435] [诊断 - GA_Phase] 区域 1 进入第 8 代遗传演化。
-[14:18:31.633] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.702] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.771] [诊断 - GA_Phase] 区域 1 进入第 9 代遗传演化。
-[14:18:31.828] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.850] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.936] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:31.995] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.083] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.109] [诊断 - GA_Phase] 区域 1 进入第 10 代遗传演化。
-[14:18:32.132] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.180] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.262] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.447] [诊断 - Zone_Complete] 区域 1 演化完成，已选出最优个体。
-[14:18:32.447] [阶段转换] >>> 开始执行: 区域 2 地形演算
-[14:18:32.465] [尝试 1] 验证成功 - 区域 2 找到合法样本 (1/20)
-[14:18:32.505] [尝试 2] 特工寻路卡死 - All_Retries_Failed_At_Step
-[14:18:32.534] [尝试 3] 特工寻路卡死 - All_Retries_Failed_At_Step
-[14:18:32.542] [尝试 4] 验证成功 - 区域 2 找到合法样本 (2/20)
-[14:18:32.562] [尝试 5] 验证成功 - 区域 2 找到合法样本 (3/20)
-[14:18:32.572] [尝试 6] 验证成功 - 区域 2 找到合法样本 (4/20)
-[14:18:32.594] [尝试 7] 验证成功 - 区域 2 找到合法样本 (5/20)
-[14:18:32.605] [尝试 8] 验证成功 - 区域 2 找到合法样本 (6/20)
-[14:18:32.627] [尝试 9] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:32.642] [尝试 10] 验证成功 - 区域 2 找到合法样本 (7/20)
-[14:18:32.660] [尝试 11] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:32.676] [尝试 12] 验证成功 - 区域 2 找到合法样本 (8/20)
-[14:18:32.694] [尝试 13] 验证成功 - 区域 2 找到合法样本 (9/20)
-[14:18:32.710] [尝试 14] 验证成功 - 区域 2 找到合法样本 (10/20)
-[14:18:32.729] [尝试 15] 验证成功 - 区域 2 找到合法样本 (11/20)
-[14:18:32.741] [尝试 16] 验证成功 - 区域 2 找到合法样本 (12/20)
-[14:18:32.759] [尝试 17] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:32.778] [尝试 18] 验证成功 - 区域 2 找到合法样本 (13/20)
-[14:18:32.788] [尝试 19] 验证成功 - 区域 2 找到合法样本 (14/20)
-[14:18:32.812] [尝试 20] 验证成功 - 区域 2 找到合法样本 (15/20)
-[14:18:32.821] [尝试 21] 验证成功 - 区域 2 找到合法样本 (16/20)
-[14:18:32.847] [尝试 22] 验证成功 - 区域 2 找到合法样本 (17/20)
-[14:18:32.855] [尝试 23] 验证成功 - 区域 2 找到合法样本 (18/20)
-[14:18:32.878] [尝试 24] 验证成功 - 区域 2 找到合法样本 (19/20)
-[14:18:32.888] [尝试 25] 验证成功 - 区域 2 找到合法样本 (20/20)
-[14:18:32.905] [诊断 - GA_Phase] 区域 2 进入第 1 代遗传演化。
-[14:18:33.009] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.033] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.059] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.080] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.095] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.165] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.176] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.235] [诊断 - GA_Phase] 区域 2 进入第 2 代遗传演化。
-[14:18:33.277] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.297] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.309] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.342] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.413] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.426] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.447] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.469] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.578] [诊断 - GA_Phase] 区域 2 进入第 3 代遗传演化。
-[14:18:33.586] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.600] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.654] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.791] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.802] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.817] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.830] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.854] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.887] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.899] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.912] [诊断 - GA_Phase] 区域 2 进入第 4 代遗传演化。
-[14:18:33.921] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.934] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:33.952] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:33.986] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.020] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.032] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.055] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.066] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.087] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.121] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.134] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.147] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.180] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.207] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.220] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.233] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.245] [诊断 - GA_Phase] 区域 2 进入第 5 代遗传演化。
-[14:18:34.280] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.316] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.349] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.362] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.398] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.431] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.466] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.486] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.498] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.533] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.552] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.579] [诊断 - GA_Phase] 区域 2 进入第 6 代遗传演化。
-[14:18:34.602] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.615] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.654] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.699] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.767] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.787] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.800] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.819] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.833] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.854] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.866] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:34.900] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.912] [诊断 - GA_Phase] 区域 2 进入第 7 代遗传演化。
-[14:18:34.923] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.936] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.949] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.969] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:34.980] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.016] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.048] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.069] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.109] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.120] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.157] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.169] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.192] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.203] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.215] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.247] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.252] [诊断 - GA_Phase] 区域 2 进入第 8 代遗传演化。
-[14:18:35.258] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.292] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.304] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.338] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.360] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.392] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.427] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.440] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.493] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.585] [诊断 - GA_Phase] 区域 2 进入第 9 代遗传演化。
-[14:18:35.593] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.604] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.627] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.763] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.778] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.792] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.804] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:35.842] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.876] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.911] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.916] [诊断 - GA_Phase] 区域 2 进入第 10 代遗传演化。
-[14:18:35.955] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:35.992] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:36.004] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.026] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.061] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.094] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.127] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:36.160] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.175] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.187] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.244] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:36.254] [诊断 - Zone_Complete] 区域 2 演化完成，已选出最优个体。
-[14:18:36.254] [阶段转换] >>> 开始执行: 区域 3 地形演算
-[14:18:36.278] [尝试 1] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.303] [尝试 2] 特工寻路卡死 - All_Retries_Failed_At_Step
-[14:18:36.322] [尝试 3] 特工寻路卡死 - Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·
-[14:18:36.331] [尝试 4] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.350] [尝试 5] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.366] [尝试 6] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.382] [尝试 7] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.402] [尝试 8] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.411] [尝试 9] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.439] [尝试 10] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.454] [尝试 11] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.467] [尝试 12] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.488] [尝试 13] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.501] [尝试 14] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.511] [尝试 15] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.536] [尝试 16] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.545] [尝试 17] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.566] [尝试 18] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.583] [尝试 19] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.605] [尝试 20] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.614] [尝试 21] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.632] [尝试 22] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.650] [尝试 23] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.668] [尝试 24] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.688] [尝试 25] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.698] [尝试 26] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.717] [尝试 27] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.733] [尝试 28] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.753] [尝试 29] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.763] [尝试 30] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.787] [尝试 31] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.802] [尝试 32] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.812] [尝试 33] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.841] [尝试 34] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.851] [尝试 35] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.867] [尝试 36] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:36.884] [尝试 37] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.902] [尝试 38] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.915] [尝试 39] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.934] [尝试 40] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.950] [尝试 41] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.972] [尝试 42] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:36.981] [尝试 43] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.000] [尝试 44] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.020] [尝试 45] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.029] [尝试 46] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.050] [尝试 47] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.069] [尝试 48] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.079] [尝试 49] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.099] [尝试 50] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.112] [诊断 - GreedyRepair] 区域 3 连续失败超过 50 次，开始铺设基准桥梁。
-[14:18:37.126] [尝试 51] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.137] [尝试 52] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.150] [尝试 53] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.175] [尝试 54] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.193] [尝试 55] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.206] [尝试 56] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.214] [尝试 57] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.245] [尝试 58] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.253] [尝试 59] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.271] [尝试 60] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.288] [尝试 61] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.311] [尝试 62] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.322] [尝试 63] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.342] [尝试 64] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.359] [尝试 65] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.370] [尝试 66] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.395] [尝试 67] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.405] [尝试 68] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.426] [尝试 69] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.435] [尝试 70] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.462] [尝试 71] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.476] [尝试 72] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.486] [尝试 73] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.506] [尝试 74] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.521] [尝试 75] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.539] [尝试 76] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.558] [尝试 77] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.567] [尝试 78] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.589] [尝试 79] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.604] [尝试 80] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.623] [尝试 81] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.634] [尝试 82] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.659] [尝试 83] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.673] [尝试 84] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.684] [尝试 85] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.708] [尝试 86] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.719] [尝试 87] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.743] [尝试 88] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.755] [尝试 89] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.773] [尝试 90] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.792] [尝试 91] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.804] [尝试 92] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.823] [尝试 93] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.840] [尝试 94] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.856] [尝试 95] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.873] [尝试 96] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:37.892] [尝试 97] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.908] [尝试 98] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.920] [尝试 99] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.941] [尝试 100] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.961] [尝试 101] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.972] [尝试 102] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:37.996] [尝试 103] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.011] [尝试 104] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.021] [尝试 105] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.041] [尝试 106] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.058] [尝试 107] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.078] [尝试 108] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.086] [尝试 109] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.107] [尝试 110] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.123] [尝试 111] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.144] [尝试 112] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.156] [尝试 113] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.179] [尝试 114] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.194] [尝试 115] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.203] [尝试 116] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.236] [尝试 117] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.249] [尝试 118] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.260] [尝试 119] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.282] [尝试 120] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.291] [尝试 121] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.315] [尝试 122] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.334] [尝试 123] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.345] [尝试 124] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.364] [尝试 125] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.385] [尝试 126] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.395] [尝试 127] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.416] [尝试 128] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.432] [尝试 129] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.451] [尝试 130] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.461] [尝试 131] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.483] [尝试 132] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.499] [尝试 133] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.520] [尝试 134] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.529] [尝试 135] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.549] [尝试 136] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.565] [尝试 137] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.581] [尝试 138] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.600] [尝试 139] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.615] [尝试 140] 验证成功 - 区域 3 找到合法样本 (1/20)
-[14:18:38.631] [尝试 141] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.651] [尝试 142] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.664] [尝试 143] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.686] [尝试 144] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.697] [尝试 145] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.716] [尝试 146] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.731] [尝试 147] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.751] [尝试 148] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.761] [尝试 149] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.780] [尝试 150] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.797] [尝试 151] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.816] [尝试 152] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.833] [尝试 153] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.848] [尝试 154] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.866] [尝试 155] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.881] [尝试 156] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.900] [尝试 157] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.920] [尝试 158] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.930] [尝试 159] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.951] [尝试 160] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.967] [尝试 161] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:38.977] [尝试 162] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:38.999] [尝试 163] 验证成功 - 区域 3 找到合法样本 (2/20)
-[14:18:39.018] [尝试 164] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.030] [尝试 165] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.056] [尝试 166] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.064] [尝试 167] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.084] [尝试 168] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.093] [尝试 169] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.117] [尝试 170] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.133] [尝试 171] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.149] [尝试 172] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.165] [尝试 173] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.186] [尝试 174] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.198] [尝试 175] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.214] [尝试 176] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.233] [尝试 177] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.248] [尝试 178] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.268] [尝试 179] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.277] [尝试 180] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.299] [尝试 181] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.315] [尝试 182] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.331] [尝试 183] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.349] [尝试 184] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.367] [尝试 185] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.377] [尝试 186] 验证成功 - 区域 3 找到合法样本 (3/20)
-[14:18:39.399] [尝试 187] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.416] [尝试 188] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.437] [尝试 189] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.445] [尝试 190] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.467] [尝试 191] 验证成功 - 区域 3 找到合法样本 (4/20)
-[14:18:39.477] [尝试 192] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.502] [尝试 193] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.512] [尝试 194] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.532] [尝试 195] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.552] [尝试 196] 验证成功 - 区域 3 找到合法样本 (5/20)
-[14:18:39.561] [尝试 197] 物理验证失败 - VerifyDie_撞击致死
-[14:18:39.580] [尝试 198] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.599] [尝试 199] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.620] [尝试 200] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.629] [尝试 201] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.649] [尝试 202] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.668] [尝试 203] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.680] [尝试 204] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.699] [尝试 205] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.716] [尝试 206] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.733] [尝试 207] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.750] [尝试 208] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.767] [尝试 209] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.781] [尝试 210] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.794] [尝试 211] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.815] [尝试 212] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.832] [尝试 213] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.855] [尝试 214] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.868] [尝试 215] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.882] [尝试 216] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.890] [尝试 217] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.920] [尝试 218] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.940] [尝试 219] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.949] [尝试 220] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:39.967] [尝试 221] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:39.984] [尝试 222] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.002] [尝试 223] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.018] [尝试 224] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.034] [尝试 225] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.058] [尝试 226] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.070] [尝试 227] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.080] [尝试 228] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.102] [尝试 229] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.117] [尝试 230] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.136] [尝试 231] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.155] [尝试 232] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.166] [尝试 233] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.184] [尝试 234] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.200] [尝试 235] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.219] [尝试 236] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.242] [尝试 237] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.255] [尝试 238] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.266] [尝试 239] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.286] [尝试 240] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.305] [尝试 241] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.315] [尝试 242] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.339] [尝试 243] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.347] [尝试 244] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.370] [尝试 245] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.388] [尝试 246] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.397] [尝试 247] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.423] [尝试 248] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.434] [尝试 249] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.453] [尝试 250] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.469] [尝试 251] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.487] [尝试 252] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.496] [尝试 253] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.518] [尝试 254] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.535] [尝试 255] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.551] [尝试 256] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.575] [尝试 257] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.585] [尝试 258] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.600] [尝试 259] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.624] [尝试 260] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.634] [尝试 261] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.652] [尝试 262] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.672] [尝试 263] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.684] [尝试 264] 验证成功 - 区域 3 找到合法样本 (6/20)
-[14:18:40.703] [尝试 265] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.719] [尝试 266] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.737] [尝试 267] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.747] [尝试 268] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.771] [尝试 269] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.780] [尝试 270] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.804] [尝试 271] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.812] [尝试 272] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.835] [尝试 273] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.852] [尝试 274] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.875] [尝试 275] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.884] [尝试 276] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.907] [尝试 277] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.916] [尝试 278] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:40.942] [尝试 279] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.953] [尝试 280] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.961] [尝试 281] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:40.985] [尝试 282] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.002] [尝试 283] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.022] [尝试 284] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.034] [尝试 285] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.053] [尝试 286] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.070] [尝试 287] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.088] [尝试 288] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.097] [尝试 289] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.119] [尝试 290] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.136] [尝试 291] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.150] [尝试 292] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.167] [尝试 293] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.191] [尝试 294] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.203] [尝试 295] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.219] [尝试 296] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.236] [尝试 297] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.253] [尝试 298] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.269] [尝试 299] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.284] [尝试 300] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.302] [尝试 301] 验证成功 - 区域 3 找到合法样本 (7/20)
-[14:18:41.318] [尝试 302] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.336] [尝试 303] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.357] [尝试 304] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.366] [尝试 305] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.390] [尝试 306] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.400] [尝试 307] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.421] [尝试 308] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.434] [尝试 309] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.450] [尝试 310] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.467] [尝试 311] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.486] [尝试 312] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.505] [尝试 313] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.513] [尝试 314] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.536] [尝试 315] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.552] [尝试 316] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.575] [尝试 317] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.591] [尝试 318] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.603] [尝试 319] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.611] [尝试 320] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.635] [尝试 321] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.651] [尝试 322] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.668] [尝试 323] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.686] [尝试 324] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.702] [尝试 325] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.720] [尝试 326] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.732] [尝试 327] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.750] [尝试 328] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.768] [尝试 329] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.784] [尝试 330] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.806] [尝试 331] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.817] [尝试 332] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.835] [尝试 333] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.854] [尝试 334] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.866] [尝试 335] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.887] [尝试 336] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.896] [尝试 337] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.918] [尝试 338] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.938] [尝试 339] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:41.952] [尝试 340] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.970] [尝试 341] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:41.986] [尝试 342] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.001] [尝试 343] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.020] [尝试 344] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.037] [尝试 345] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.051] [尝试 346] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.067] [尝试 347] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.089] [尝试 348] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.098] [尝试 349] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.118] [尝试 350] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.136] [尝试 351] 验证成功 - 区域 3 找到合法样本 (8/20)
-[14:18:42.154] [尝试 352] 验证成功 - 区域 3 找到合法样本 (9/20)
-[14:18:42.162] [尝试 353] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.191] [尝试 354] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.205] [尝试 355] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.222] [尝试 356] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.237] [尝试 357] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.253] [尝试 358] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.276] [尝试 359] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.284] [尝试 360] 验证成功 - 区域 3 找到合法样本 (10/20)
-[14:18:42.303] [尝试 361] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.324] [尝试 362] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.335] [尝试 363] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.355] [尝试 364] 验证成功 - 区域 3 找到合法样本 (11/20)
-[14:18:42.372] [尝试 365] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.387] [尝试 366] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.405] [尝试 367] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.420] [尝试 368] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.437] [尝试 369] 验证成功 - 区域 3 找到合法样本 (12/20)
-[14:18:42.456] [尝试 370] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.467] [尝试 371] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.487] [尝试 372] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.505] [尝试 373] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.524] [尝试 374] 验证成功 - 区域 3 找到合法样本 (13/20)
-[14:18:42.531] [尝试 375] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.553] [尝试 376] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.570] [尝试 377] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.588] [尝试 378] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.606] [尝试 379] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.616] [尝试 380] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.637] [尝试 381] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.655] [尝试 382] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.674] [尝试 383] 验证成功 - 区域 3 找到合法样本 (14/20)
-[14:18:42.683] [尝试 384] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.703] [尝试 385] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.720] [尝试 386] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.738] [尝试 387] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.749] [尝试 388] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.770] [尝试 389] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.791] [尝试 390] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.803] [尝试 391] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.824] [尝试 392] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.834] [尝试 393] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.855] [尝试 394] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.876] [尝试 395] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.886] [尝试 396] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.905] [尝试 397] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:42.925] [尝试 398] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.935] [尝试 399] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.950] [尝试 400] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.979] [尝试 401] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:42.997] [尝试 402] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.011] [尝试 403] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.027] [尝试 404] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.039] [尝试 405] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.049] [尝试 406] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.070] [尝试 407] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.089] [尝试 408] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.098] [尝试 409] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.120] [尝试 410] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.136] [尝试 411] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.153] [尝试 412] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.175] [尝试 413] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.184] [尝试 414] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.207] [尝试 415] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.220] [尝试 416] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.241] [尝试 417] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.254] [尝试 418] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.270] [尝试 419] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.290] [尝试 420] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.300] [尝试 421] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.319] [尝试 422] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.337] [尝试 423] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.357] [尝试 424] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.366] [尝试 425] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.387] [尝试 426] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.404] [尝试 427] 物理验证失败 - VerifyDie_撞击致死
-[14:18:43.422] [尝试 428] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.437] [尝试 429] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.453] [尝试 430] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.474] [尝试 431] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.483] [尝试 432] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.510] [尝试 433] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.521] [尝试 434] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.543] [尝试 435] 验证成功 - 区域 3 找到合法样本 (15/20)
-[14:18:43.552] [尝试 436] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.574] [尝试 437] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.584] [尝试 438] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.608] [尝试 439] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.617] [尝试 440] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.640] [尝试 441] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.650] [尝试 442] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.670] [尝试 443] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.688] [尝试 444] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.706] [尝试 445] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.723] [尝试 446] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.740] [尝试 447] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.749] [尝试 448] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.775] [尝试 449] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.784] [尝试 450] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.807] [尝试 451] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.818] [尝试 452] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.840] [尝试 453] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.849] [尝试 454] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.876] [尝试 455] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.887] [尝试 456] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.903] [尝试 457] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.920] [尝试 458] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.939] [尝试 459] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.955] [尝试 460] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:43.974] [尝试 461] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:43.989] [尝试 462] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.008] [尝试 463] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.022] [尝试 464] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.040] [尝试 465] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.056] [尝试 466] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.074] [尝试 467] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.090] [尝试 468] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.108] [尝试 469] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.128] [尝试 470] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.142] [尝试 471] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.152] [尝试 472] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.173] [尝试 473] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.195] [尝试 474] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.203] [尝试 475] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.226] [尝试 476] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.238] [尝试 477] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.259] [尝试 478] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.268] [尝试 479] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.292] [尝试 480] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.303] [尝试 481] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.323] [尝试 482] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.339] [尝试 483] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.356] [尝试 484] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.377] [尝试 485] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.386] [尝试 486] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.406] [尝试 487] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.423] [尝试 488] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.441] [尝试 489] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.457] [尝试 490] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.476] [尝试 491] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.485] [尝试 492] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.511] [尝试 493] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.519] [尝试 494] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.540] [尝试 495] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.558] [尝试 496] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.576] [尝试 497] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.588] [尝试 498] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.610] [尝试 499] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.620] [尝试 500] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.644] [尝试 501] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.654] [尝试 502] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.674] [尝试 503] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.696] [尝试 504] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.707] [尝试 505] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.723] [尝试 506] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.741] [尝试 507] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.759] [尝试 508] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.774] [尝试 509] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.792] [尝试 510] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.801] [尝试 511] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.825] [尝试 512] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.841] [尝试 513] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.857] [尝试 514] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.867] [尝试 515] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.896] [尝试 516] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.905] [尝试 517] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.926] [尝试 518] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.936] [尝试 519] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:44.958] [尝试 520] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.976] [尝试 521] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:44.989] [尝试 522] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.007] [尝试 523] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.026] [尝试 524] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.034] [尝试 525] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.062] [尝试 526] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.071] [尝试 527] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.090] [尝试 528] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.105] [尝试 529] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.123] [尝试 530] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.141] [尝试 531] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.157] [尝试 532] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.174] [尝试 533] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.190] [尝试 534] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.210] [尝试 535] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.218] [尝试 536] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.239] [尝试 537] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.257] [尝试 538] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.275] [尝试 539] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.292] [尝试 540] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.306] [尝试 541] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.329] [尝试 542] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.338] [尝试 543] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.356] [尝试 544] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.380] [尝试 545] 验证成功 - 区域 3 找到合法样本 (16/20)
-[14:18:45.390] [尝试 546] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.411] [尝试 547] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.422] [尝试 548] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.441] [尝试 549] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.457] [尝试 550] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.480] [尝试 551] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.494] [尝试 552] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.507] [尝试 553] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.523] [尝试 554] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.539] [尝试 555] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.558] [尝试 556] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.569] [尝试 557] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.591] [尝试 558] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.609] [尝试 559] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.618] [尝试 560] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.640] [尝试 561] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.661] [尝试 562] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.670] [尝试 563] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.691] [尝试 564] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.711] [尝试 565] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.719] [尝试 566] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.742] [尝试 567] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.758] [尝试 568] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.775] [尝试 569] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.788] [尝试 570] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.810] [尝试 571] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.819] [尝试 572] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.842] [尝试 573] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.859] [尝试 574] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.873] [尝试 575] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.893] [尝试 576] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.907] [尝试 577] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:45.925] [尝试 578] 验证成功 - 区域 3 找到合法样本 (17/20)
-[14:18:45.941] [尝试 579] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.958] [尝试 580] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.974] [尝试 581] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:45.994] [尝试 582] 验证成功 - 区域 3 找到合法样本 (18/20)
-[14:18:46.007] [尝试 583] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.023] [尝试 584] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.040] [尝试 585] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.058] [尝试 586] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.068] [尝试 587] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.092] [尝试 588] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.099] [尝试 589] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.124] [尝试 590] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.139] [尝试 591] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.159] [尝试 592] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.170] [尝试 593] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.193] [尝试 594] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.206] [尝试 595] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.223] [尝试 596] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.241] [尝试 597] 验证成功 - 区域 3 找到合法样本 (19/20)
-[14:18:46.257] [尝试 598] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.273] [尝试 599] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.290] [尝试 600] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.313] [尝试 601] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.324] [尝试 602] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.344] [尝试 603] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.353] [尝试 604] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.373] [尝试 605] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.393] [尝试 606] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.402] [尝试 607] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.426] [尝试 608] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.436] [尝试 609] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.458] [尝试 610] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.476] [尝试 611] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.486] [尝试 612] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.506] [尝试 613] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.530] [尝试 614] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.546] [尝试 615] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.557] [尝试 616] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.576] [尝试 617] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.585] [尝试 618] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.607] [尝试 619] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.631] [尝试 620] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.648] [尝试 621] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.658] [尝试 622] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.677] [尝试 623] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.695] [尝试 624] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.708] [尝试 625] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.725] [尝试 626] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.743] [尝试 627] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.760] [尝试 628] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.769] [尝试 629] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.796] [尝试 630] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.804] [尝试 631] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.826] [尝试 632] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.840] [尝试 633] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.862] [尝试 634] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.872] [尝试 635] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.891] [尝试 636] 物理验证失败 - VerifyTimeout_动作播完未达终点
-[14:18:46.910] [尝试 637] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.920] [尝试 638] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.945] [尝试 639] 验证成功 - 区域 3 找到合法样本 (20/20)
-[14:18:46.949] [诊断 - GA_Phase] 区域 3 进入第 1 代遗传演化。
-[14:18:46.962] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.974] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:46.996] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.010] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.020] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.051] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.064] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.075] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.100] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.112] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.137] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.166] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.180] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.198] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.212] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.234] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.247] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.265] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.281] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.286] [诊断 - GA_Phase] 区域 3 进入第 2 代遗传演化。
-[14:18:47.293] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.315] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.328] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.352] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.364] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.378] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.404] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.418] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.430] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.448] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.479] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.499] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.511] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.531] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.553] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.584] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.607] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.619] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.631] [诊断 - GA_Phase] 区域 3 进入第 3 代遗传演化。
-[14:18:47.640] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.652] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.671] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.684] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.705] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.715] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.739] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.757] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.771] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.790] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.806] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.822] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.834] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.858] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.870] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.890] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.903] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.930] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.942] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.958] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:47.964] [诊断 - GA_Phase] 区域 3 进入第 4 代遗传演化。
-[14:18:47.971] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:47.995] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.013] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.024] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.046] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.057] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.076] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.095] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.108] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.125] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.144] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.159] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.175] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.186] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.211] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.226] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.242] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.256] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.277] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.291] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.296] [诊断 - GA_Phase] 区域 3 进入第 5 代遗传演化。
-[14:18:48.306] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.332] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.343] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.357] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.384] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.397] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.434] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.451] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.464] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.478] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.497] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.509] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.529] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.540] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.563] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.578] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.595] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.613] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.625] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.639] [诊断 - GA_Phase] 区域 3 进入第 6 代遗传演化。
-[14:18:48.650] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.664] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.675] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.697] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.707] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.744] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.757] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.780] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.792] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.815] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.827] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.851] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.866] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.879] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.891] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.914] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.930] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.941] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:48.974] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:48.979] [诊断 - GA_Phase] 区域 3 进入第 7 代遗传演化。
-[14:18:48.990] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.006] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.016] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.036] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.047] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.072] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.106] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.120] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.134] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.148] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.173] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.184] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.207] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.217] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.240] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.252] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.266] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.285] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.302] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.307] [诊断 - GA_Phase] 区域 3 进入第 8 代遗传演化。
-[14:18:49.315] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.336] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.351] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.372] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.383] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.402] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.421] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.437] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.470] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.482] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.505] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.520] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.530] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.554] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.567] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.591] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.602] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.621] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.631] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.647] [诊断 - GA_Phase] 区域 3 进入第 9 代遗传演化。
-[14:18:49.656] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.666] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.688] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.705] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.721] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.755] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.767] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.787] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.799] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.821] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.832] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.872] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.890] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.925] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.941] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.956] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:49.971] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:49.983] [诊断 - GA_Phase] 区域 3 进入第 10 代遗传演化。
-[14:18:49.993] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.005] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.020] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:50.054] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.074] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.085] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.108] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.119] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.144] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:50.155] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.175] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.190] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:50.202] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.224] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:50.257] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.285] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
-[14:18:50.310] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
-[14:18:50.320] [诊断 - Zone_Complete] 区域 3 演化完成，已选出最优个体。
+[17:33:28.878] [阶段转换] >>> 开始执行: 区域 0 地形演算
+[17:33:28.905] [尝试 1] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:28.923] [尝试 2] 验证成功 - 区域 0 找到合法样本 (1/20)
+[17:33:28.931] [尝试 3] 验证成功 - 区域 0 找到合法样本 (2/20)
+[17:33:28.953] [尝试 4] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:28.968] [尝试 5] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:28.979] [尝试 6] 验证成功 - 区域 0 找到合法样本 (3/20)
+[17:33:29.001] [尝试 7] 验证成功 - 区域 0 找到合法样本 (4/20)
+[17:33:29.018] [尝试 8] 验证成功 - 区域 0 找到合法样本 (5/20)
+[17:33:29.034] [尝试 9] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.052] [尝试 10] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.067] [尝试 11] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.085] [尝试 12] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.103] [尝试 13] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.112] [尝试 14] 验证成功 - 区域 0 找到合法样本 (6/20)
+[17:33:29.136] [尝试 15] 验证成功 - 区域 0 找到合法样本 (7/20)
+[17:33:29.152] [尝试 16] 验证成功 - 区域 0 找到合法样本 (8/20)
+[17:33:29.168] [尝试 17] 验证成功 - 区域 0 找到合法样本 (9/20)
+[17:33:29.184] [尝试 18] 验证成功 - 区域 0 找到合法样本 (10/20)
+[17:33:29.202] [尝试 19] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.219] [尝试 20] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.237] [尝试 21] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.248] [尝试 22] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.268] [尝试 23] 验证成功 - 区域 0 找到合法样本 (11/20)
+[17:33:29.284] [尝试 24] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.301] [尝试 25] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.318] [尝试 26] 验证成功 - 区域 0 找到合法样本 (12/20)
+[17:33:29.337] [尝试 27] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.346] [尝试 28] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.368] [尝试 29] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.385] [尝试 30] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.400] [尝试 31] 验证成功 - 区域 0 找到合法样本 (13/20)
+[17:33:29.418] [尝试 32] 验证成功 - 区域 0 找到合法样本 (14/20)
+[17:33:29.437] [尝试 33] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.447] [尝试 34] 验证成功 - 区域 0 找到合法样本 (15/20)
+[17:33:29.469] [尝试 35] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.479] [尝试 36] 验证成功 - 区域 0 找到合法样本 (16/20)
+[17:33:29.500] [尝试 37] 验证成功 - 区域 0 找到合法样本 (17/20)
+[17:33:29.519] [尝试 38] 验证成功 - 区域 0 找到合法样本 (18/20)
+[17:33:29.536] [尝试 39] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.548] [尝试 40] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.568] [尝试 41] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:29.586] [尝试 42] 验证成功 - 区域 0 找到合法样本 (19/20)
+[17:33:29.596] [尝试 43] 验证成功 - 区域 0 找到合法样本 (20/20)
+[17:33:29.613] [诊断 - GA_Phase] 区域 0 进入第 1 代遗传演化。
+[17:33:29.634] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:29.688] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:29.701] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:29.713] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.751] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.763] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.787] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.800] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.821] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.834] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.853] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.866] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.886] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:29.919] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.930] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.946] [诊断 - GA_Phase] 区域 0 进入第 2 代遗传演化。
+[17:33:29.953] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:29.988] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.022] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.054] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.069] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.139] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.150] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.173] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.220] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.235] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.271] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.276] [诊断 - GA_Phase] 区域 0 进入第 3 代遗传演化。
+[17:33:30.283] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.318] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.338] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.351] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.372] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.404] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.448] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.472] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.504] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.566] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.608] [诊断 - GA_Phase] 区域 0 进入第 4 代遗传演化。
+[17:33:30.615] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.649] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.669] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.682] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.703] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.714] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.738] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.771] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.784] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.806] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.819] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.833] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.853] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.888] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:30.923] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:30.946] [诊断 - GA_Phase] 区域 0 进入第 5 代遗传演化。
+[17:33:31.002] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.020] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.100] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.134] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.221] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.269] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.274] [诊断 - GA_Phase] 区域 0 进入第 6 代遗传演化。
+[17:33:31.304] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.350] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.375] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.387] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.401] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.421] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.436] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.473] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.486] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.520] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.532] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.556] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.568] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.609] [诊断 - GA_Phase] 区域 0 进入第 7 代遗传演化。
+[17:33:31.619] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.653] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.667] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.688] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.701] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.721] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.734] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.749] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.770] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.803] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.836] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:31.848] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.872] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.884] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.918] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.931] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.946] [诊断 - GA_Phase] 区域 0 进入第 8 代遗传演化。
+[17:33:31.955] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.970] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:31.981] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.004] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.014] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.049] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.072] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.083] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.104] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.118] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.137] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.151] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.181] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.205] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.236] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.248] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.271] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.276] [诊断 - GA_Phase] 区域 0 进入第 9 代遗传演化。
+[17:33:32.282] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.373] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.386] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.404] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.416] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.440] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.451] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.482] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.517] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.541] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.554] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.566] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.589] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.608] [诊断 - GA_Phase] 区域 0 进入第 10 代遗传演化。
+[17:33:32.617] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.670] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.692] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.805] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.888] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.901] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.925] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:32.939] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:32.950] [诊断 - Zone_Complete] 区域 0 演化完成，已选出最优个体。
+[17:33:32.951] [阶段转换] >>> 开始执行: 区域 1 地形演算
+[17:33:32.976] [尝试 1] 验证成功 - 区域 1 找到合法样本 (1/20)
+[17:33:33.009] [尝试 2] 验证成功 - 区域 1 找到合法样本 (2/20)
+[17:33:33.034] [尝试 3] 特工寻路卡死 - Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·
+[17:33:33.045] [尝试 4] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.068] [尝试 5] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.085] [尝试 6] 验证成功 - 区域 1 找到合法样本 (3/20)
+[17:33:33.099] [尝试 7] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.118] [尝试 8] 验证成功 - 区域 1 找到合法样本 (4/20)
+[17:33:33.137] [尝试 9] 验证成功 - 区域 1 找到合法样本 (5/20)
+[17:33:33.148] [尝试 10] 验证成功 - 区域 1 找到合法样本 (6/20)
+[17:33:33.169] [尝试 11] 验证成功 - 区域 1 找到合法样本 (7/20)
+[17:33:33.184] [尝试 12] 验证成功 - 区域 1 找到合法样本 (8/20)
+[17:33:33.202] [尝试 13] 验证成功 - 区域 1 找到合法样本 (9/20)
+[17:33:33.219] [尝试 14] 验证成功 - 区域 1 找到合法样本 (10/20)
+[17:33:33.232] [尝试 15] 验证成功 - 区域 1 找到合法样本 (11/20)
+[17:33:33.252] [尝试 16] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.265] [尝试 17] 验证成功 - 区域 1 找到合法样本 (12/20)
+[17:33:33.286] [尝试 18] 验证成功 - 区域 1 找到合法样本 (13/20)
+[17:33:33.298] [尝试 19] 验证成功 - 区域 1 找到合法样本 (14/20)
+[17:33:33.317] [尝试 20] 验证成功 - 区域 1 找到合法样本 (15/20)
+[17:33:33.334] [尝试 21] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.351] [尝试 22] 验证成功 - 区域 1 找到合法样本 (16/20)
+[17:33:33.368] [尝试 23] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.385] [尝试 24] 验证成功 - 区域 1 找到合法样本 (17/20)
+[17:33:33.398] [尝试 25] 验证成功 - 区域 1 找到合法样本 (18/20)
+[17:33:33.418] [尝试 26] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:33.437] [尝试 27] 验证成功 - 区域 1 找到合法样本 (19/20)
+[17:33:33.447] [尝试 28] 验证成功 - 区域 1 找到合法样本 (20/20)
+[17:33:33.462] [诊断 - GA_Phase] 区域 1 进入第 1 代遗传演化。
+[17:33:33.471] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.483] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.503] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.533] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.544] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.573] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.586] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.619] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.632] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.646] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.704] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.720] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.748] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.771] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.790] [诊断 - GA_Phase] 区域 1 进入第 2 代遗传演化。
+[17:33:33.800] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyDie_撞击致死
+[17:33:33.819] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.834] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.848] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.872] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.883] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.914] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.937] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.952] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.964] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:33.986] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:34.021] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.053] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.067] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.081] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.106] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.126] [诊断 - GA_Phase] 区域 1 进入第 3 代遗传演化。
+[17:33:34.135] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:34.148] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.170] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.184] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.198] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.220] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.234] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.248] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.271] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.316] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.338] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.351] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.365] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.387] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.402] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.415] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.440] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.453] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:34.457] [诊断 - GA_Phase] 区域 1 进入第 4 代遗传演化。
+[17:33:34.466] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.488] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.522] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.534] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.548] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.584] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.597] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.620] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.632] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.655] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.670] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.738] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.771] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.784] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.796] [诊断 - GA_Phase] 区域 1 进入第 5 代遗传演化。
+[17:33:34.804] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.817] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.867] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.888] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.903] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.937] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.948] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.970] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:34.983] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.006] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.018] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.033] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.066] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.088] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.100] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.120] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:35.125] [诊断 - GA_Phase] 区域 1 进入第 6 代遗传演化。
+[17:33:35.134] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.173] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.186] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.221] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.234] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.248] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.285] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.298] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.320] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.347] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.370] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.383] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.420] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.454] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.459] [诊断 - GA_Phase] 区域 1 进入第 7 代遗传演化。
+[17:33:35.469] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.482] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.517] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.555] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.589] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.616] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.654] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:35.722] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.735] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.749] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.796] [诊断 - GA_Phase] 区域 1 进入第 8 代遗传演化。
+[17:33:35.803] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:35.817] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.854] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.870] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.884] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:35.896] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.921] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.956] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.986] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:35.999] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.021] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.047] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.076] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:36.101] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.123] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.128] [诊断 - GA_Phase] 区域 1 进入第 9 代遗传演化。
+[17:33:36.136] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:36.152] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.167] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.189] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.202] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.237] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.252] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.274] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.287] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.306] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.340] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:36.354] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.367] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.388] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.405] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.417] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.439] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.451] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.464] [诊断 - GA_Phase] 区域 1 进入第 10 代遗传演化。
+[17:33:36.472] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.486] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.517] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.538] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.551] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.573] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.621] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.637] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.650] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.673] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.704] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:36.718] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.738] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.751] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.772] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.784] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.803] [诊断 - Zone_Complete] 区域 1 演化完成，已选出最优个体。
+[17:33:36.804] [阶段转换] >>> 开始执行: 区域 2 地形演算
+[17:33:36.822] [尝试 1] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:36.859] [尝试 2] 特工寻路卡死 - Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·
+[17:33:36.893] [尝试 3] 特工寻路卡死 - Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·
+[17:33:36.902] [尝试 4] 验证成功 - 区域 2 找到合法样本 (1/20)
+[17:33:36.919] [尝试 5] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:36.935] [尝试 6] 验证成功 - 区域 2 找到合法样本 (2/20)
+[17:33:36.953] [尝试 7] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:36.970] [尝试 8] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:36.985] [尝试 9] 验证成功 - 区域 2 找到合法样本 (3/20)
+[17:33:37.003] [尝试 10] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.018] [尝试 11] 验证成功 - 区域 2 找到合法样本 (4/20)
+[17:33:37.036] [尝试 12] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.052] [尝试 13] 验证成功 - 区域 2 找到合法样本 (5/20)
+[17:33:37.070] [尝试 14] 验证成功 - 区域 2 找到合法样本 (6/20)
+[17:33:37.086] [尝试 15] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.098] [尝试 16] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.118] [尝试 17] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.136] [尝试 18] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.154] [尝试 19] 验证成功 - 区域 2 找到合法样本 (7/20)
+[17:33:37.164] [尝试 20] 验证成功 - 区域 2 找到合法样本 (8/20)
+[17:33:37.185] [尝试 21] 验证成功 - 区域 2 找到合法样本 (9/20)
+[17:33:37.202] [尝试 22] 验证成功 - 区域 2 找到合法样本 (10/20)
+[17:33:37.219] [尝试 23] 物理验证失败 - VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.237] [尝试 24] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.249] [尝试 25] 验证成功 - 区域 2 找到合法样本 (11/20)
+[17:33:37.269] [尝试 26] 验证成功 - 区域 2 找到合法样本 (12/20)
+[17:33:37.288] [尝试 27] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.299] [尝试 28] 验证成功 - 区域 2 找到合法样本 (13/20)
+[17:33:37.319] [尝试 29] 验证成功 - 区域 2 找到合法样本 (14/20)
+[17:33:37.337] [尝试 30] 验证成功 - 区域 2 找到合法样本 (15/20)
+[17:33:37.356] [尝试 31] 验证成功 - 区域 2 找到合法样本 (16/20)
+[17:33:37.366] [尝试 32] 验证成功 - 区域 2 找到合法样本 (17/20)
+[17:33:37.389] [尝试 33] 验证成功 - 区域 2 找到合法样本 (18/20)
+[17:33:37.398] [尝试 34] 验证成功 - 区域 2 找到合法样本 (19/20)
+[17:33:37.420] [尝试 35] 物理验证失败 - VerifyTimeout_动作播完未达终点
+[17:33:37.437] [尝试 36] 验证成功 - 区域 2 找到合法样本 (20/20)
+[17:33:37.447] [诊断 - GA_Phase] 区域 2 进入第 1 代遗传演化。
+[17:33:37.466] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.488] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.503] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.517] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.551] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.587] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.600] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.622] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.634] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.700] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.724] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.772] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.777] [诊断 - GA_Phase] 区域 2 进入第 2 代遗传演化。
+[17:33:37.785] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.806] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.819] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.871] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.883] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.905] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:37.950] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.974] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:37.984] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.006] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.039] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.053] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.071] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.104] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.111] [诊断 - GA_Phase] 区域 2 进入第 3 代遗传演化。
+[17:33:38.137] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.172] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.184] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.217] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.289] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.304] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.317] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.339] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.420] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.432] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.447] [诊断 - GA_Phase] 区域 2 进入第 4 代遗传演化。
+[17:33:38.466] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.487] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.522] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.534] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.567] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.600] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.634] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.654] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.701] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.721] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.776] [诊断 - GA_Phase] 区域 2 进入第 5 代遗传演化。
+[17:33:38.784] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.852] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:38.873] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.918] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.939] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:38.971] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.023] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.036] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.057] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.069] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.114] [诊断 - GA_Phase] 区域 2 进入第 6 代遗传演化。
+[17:33:39.154] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.167] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.188] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.200] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.257] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.283] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.307] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.370] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.381] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.405] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.417] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.438] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.443] [诊断 - GA_Phase] 区域 2 进入第 7 代遗传演化。
+[17:33:39.472] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.482] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.538] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.585] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.638] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.652] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.733] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.757] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.769] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.775] [诊断 - GA_Phase] 区域 2 进入第 8 代遗传演化。
+[17:33:39.816] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.848] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.951] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:39.972] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:39.983] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.038] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.071] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.114] [诊断 - GA_Phase] 区域 2 进入第 9 代遗传演化。
+[17:33:40.125] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.152] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.164] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.190] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.272] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.284] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.340] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.401] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.444] [诊断 - GA_Phase] 区域 2 进入第 10 代遗传演化。
+[17:33:40.452] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.472] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.540] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.572] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.608] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.620] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.639] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.652] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.683] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.704] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.756] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyOutOfBounds_物理验证阶段脱离生存空间
+[17:33:40.768] [诊断 - Mutation_Failed] 子代交叉突变后验证失败: VerifyTimeout_动作播完未达终点
+[17:33:40.788] [诊断 - Zone_Complete] 区域 2 演化完成，已选出最优个体。
 --------------------------------------------------
-[14:18:50.502] 生成工作全部结束！
-[14:18:50.502] 最终统计 -> 总尝试: 2000 次，成功生成: 4 个关卡。
+[17:33:40.878] 生成工作全部结束！
+[17:33:40.878] 最终统计 -> 总尝试: 2000 次，成功生成: 3 个关卡。
