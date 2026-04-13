@@ -74,6 +74,7 @@
     <Compile Include="Assets\Scripts\Level\LevelMetrics.cs" />
     <Compile Include="Assets\Scripts\Character\Character.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceAnalyzer.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_PathWeaver.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PathFinderFast.cs" />
     <Compile Include="Assets\Scripts\Map\Map_Heatmap.cs" />
     <Compile Include="Assets\Scripts\Map\Map_Drawing.cs" />
@@ -99,8 +100,10 @@
     <Compile Include="Assets\Scripts\DDA\AdversarialDirector.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerDeathState.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Visuals.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_RegionalBaker.cs" />
     <Compile Include="Assets\Scripts\DDA\DynamicTerrain.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\worldplan\WorldBlueprintPlanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RiskDiffusion.compute" />

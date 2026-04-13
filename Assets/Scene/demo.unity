@@ -440,6 +440,53 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &235782645
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 235782647}
+  - component: {fileID: 235782646}
+  m_Layer: 0
+  m_Name: WorldBlueprintPlanner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &235782646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235782645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ab082ef9994fd94a89dd50c647129d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  macroColumns: 4
+  macroRows: 4
+  map: {fileID: 2106156355}
+--- !u!4 &235782647
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235782645}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 961.97656, y: 457.0919, z: -4.94116}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &392961404
 GameObject:
   m_ObjectHideFlags: 0
@@ -537,8 +584,9 @@ MonoBehaviour:
   gaMutationRate: 0.3
   designerIntent:
     riskTension: 0.7
-    mechanicalComplexity: 0.8
-    structuralExploration: 0.4
+    mechanicalComplexity: 0.3
+    structuralExploration: 0.6
+  blueprintPlanner: {fileID: 235782646}
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
@@ -3481,6 +3529,7 @@ MonoBehaviour:
     riskTension: 0.5
     mechanicalComplexity: 0.5
     structuralExploration: 0.5
+  blueprintPlanner: {fileID: 0}
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
@@ -3688,3 +3737,4 @@ SceneRoots:
   - {fileID: 415122242}
   - {fileID: 1973834182}
   - {fileID: 629766504}
+  - {fileID: 235782647}
