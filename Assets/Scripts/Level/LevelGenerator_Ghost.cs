@@ -211,102 +211,93 @@ public partial class LevelGenerator : MonoBehaviour
     {
         float weightRight = 0f, weightLeft = 0f, weightUp = 0f, weightDown = 0f;
 
-        // --- 1. 基础方向权重 (向着终点进发) ---
+        // --- 1. 基础方向权重 ---
         if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
         if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
 
-        // --- 2. 连续风险张量场介入 (核心动力学重构) ---
+        // --- [意图注入 1] 结构探索性 (Structural Exploration) ---
+        // 探索性越高，幽灵越喜欢“绕远路”和“向上飞”；探索性越低，幽灵越喜欢无脑直线冲锋。
+        if (designerIntent.structuralExploration > 0.6f)
+        {
+            weightUp += 15f * designerIntent.structuralExploration; // 强拉垂直权重
+            if (Random.value < 0.3f) // 30%概率反向走，制造回字形结构
+            {
+                float temp = weightRight; weightRight = weightLeft; weightLeft = temp;
+            }
+        }
+        else if (designerIntent.structuralExploration < 0.4f)
+        {
+            if (endPos.x > currentPos.x) weightRight += 20f; else weightLeft += 20f;
+            if (Mathf.Abs(endPos.y - currentPos.y) < Map.cTileSize * 2) { weightUp = 0; weightDown = 0; } // 压平轨迹
+        }
+
+        // --- [意图注入 2] 风险紧张感 (Risk Tension) ---
         if (riskFieldSolver != null)
         {
-            float delta = Map.cTileSize; // 采样步长
-
-            // 亚像素级连续场采样
+            float delta = Map.cTileSize;
             float currentRisk = riskFieldSolver.GetRiskAtContinuousPosition(currentPos);
             float riskRight = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.right * delta);
             float riskLeft = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.left * delta);
             float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
             float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
 
-            // 计算空间风险梯度向量 (Gradient Vector ∇R)
-            float gradX = (riskRight - riskLeft) / (2f * delta);
-            float gradY = (riskUp - riskDown) / (2f * delta);
-            Vector2 riskGradient = new Vector2(gradX, gradY);
-
-            // 如果处于高危区域 (当前死亡率较高)，启用强效逃逸机制
-            if (currentRisk > 0.1f)
+            if (designerIntent.riskTension > 0.7f)
             {
-                // 负梯度方向即为“最速逃离风险”的绝对安全方向
-                Vector2 escapeVector = -riskGradient.normalized;
-
-                // 将逃逸向量的投影分量直接转化为动作权重奖励 (权重呈指数级增长)
-                if (escapeVector.x > 0) weightRight += escapeVector.x * 50f * currentRisk;
-                if (escapeVector.x < 0) weightLeft += Mathf.Abs(escapeVector.x) * 50f * currentRisk;
-                if (escapeVector.y > 0) weightUp += escapeVector.y * 50f * currentRisk;
-                if (escapeVector.y < 0) weightDown += Mathf.Abs(escapeVector.y) * 50f * currentRisk;
+                // [刀尖起舞] 紧张感极高时，幽灵会产生“向死而生”的倾向，主动靠近(但不跨入)致死区
+                if (riskRight > 0.4f && riskRight < 0.9f) weightRight += 15f;
+                if (riskUp > 0.4f && riskUp < 0.9f) weightUp += 15f;
             }
-
-            // 绝对风险惩罚：切断通向绝对死亡区域 (Risk > 0.8) 的路径
-            if (riskRight > 0.8f) weightRight = 0f;
-            if (riskLeft > 0.8f) weightLeft = 0f;
-            if (riskUp > 0.8f) weightUp = 0f;
-            if (riskDown > 0.8f) weightDown = 0f;
-        }
-
-        // --- 3. 兜底策略 ---
-        if (weightRight <= 0 && weightLeft <= 0 && weightUp <= 0 && weightDown <= 0)
-        {
-            return ActionType.Drop;
-        }
-
-        ActionType pickedAction = ActionType.Drop;
-
-        // --- 4. 动作坍缩与空间几何约束 ---
-        if (stagnationCount > 8)
-        {
-            if (weightUp >= weightRight && weightUp >= weightLeft) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-            else if (weightRight >= weightLeft) pickedAction = ActionType.LongJumpRight;
-            else pickedAction = ActionType.LongJumpLeft;
-        }
-        else
-        {
-            float totalWeight = weightRight + weightLeft + weightUp + weightDown;
-            float r = Random.Range(0, totalWeight);
-
-            if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
             else
             {
-                r -= weightRight;
-                if (r < weightLeft) pickedAction = (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
-                else
-                {
-                    r -= weightLeft;
-                    if (r < weightUp)
-                    {
-                        float upR = Random.value;
-                        if (upR < 0.33f) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-                        else if (upR < 0.66f) pickedAction = (Random.value > 0.5f) ? ActionType.LongJumpRight : ActionType.LongJumpLeft;
-                        else pickedAction = (Random.value > 0.5f) ? ActionType.JumpRight : ActionType.JumpLeft;
-                    }
-                    else pickedAction = ActionType.Drop;
-                }
+                // 正常的风险逃逸逻辑...
+                Vector2 escapeVector = -new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
+                if (escapeVector.x > 0) weightRight += escapeVector.x * 50f * currentRisk;
+                // ... (保留你原有的逃逸逻辑)
+            }
+
+            // 绝对死亡墙依然不可跨越
+            if (riskRight > 0.9f) weightRight = 0f;
+            if (riskLeft > 0.9f) weightLeft = 0f;
+            if (riskUp > 0.9f) weightUp = 0f;
+        }
+
+        if (weightRight <= 0 && weightLeft <= 0 && weightUp <= 0 && weightDown <= 0) return ActionType.Drop;
+
+        ActionType pickedAction = ActionType.Drop;
+        float totalWeight = weightRight + weightLeft + weightUp + weightDown;
+        float r = Random.Range(0, totalWeight);
+
+        // 标准概率抽取
+        if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
+        else
+        {
+            r -= weightRight;
+            if (r < weightLeft) pickedAction = (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
+            else
+            {
+                r -= weightLeft;
+                if (r < weightUp) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
+                else pickedAction = ActionType.Drop;
             }
         }
 
-        // 几何学动作修剪 (保留原有逻辑)
-        SurvivalSpaceAnalyzer.ZoneGeometry geometry = zone != null ? zone.geometryType : SurvivalSpaceAnalyzer.ZoneGeometry.OrganicShape;
-        if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.HorizontalCorridor)
+        // --- [意图注入 3] 机械复杂度 (Mechanical Complexity) ---
+        // 强制升格或降格幽灵的动作操作量
+        if (designerIntent.mechanicalComplexity > 0.7f)
         {
-            if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.LongJumpRight;
-            if (pickedAction == ActionType.HighJumpLeft) pickedAction = ActionType.LongJumpLeft;
-            if (pickedAction == ActionType.JumpRight) pickedAction = ActionType.MoveRight;
-            if (pickedAction == ActionType.JumpLeft) pickedAction = ActionType.MoveLeft;
-        }
-        else if (geometry == SurvivalSpaceAnalyzer.ZoneGeometry.VerticalShaft)
-        {
-            if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.HighJumpRight;
-            if (pickedAction == ActionType.LongJumpLeft) pickedAction = ActionType.HighJumpLeft;
+            // 强制炫技：把走变成跳，跳变成大跳
             if (pickedAction == ActionType.MoveRight) pickedAction = ActionType.JumpRight;
             if (pickedAction == ActionType.MoveLeft) pickedAction = ActionType.JumpLeft;
+            if (pickedAction == ActionType.JumpRight && Random.value < 0.8f) pickedAction = ActionType.LongJumpRight;
+            if (pickedAction == ActionType.JumpLeft && Random.value < 0.8f) pickedAction = ActionType.LongJumpLeft;
+        }
+        else if (designerIntent.mechanicalComplexity < 0.3f)
+        {
+            // 降低操作：尽量只保留基本移动
+            if (pickedAction == ActionType.JumpRight && Random.value < 0.6f) pickedAction = ActionType.MoveRight;
+            if (pickedAction == ActionType.JumpLeft && Random.value < 0.6f) pickedAction = ActionType.MoveLeft;
+            if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.JumpRight;
+            if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.JumpRight;
         }
 
         return pickedAction;

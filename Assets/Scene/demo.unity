@@ -536,9 +536,9 @@ MonoBehaviour:
   gaMaxGenerations: 10
   gaMutationRate: 0.3
   designerIntent:
-    riskTension: 0
-    mechanicalComplexity: 1
-    structuralExploration: 0
+    riskTension: 0.7
+    mechanicalComplexity: 0.8
+    structuralExploration: 0.4
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
@@ -2945,8 +2945,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetPlayer: {fileID: 600731197}
   map: {fileID: 2106156355}
-  predictionWindow: 0.6
-  cooldown: 3
+  currentIntent:
+    riskTension: 0
+    mechanicalComplexity: 0
+    structuralExploration: 0
+  basePredictionWindow: 0.6
+  baseCooldown: 1.5
   ignoreIdlePlayer: 1
   spawnProtectionTime: 2
   terrainCooldown: 4
@@ -2972,7 +2976,6 @@ MonoBehaviour:
     strategy: 0
     weight: 1
   isIWBTGSculptingMode: 0
-  deviationTolerance: 1.5
 --- !u!4 &1973834182
 Transform:
   m_ObjectHideFlags: 0

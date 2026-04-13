@@ -484,8 +484,10 @@ public partial class LevelGenerator : MonoBehaviour
         foreach (var point in trajectory)
         {
             Vector2i t = map.GetMapTileAtPoint(point);
-            for (int dx = -4; dx <= 4; dx++)
-                for (int dy = -4; dy <= 4; dy++)
+            // [意图注入 4] 机械复杂度越高，给玩家留下的腾空容错空间越小（气道变窄）
+            int padding = designerIntent.mechanicalComplexity > 0.7f ? 2 : 4;
+            for (int dx = -padding; dx <= padding; dx++)
+                for (int dy = -padding; dy <= padding; dy++)
                     airMask.Add(new Vector2i(t.x + dx, t.y + dy));
         }
 
@@ -495,6 +497,11 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         float seed = Random.Range(0f, 100f);
+
+        // [意图注入 5] 地貌拓扑动态映射
+        // 探索性低(0.0) -> 大块厚实平地；探索性高(1.0) -> 极度破碎的零星碎块
+        float dynamicBlockDensity = Mathf.Lerp(0.85f, 0.20f, designerIntent.structuralExploration);
+        float dynamicNoiseScale = Mathf.Lerp(0.02f, 0.35f, designerIntent.structuralExploration);
 
         for (int x = 0; x < map.mWidth; x++)
         {
@@ -506,38 +513,30 @@ public partial class LevelGenerator : MonoBehaviour
                 if (airMask.Contains(currentPos)) { map.SetTile(x, y, TileType.Empty); continue; }
                 if (y < 2) { map.SetTile(x, y, TileType.Block); continue; }
 
-                float noiseVal = Mathf.PerlinNoise(x * noiseScale + seed, y * noiseScale + seed);
+                float noiseVal = Mathf.PerlinNoise(x * dynamicNoiseScale + seed, y * dynamicNoiseScale + seed);
                 float heightAtten = 1.0f - ((float)y / map.mHeight) * 0.5f;
 
-                if (noiseVal * heightAtten > (1.0f - blockDensity)) map.SetTile(x, y, TileType.Block);
+                if (noiseVal * heightAtten > (1.0f - dynamicBlockDensity)) map.SetTile(x, y, TileType.Block);
                 else map.SetTile(x, y, TileType.Empty);
             }
         }
 
+        // 静态刺生成逻辑
         for (int x = 1; x < map.mWidth - 1; x++)
         {
             for (int y = 1; y < map.mHeight - 1; y++)
             {
                 Vector2i cur = new Vector2i(x, y);
-                Vector2i up = new Vector2i(x, y + 1);
-                Vector2i down = new Vector2i(x, y - 1);
-
-                bool isSafeZone = false;
-                if (map.survivalSpaceTiles != null)
-                {
-                    isSafeZone = map.survivalSpaceTiles.Contains(cur) ||
-                                 map.survivalSpaceTiles.Contains(up) ||
-                                 map.survivalSpaceTiles.Contains(down);
-                }
-
+                bool isSafeZone = map.survivalSpaceTiles != null && (map.survivalSpaceTiles.Contains(cur) || map.survivalSpaceTiles.Contains(new Vector2i(x, y + 1)) || map.survivalSpaceTiles.Contains(new Vector2i(x, y - 1)));
                 if (isSafeZone) continue;
 
                 if (map.GetTile(x, y) == TileType.Empty && !airMask.Contains(new Vector2i(x, y)))
                 {
                     bool topBlock = map.GetTile(x, y + 1) == TileType.Block;
                     bool bottomBlock = map.GetTile(x, y - 1) == TileType.Block;
-
-                    if (Random.value < 0.9f)
+                    // [意图注入 6] 紧张感越高，背景里的视觉干扰刺越多
+                    float spikeProb = Mathf.Lerp(0.95f, 0.4f, designerIntent.riskTension);
+                    if (Random.value > spikeProb)
                     {
                         if (topBlock) SpawnSpike(x, y, true);
                         else if (bottomBlock) SpawnSpike(x, y, false);
@@ -546,14 +545,8 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
-        if (start.x != -1)
-        {
-            for (int dx = -2; dx <= 2; dx++) FillColumn(start.x + dx, 0, start.y - 1, TileType.Block);
-        }
-        if (end.x != -1)
-        {
-            for (int dx = -2; dx <= 2; dx++) FillColumn(end.x + dx, 0, end.y - 1, TileType.Block);
-        }
+        if (start.x != -1) for (int dx = -2; dx <= 2; dx++) FillColumn(start.x + dx, 0, start.y - 1, TileType.Block);
+        if (end.x != -1) for (int dx = -2; dx <= 2; dx++) FillColumn(end.x + dx, 0, end.y - 1, TileType.Block);
     }
 
     public void BakeIWBTGLevel(LevelIndividual goldenLevel)
