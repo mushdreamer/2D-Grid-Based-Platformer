@@ -4,7 +4,15 @@ using System.Linq;
 
 public static class TopologyEvaluator
 {
-    public static void EvaluateIndividual(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone, RiskFieldSolver riskSolver)
+    [System.Serializable]
+    public struct DesignerIntent
+    {
+        [Range(0f, 1f)] public float riskTension;
+        [Range(0f, 1f)] public float mechanicalComplexity;
+        [Range(0f, 1f)] public float structuralExploration;
+    }
+
+    public static void EvaluateIndividual(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone, RiskFieldSolver riskSolver, DesignerIntent intent)
     {
         if (ind.trajectory == null || ind.trajectory.Count < 2)
         {
@@ -16,29 +24,35 @@ public static class TopologyEvaluator
         float topologyScore = CalculateTopologyMatch(ind.trajectory, zone);
         float spatialScore = CalculateSpatialUtilization(ind.trajectory, zone.bounds);
 
-        float targetDensity = 0.8f;
+        float targetDensity = Mathf.Lerp(0.3f, 0.95f, intent.mechanicalComplexity);
         float densityScore = 1.0f - Mathf.Abs(targetDensity - ind.inputDensity);
-        float linearityScore = 1.0f - ind.linearity;
 
-        // [核心重构] 计算路径的期望死亡率积分
+        float targetLinearity = Mathf.Lerp(0.9f, 0.1f, intent.structuralExploration);
+        float linearityScore = 1.0f - Mathf.Abs(targetLinearity - ind.linearity);
+
         float pathRiskIntegral = CalculateRiskPathIntegral(ind.trajectory, riskSolver);
+        float targetRiskExperience = Mathf.Lerp(0.05f, 0.45f, intent.riskTension);
+        float riskVariance = Mathf.Lerp(0.1f, 0.02f, intent.riskTension);
+        float riskMatchScore = Mathf.Exp(-Mathf.Pow(pathRiskIntegral - targetRiskExperience, 2) / riskVariance);
 
-        // 假设我们期望关卡的理想生存压力 (期望死亡率) 为 0.15 (即15%概率死亡)
-        float targetRiskExperience = 0.15f;
-        // 采用高斯核衰减函数：实际积分越偏离目标体验，得分越低
-        float riskMatchScore = Mathf.Exp(-Mathf.Pow(pathRiskIntegral - targetRiskExperience, 2) / 0.05f);
+        float kinematicWeight = Mathf.Lerp(0.1f, 0.3f, intent.mechanicalComplexity);
+        float topologyWeight = Mathf.Lerp(0.1f, 0.3f, intent.structuralExploration);
+        float riskWeight = Mathf.Lerp(0.2f, 0.5f, intent.riskTension);
+        float spatialWeight = 0.1f;
 
-        // 将风险积分拟合度作为最高权重的评价维度并入适应度函数
-        ind.fitness = (kinematicScore * 0.1f) +
-                      (topologyScore * 0.2f) +
-                      (spatialScore * 0.1f) +
+        float totalWeight = kinematicWeight + topologyWeight + riskWeight + spatialWeight + 0.2f;
+
+        ind.fitness = (kinematicScore * kinematicWeight) +
+                      (topologyScore * topologyWeight) +
+                      (spatialScore * spatialWeight) +
                       (densityScore * 0.1f) +
                       (linearityScore * 0.1f) +
-                      (riskMatchScore * 0.4f) + // 40% 的权重交由物理场控制
-                      (ind.trajectory.Count * 0.001f);
+                      (riskMatchScore * riskWeight);
+
+        ind.fitness /= totalWeight;
+        ind.fitness += (ind.trajectory.Count * 0.0005f);
     }
 
-    // [新增] 沿物理轨迹进行离散化的连续场路径积分
     private static float CalculateRiskPathIntegral(List<Vector3> trajectory, RiskFieldSolver solver)
     {
         if (solver == null || trajectory.Count == 0) return 0f;
@@ -49,7 +63,6 @@ public static class TopologyEvaluator
             totalRisk += solver.GetRiskAtContinuousPosition(point);
         }
 
-        // 返回归一化的平均期望死亡率
         return totalRisk / trajectory.Count;
     }
 

@@ -1,10 +1,10 @@
-using UnityEngine;
+锘縰sing UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    [Header("Visualization Settings (可视化设置)")]
+    [Header("Visualization Settings (驴脡脢脫禄炉脡猫脰脙)")]
     public bool enableSearchVisuals = true;
     public float successDisplayTime = 0.2f;
     public float searchDisplayTime = 0.05f;

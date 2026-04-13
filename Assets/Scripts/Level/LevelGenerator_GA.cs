@@ -13,6 +13,14 @@ public partial class LevelGenerator : MonoBehaviour
     public int gaMaxGenerations = 10;
     public float gaMutationRate = 0.3f;
 
+    [Header("Designer Intent Mapping (设计师意图映射)")]
+    public TopologyEvaluator.DesignerIntent designerIntent = new TopologyEvaluator.DesignerIntent
+    {
+        riskTension = 0.5f,
+        mechanicalComplexity = 0.5f,
+        structuralExploration = 0.5f
+    };
+
     public void GenerateEvolutionaryMapElitesLibrary(Vector2i startTile, Vector2i endTile)
     {
         StartCoroutine(GenerateSegmentedEvolutionaryRoutine(startTile, endTile));
@@ -22,6 +30,7 @@ public partial class LevelGenerator : MonoBehaviour
     {
         Initialize();
         if (director != null) director.SetRunning(false);
+        if (director != null) director.SyncIntent(designerIntent);
         ClearVisuals();
         InitLog("多空间独立分段生成 MAP-Elites (运动学约束版)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
@@ -112,7 +121,7 @@ public partial class LevelGenerator : MonoBehaviour
                     RecordFailure("Init_Sim_" + failReason);
                     LogAttemptResult(initialAttempts, "特工寻路卡死", failReason);
                 }
-                yield return null; // 确保每尝试一次都让出 CPU，防止引擎假死
+                yield return null;
             }
 
             for (int generation = 1; generation <= gaMaxGenerations; generation++)
@@ -320,7 +329,7 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        TopologyEvaluator.EvaluateIndividual(ind, zone, riskFieldSolver);
+        TopologyEvaluator.EvaluateIndividual(ind, zone, riskFieldSolver, designerIntent);
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)

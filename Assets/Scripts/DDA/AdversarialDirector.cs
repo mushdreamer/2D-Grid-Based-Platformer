@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -22,14 +22,17 @@ public class AdversarialDirector : MonoBehaviour
     public Bot targetPlayer;
     public Map map;
 
-    [Header("Difficulty Brain")]
-    public float predictionWindow = 0.6f;
-    public float cooldown = 1.5f;
+    [Header("Designer Intent (ç”±ç”Ÿæˆå™¨åŠ¨æ€åŒæ­¥)")]
+    public TopologyEvaluator.DesignerIntent currentIntent;
 
-    [Header("Quality of Life (ÌåÑéÓÅ»¯)")]
-    public bool ignoreIdlePlayer = true;      // ÊÇ·ñºöÂÔ¾²Ö¹µÄÍæ¼Ò
-    public float spawnProtectionTime = 2.0f;  // ³öÉúÎŞµĞ±£»¤Ê±¼ä£¨Ãë£©
-    private float runStartTime = 0f;          // ¼ÇÂ¼µ¼Ñİ¿ªÊ¼ÔËĞĞµÄÊ±¼ä
+    [Header("Base Difficulty Stats")]
+    public float basePredictionWindow = 0.6f;
+    public float baseCooldown = 1.5f;
+
+    [Header("Quality of Life")]
+    public bool ignoreIdlePlayer = true;
+    public float spawnProtectionTime = 2.0f;
+    private float runStartTime = 0f;
 
     [Header("Terrain Trap Settings")]
     public float terrainCooldown = 4.0f;
@@ -40,26 +43,29 @@ public class AdversarialDirector : MonoBehaviour
 
     [Header("IWBTG Sculpting Mode")]
     public bool isIWBTGSculptingMode = false;
-    public float deviationTolerance = 1.5f; // ÔÊĞíÆ«Àë»ù×¼¹ì¼£µÄ×î´ó¾àÀëÔ¼Êø
     private List<Vector3> goldenTrajectory = new List<Vector3>();
 
     private float lastTrapTime = 0f;
     private bool isRunning = true;
     private List<GameObject> activeTraps = new List<GameObject>();
-
     private List<KillerMemory> killerHallOfFame = new List<KillerMemory>();
     private HashSet<Vector2i> permanentCrackTriggers = new HashSet<Vector2i>();
-
     private KillerMemory? currentFrameKiller = null;
     private Vector2i lastCrackTile;
     private float lastCrackTime = -999f;
+
+    // åŒæ­¥è®¾è®¡å¸ˆæ„å›¾
+    public void SyncIntent(TopologyEvaluator.DesignerIntent intent)
+    {
+        currentIntent = intent;
+    }
 
     public void SetRunning(bool state)
     {
         isRunning = state;
         if (isRunning)
         {
-            runStartTime = Time.time; // Æô¶¯Ê±¼ÇÂ¼Ê±¼ä£¬¿ªÆô³öÉú±£»¤
+            runStartTime = Time.time;
             lastTrapTime = Time.time;
             lastTerrainTime = Time.time;
         }
@@ -73,96 +79,76 @@ public class AdversarialDirector : MonoBehaviour
     {
         goldenTrajectory = new List<Vector3>(intendedPath);
         isIWBTGSculptingMode = true;
-        Debug.Log(">>> µ¼ÑİÒÑ½øÈë IWBTG µñ¿ÌÄ£Ê½£¬¿ªÊ¼Ö´ĞĞ¿Õ¼äÔ¼Êø±Õ»·¡£");
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            Debug.Log(">>> ÊÖ¶¯´¥·¢£º´óµØÁÑ±ä£¡");
-            TriggerGroundCrackCombo();
-        }
-
         if (!isRunning || targetPlayer == null || !targetPlayer.gameObject.activeInHierarchy) return;
 
-        // --- 1. ³öÉú±£»¤ÆÚ ---
-        if (Time.time < runStartTime + spawnProtectionTime)
-        {
-            lastTrapTime = Time.time;
-            lastTerrainTime = Time.time;
-            return;
-        }
+        // 1. å‡ºç”Ÿä¿æŠ¤æœŸ (å—é£é™©ç´§å¼ æ„Ÿå½±å“ï¼Œè¶Šé«˜ä¿æŠ¤è¶ŠçŸ­)
+        float protectionBuffer = Mathf.Lerp(spawnProtectionTime, 0.5f, currentIntent.riskTension);
+        if (Time.time < runStartTime + protectionBuffer) return;
 
-        // --- 2. ¾²Ö¹ÃşÓã±£»¤ ---
+        // 2. é™æ­¢ä¿æŠ¤ (åœ¨éé›•åˆ»æ¨¡å¼ä¸‹ç”Ÿæ•ˆ)
         if (ignoreIdlePlayer && targetPlayer.mCurrentState != Character.CharacterState.Die && !isIWBTGSculptingMode)
         {
             bool isIdle = targetPlayer.mOnGround && Mathf.Abs(targetPlayer.mSpeed.x) < 0.1f;
-            if (isIdle)
-            {
-                lastTrapTime = Time.time;
-                lastTerrainTime = Time.time;
-                return;
-            }
+            if (isIdle) return;
         }
 
+        // 3. è½¨è¿¹åç§»ç¡¬çº¦æŸ
         if (isIWBTGSculptingMode && targetPlayer.mCurrentState != Character.CharacterState.Die)
         {
             CheckDeviationAndEnforceConstraint();
             return;
         }
 
+        // æ¸…ç†å·²é”€æ¯çš„é™·é˜±å¼•ç”¨
         for (int i = activeTraps.Count - 1; i >= 0; i--)
             if (activeTraps[i] == null) activeTraps.RemoveAt(i);
 
-        // --- 3. ¼ì²âÍæ¼ÒÊÇ·ñÔÚÉú´æ¿Õ¼ä ---
+        // 4. ç”Ÿå­˜ç©ºé—´æ£€æµ‹
         Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
         Vector2i playerTile = map.GetMapTileAtPoint(feetPos);
-        bool inSafeZone = false;
-        if (map.survivalSpaceTiles != null)
-        {
-            inSafeZone = map.survivalSpaceTiles.Contains(playerTile);
-        }
+        bool inSafeZone = map.survivalSpaceTiles != null && map.survivalSpaceTiles.Contains(playerTile);
 
-        // --- 4. ÓÀ¾ÃµØĞÎÉ±¼ì²â (ÎŞÊÓ°²È«Çø) ---
-        if (targetPlayer.mOnGround)
+        // 5. æ°¸ä¹…åœ°å½¢æ€ (æ— è§†å®‰å…¨åŒºï¼Œç”±æ€æ‰‹è®°å¿†ç³»ç»Ÿè§¦å‘)
+        if (targetPlayer.mOnGround && permanentCrackTriggers.Contains(playerTile))
         {
-            if (permanentCrackTriggers.Contains(playerTile))
+            if (map.GetTile(playerTile.x, playerTile.y) == TileType.Block)
             {
-                if (map.GetTile(playerTile.x, playerTile.y) == TileType.Block)
-                {
-                    Debug.Log("<color=red>Director: ´¥·¢ÓÀ¾ÃµØĞÎÉ±£¡</color>");
-                    TriggerGroundCrackComboAt(playerTile);
-                    return;
-                }
+                TriggerGroundCrackComboAt(playerTile);
+                return;
             }
         }
 
-        // --- 5. °²È«ÇøÂß¼­·ÖÖ§ ---
         if (inSafeZone)
         {
             lastTrapTime = Time.time;
             return;
         }
 
-        // --- 6. Î£ÏÕÇøÂß¼­ (±©×ßÄ£Ê½) ---
-        float effectiveCooldown = 0.5f;
+        // 6. åŠ¨æ€é™·é˜±å‘å°„
+        float effectiveCooldown = Mathf.Lerp(baseCooldown, 0.4f, currentIntent.riskTension);
+        float effectivePrediction = Mathf.Lerp(basePredictionWindow, 1.2f, currentIntent.mechanicalComplexity);
 
         if (Time.time > lastTrapTime + effectiveCooldown)
         {
-            AttemptLethalTrap();
+            AttemptLethalTrap(effectivePrediction);
         }
 
-        if (Time.time > lastTerrainTime + terrainCooldown)
+        // 7. åŠ¨æ€åœ°å½¢è£‚å˜æ¦‚ç‡
+        float effectiveTerrainCooldown = Mathf.Lerp(terrainCooldown, 1.5f, currentIntent.riskTension);
+        if (Time.time > lastTerrainTime + effectiveTerrainCooldown)
         {
-            if (targetPlayer.mOnGround && Random.value < 0.1f)
+            if (targetPlayer.mOnGround && Random.value < (0.05f + currentIntent.riskTension * 0.2f))
             {
                 TriggerGroundCrackCombo();
             }
         }
     }
 
-    void CheckDeviationAndEnforceConstraint()
+    private void CheckDeviationAndEnforceConstraint()
     {
         if (goldenTrajectory == null || goldenTrajectory.Count == 0) return;
 
@@ -173,27 +159,112 @@ public class AdversarialDirector : MonoBehaviour
             if (dist < minDistance) minDistance = dist;
         }
 
-        if (minDistance > deviationTolerance * Map.cTileSize)
+        float dynamicTolerance = Mathf.Lerp(2.5f, 0.8f, currentIntent.riskTension);
+        if (minDistance > dynamicTolerance * Map.cTileSize)
         {
-            Debug.Log($"<color=magenta>Director: ·¢ÏÖ¹ì¼£Î¥¹æÆ«ÒÆ (Æ«²î {minDistance:F2})£¬Ö´ĞĞÓ²Ô¼ÊøÄ¨É±¡£</color>");
+            targetPlayer.Die();
+        }
+    }
 
-            TrapConfig executionConfig = trapLibrary.Find(x => x.name == "AbyssSpike");
-            if (executionConfig.prefab == null && trapLibrary.Count > 0) executionConfig = trapLibrary[0];
+    private void AttemptLethalTrap(float prediction)
+    {
+        if (trapLibrary.Count == 0) return;
+        TrapConfig config = GetIntentBiasedTrapConfig();
+        List<Vector2> futurePath = SimulatePlayerPath(prediction);
+        if (futurePath.Count == 0) return;
 
-            if (executionConfig.prefab != null)
+        Vector2? spawnPos = CalculateLethalSpawnPosition(config, futurePath);
+        if (spawnPos.HasValue)
+        {
+            Vector2 killZone = futurePath[futurePath.Count - 1];
+            SpawnTrap(config, spawnPos.Value, killZone, false, prediction);
+            lastTrapTime = Time.time;
+        }
+    }
+
+    private TrapConfig GetIntentBiasedTrapConfig()
+    {
+        float totalWeight = 0f;
+        foreach (var c in trapLibrary)
+        {
+            float bias = 1.0f;
+            if (currentIntent.mechanicalComplexity > 0.7f && c.strategy == TrapStrategy.SniperIntercept) bias = 3.0f;
+            if (currentIntent.riskTension > 0.7f && c.strategy == TrapStrategy.DropFromAbove) bias = 2.0f;
+            totalWeight += c.weight * bias;
+        }
+
+        float r = Random.Range(0, totalWeight);
+        float cur = 0f;
+        foreach (var c in trapLibrary)
+        {
+            float bias = 1.0f;
+            if (currentIntent.mechanicalComplexity > 0.7f && c.strategy == TrapStrategy.SniperIntercept) bias = 3.0f;
+            if (currentIntent.riskTension > 0.7f && c.strategy == TrapStrategy.DropFromAbove) bias = 2.0f;
+            cur += c.weight * bias;
+            if (r <= cur) return c;
+        }
+        return trapLibrary[0];
+    }
+
+    private void SpawnTrap(TrapConfig config, Vector2 pos, Vector2 targetZone, bool isPermanent, float prediction)
+    {
+        GameObject obj = Instantiate(config.prefab, new Vector3(pos.x, pos.y, -5f), Quaternion.identity);
+        activeTraps.Add(obj);
+        SmartTrap trap = obj.GetComponent<SmartTrap>();
+        if (trap != null)
+        {
+            trap.configName = config.name;
+            trap.initialSpawnPosition = pos; // è®°å½•åˆå§‹ä½ç½®ç”¨äºè®°å¿†
+            trap.ActivateTrap(targetZone, prediction, targetPlayer);
+        }
+    }
+
+    // æ€æ‰‹è®°å¿†ç³»ç»Ÿæ¥å£ï¼šå½“ç©å®¶æ­»äº¡æ—¶ï¼Œé™·é˜±é€šè¿‡æ­¤æ–¹æ³•è‡ªæˆ‘æ™‹å‡
+    public void RecordKillerTrap(SmartTrap trap)
+    {
+        currentFrameKiller = new KillerMemory
+        {
+            configName = trap.configName,
+            spawnPos = trap.initialSpawnPosition,
+            targetPos = targetPlayer.mPosition,
+            isEvent = false
+        };
+    }
+
+    public void OnPlayerDeath()
+    {
+        // æ™‹å‡æœ¬å›åˆæœ€è‡´å‘½çš„é™·é˜±æˆ–åœ°å½¢äº‹ä»¶
+        if (currentFrameKiller.HasValue)
+        {
+            killerHallOfFame.Add(currentFrameKiller.Value);
+        }
+        else if (Time.time - lastCrackTime < 2.5f)
+        {
+            killerHallOfFame.Add(new KillerMemory { isEvent = true, eventTile = lastCrackTile });
+        }
+
+        currentFrameKiller = null;
+        ClearTraps();
+    }
+
+    public void RespawnPermanentThreats()
+    {
+        foreach (var mem in killerHallOfFame)
+        {
+            if (mem.isEvent) { permanentCrackTriggers.Add(mem.eventTile); }
+            else
             {
-                Vector2 killZone = targetPlayer.mPosition;
-                SpawnTrap(executionConfig, killZone + Vector2.up * 50f, killZone, true);
-
-                KillerMemory mem = new KillerMemory { configName = executionConfig.name, spawnPos = killZone + Vector2.up * 50f, targetPos = killZone, isEvent = false };
-                killerHallOfFame.Add(mem);
-
-                targetPlayer.Die();
+                if (mem.configName == "AbyssSpike") continue;
+                TrapConfig config = trapLibrary.Find(x => x.name == mem.configName);
+                if (config.prefab != null) SpawnTrap(config, mem.spawnPos, mem.targetPos, true, basePredictionWindow);
             }
         }
     }
 
-    void TriggerGroundCrackCombo()
+    public void ClearTraps() { foreach (var t in activeTraps) if (t != null) Destroy(t); activeTraps.Clear(); }
+
+    // åœ°å½¢è£‚å˜é€»è¾‘
+    public void TriggerGroundCrackCombo()
     {
         if (map == null) return;
         Vector2 feetPos = targetPlayer.mPosition + Vector2.down * (targetPlayer.mAABB.HalfSizeY + 2.0f);
@@ -201,11 +272,11 @@ public class AdversarialDirector : MonoBehaviour
         if (map.GetTile(playerTile.x, playerTile.y) == TileType.Block) TriggerGroundCrackComboAt(playerTile);
     }
 
-    void TriggerGroundCrackComboAt(Vector2i centerTile)
+    public void TriggerGroundCrackComboAt(Vector2i centerTile)
     {
         lastCrackTile = centerTile;
         lastCrackTime = Time.time;
-        int leftWidth = 3; int rightWidth = 3; int depth = 5;
+        int leftWidth = 3, rightWidth = 3, depth = 5;
         Vector2i leftCenter = new Vector2i(centerTile.x - 1, centerTile.y - depth / 2 + 1);
         map.ConvertRegionToDynamic(leftCenter, leftWidth, depth, TerrainMotion.SplitHorizontal, -180f);
         Vector2i rightCenter = new Vector2i(centerTile.x + 2, centerTile.y - depth / 2 + 1);
@@ -234,83 +305,17 @@ public class AdversarialDirector : MonoBehaviour
         }
     }
 
-    public void RecordKillerTrap(SmartTrap trap)
-    {
-        KillerMemory memory = new KillerMemory { configName = trap.configName, spawnPos = trap.initialSpawnPosition, targetPos = targetPlayer.mPosition, isEvent = false };
-        currentFrameKiller = memory;
-    }
-
-    public void OnPlayerDeath()
-    {
-        bool killerFound = false;
-        if (currentFrameKiller.HasValue) { killerHallOfFame.Add(currentFrameKiller.Value); killerFound = true; Debug.Log($"<color=yellow>Director: ÏİÚå [{currentFrameKiller.Value.configName}] ÒÑ½úÉı£¡</color>"); }
-        else if (Time.time - lastCrackTime < 2.5f) { KillerMemory eventMem = new KillerMemory { isEvent = true, eventTile = lastCrackTile }; killerHallOfFame.Add(eventMem); killerFound = true; Debug.Log($"<color=yellow>Director: µØĞÎÁÑ±ä [{lastCrackTile}] ÒÑ½úÉı£¡</color>"); }
-        currentFrameKiller = null; ClearTraps();
-    }
-
-    public void RespawnPermanentThreats()
-    {
-        foreach (var mem in killerHallOfFame)
-        {
-            if (mem.isEvent) { permanentCrackTriggers.Add(mem.eventTile); }
-            else
-            {
-                if (mem.configName == "AbyssSpike") continue;
-                TrapConfig config = trapLibrary.Find(x => x.name == mem.configName);
-                if (config.prefab == null && trapLibrary.Count > 0) config = trapLibrary[0];
-                if (config.prefab != null) SpawnTrap(config, mem.spawnPos, mem.targetPos, true);
-            }
-        }
-    }
-
-    void AttemptLethalTrap()
-    {
-        if (trapLibrary.Count == 0) return;
-        TrapConfig config = GetRandomTrapConfig();
-        List<Vector2> futurePath = SimulatePlayerPath(predictionWindow);
-        if (futurePath.Count == 0) return;
-        Vector2? spawnPos = CalculateLethalSpawnPosition(config, futurePath);
-        if (spawnPos.HasValue)
-        {
-            Vector2 killZone = futurePath[futurePath.Count - 1];
-            SpawnTrap(config, spawnPos.Value, killZone, false);
-            lastTrapTime = Time.time;
-        }
-    }
-
-    void SpawnTrap(TrapConfig config, Vector2 pos, Vector2 targetZone, bool isPermanent)
-    {
-        GameObject obj = Instantiate(config.prefab, new Vector3(pos.x, pos.y, -5f), Quaternion.identity);
-        activeTraps.Add(obj);
-        SmartTrap trap = obj.GetComponent<SmartTrap>();
-        if (trap != null) { trap.configName = config.name; trap.ActivateTrap(targetZone, predictionWindow, targetPlayer); }
-    }
-
-    public void ClearTraps() { foreach (var t in activeTraps) if (t != null) Destroy(t); activeTraps.Clear(); }
-
-    TrapConfig GetRandomTrapConfig()
-    {
-        float totalWeight = 0f;
-        foreach (var c in trapLibrary) totalWeight += c.weight;
-        if (totalWeight <= 0f) return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig();
-        float r = Random.Range(0, totalWeight);
-        float cur = 0f;
-        foreach (var c in trapLibrary) { cur += c.weight; if (r <= cur) return c; }
-        return trapLibrary.Count > 0 ? trapLibrary[0] : new TrapConfig();
-    }
-
-    Vector2? CalculateLethalSpawnPosition(TrapConfig c, List<Vector2> p)
+    private Vector2? CalculateLethalSpawnPosition(TrapConfig c, List<Vector2> p)
     {
         if (p == null || p.Count == 0) return targetPlayer.mPosition;
         Vector2 k = p[p.Count - 1];
         if (c.strategy == TrapStrategy.DropFromAbove) return new Vector2(k.x, k.y + Map.cTileSize * 15f);
         if (c.strategy == TrapStrategy.RiseFromBelow) return k + Vector2.down * Map.cTileSize * 15f;
         if (c.strategy == TrapStrategy.SniperIntercept) return targetPlayer.mPosition + new Vector2(Random.value > 0.5f ? 1 : -1, 1).normalized * Map.cTileSize * 20f;
-        if (c.strategy == TrapStrategy.FakeBlockSurprise) return k;
         return k + Vector2.up * Map.cTileSize * 10f;
     }
 
-    List<Vector2> SimulatePlayerPath(float t)
+    private List<Vector2> SimulatePlayerPath(float t)
     {
         List<Vector2> path = new List<Vector2>();
         Vector2 p = targetPlayer.mPosition;
@@ -319,14 +324,11 @@ public class AdversarialDirector : MonoBehaviour
         float timeSimulated = 0f;
         while (timeSimulated < t)
         {
-            v.y += Constants.cGravity * step;
+            v.y += -1600f * step;
             p += v * step;
             path.Add(p);
             timeSimulated += step;
         }
         return path;
     }
-
-    bool IsPositionValid(Vector2 p) { return true; }
-    bool HasWallBetween(Vector2 s, Vector2 e) { return false; }
 }

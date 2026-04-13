@@ -535,6 +535,10 @@ MonoBehaviour:
   gaPopulationSize: 20
   gaMaxGenerations: 10
   gaMutationRate: 0.3
+  designerIntent:
+    riskTension: 0
+    mechanicalComplexity: 1
+    structuralExploration: 0
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
@@ -3470,6 +3474,10 @@ MonoBehaviour:
   gaPopulationSize: 20
   gaMaxGenerations: 10
   gaMutationRate: 0.3
+  designerIntent:
+    riskTension: 0.5
+    mechanicalComplexity: 0.5
+    structuralExploration: 0.5
   enableSearchVisuals: 1
   successDisplayTime: 0.15
   searchDisplayTime: 0.02
