@@ -581,9 +581,7 @@ MonoBehaviour:
   hardcoreDeviationTolerance: 1.5
   gaPopulationSize: 20
   gaMaxGenerations: 10
-  gaMutationRate: 0.6
-  maxRiskEmitters: 3
-  blockadeProbability: 0.3
+  gaMutationRate: 0.3
   designerIntent:
     riskTension: 0.7
     mechanicalComplexity: 0.3
@@ -3527,8 +3525,6 @@ MonoBehaviour:
   gaPopulationSize: 20
   gaMaxGenerations: 10
   gaMutationRate: 0.3
-  maxRiskEmitters: 3
-  blockadeProbability: 0.3
   designerIntent:
     riskTension: 0.5
     mechanicalComplexity: 0.5
