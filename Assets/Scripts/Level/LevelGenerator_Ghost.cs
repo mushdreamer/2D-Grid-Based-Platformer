@@ -179,7 +179,6 @@ public partial class LevelGenerator : MonoBehaviour
                 reason = "All_Retries_Failed_At_Step";
                 failPos = ghostAgent.mPosition;
 
-                // 陷入死胡同时，利用温度注入位置微扰以脱困
                 if (temperature > 0.2f)
                 {
                     ghostAgent.mPosition += new Vector2(Random.Range(-2f, 2f), 0);
@@ -247,15 +246,13 @@ public partial class LevelGenerator : MonoBehaviour
             }
             else
             {
+                // 核心修复：纯靠 PDE 的连续梯度提供自然排斥力，绝不允许对高风险网格实行硬截断封杀
                 Vector2 escapeVector = -new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
                 if (escapeVector.x > 0) weightRight += escapeVector.x * riskSensitivity * currentRisk;
                 if (escapeVector.x < 0) weightLeft += -escapeVector.x * riskSensitivity * currentRisk;
                 if (escapeVector.y > 0) weightUp += escapeVector.y * riskSensitivity * currentRisk;
+                if (escapeVector.y < 0) weightDown += -escapeVector.y * riskSensitivity * currentRisk;
             }
-
-            if (riskRight > 0.9f) weightRight = 0f;
-            if (riskLeft > 0.9f) weightLeft = 0f;
-            if (riskUp > 0.9f) weightUp = 0f;
         }
 
         weightRight += Random.Range(0, 30f * temp);
@@ -329,6 +326,7 @@ public partial class LevelGenerator : MonoBehaviour
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
+            // 让底层物理引擎来绝对裁决越界行为，而非依靠 PDE 张量场的提前主观拦截
             if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
             {
                 Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
@@ -363,6 +361,11 @@ public partial class LevelGenerator : MonoBehaviour
 
     void EnsureVirtualFloorRealtime()
     {
+        if (ghostAgent.mPosition.y > currentVirtualFloorY + Map.cTileSize * 8f)
+        {
+            currentVirtualFloorY = ghostAgent.mPosition.y - Map.cTileSize * 5f;
+        }
+
         if (ghostAgent.mSpeed.y > 0.1f) return;
 
         Vector2i centerTile = map.GetMapTileAtPoint(ghostAgent.mPosition);

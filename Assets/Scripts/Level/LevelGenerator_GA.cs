@@ -148,22 +148,17 @@ public partial class LevelGenerator : MonoBehaviour
         riskFieldSolver.ResetToInitialState();
         riskFieldSolver.SetGlobalDiffusionTensor(new Vector2(0.5f, 0.5f));
 
+        // 核心修复：降低边界场压，防止狭窄生存空间内部发生 PDE 饱和坍缩
         for (int x = 0; x < map.mWidth; x++)
         {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1f);
-        }
-        for (int y = 0; y < map.mHeight; y++)
-        {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1f);
-        }
-
-        if (map.survivalSpaceTiles != null)
-        {
-            foreach (var safeTile in map.survivalSpaceTiles)
+            for (int y = 0; y < map.mHeight; y++)
             {
-                riskFieldSolver.SetDirichletBoundary(safeTile, 0.0f);
+                Vector2i tile = new Vector2i(x, y);
+                if (map.survivalSpaceTiles != null && !map.survivalSpaceTiles.Contains(tile))
+                {
+                    // 使用 0.85f 替代 1.0f，给予梯度流形更平滑的向心收敛度
+                    riskFieldSolver.SetDirichletBoundary(tile, 0.85f);
+                }
             }
         }
 
@@ -173,7 +168,9 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         riskFieldSolver.SetDirichletBoundary(end, 0.0f);
-        riskFieldSolver.SolveImmediate(500);
+
+        // 核心修复：将迭代次数下调，允许自然势能梯度存在，避免热传导将整个狭窄通道烤熟
+        riskFieldSolver.SolveImmediate(150);
     }
 
     private LevelIndividual CrossoverAndMutateWithDiversity(LevelIndividual pA, LevelIndividual pB, Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
