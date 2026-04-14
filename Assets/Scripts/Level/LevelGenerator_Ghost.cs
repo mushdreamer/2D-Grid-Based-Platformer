@@ -5,7 +5,6 @@ using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    // [ÐÂÔö] ÇáÁ¿¼¶×´Ì¬¿ìÕÕ£¬ÓÃÓÚ¶¯×÷Ê§°ÜÊ±µÄË²¼ä»Øµµ
     public struct GhostCheckpoint
     {
         public Vector2 position;
@@ -30,15 +29,15 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null)
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null, float temperature = 0f)
     {
-        int microAttempts = 5; // ÒýÈë»ØËÝºó£¬ÕûÌåºê¹ÛÖØÊÔ´ÎÊý¿ÉÒÔ´ó·ù½µµÍ
+        int microAttempts = 5;
         finalReason = "";
         failPos = Vector2.zero;
 
         if (route == null || route.Count == 0)
         {
-            finalReason = "RouteEmpty_¹æ»®Â·ÏßÎª¿Õ";
+            finalReason = "RouteEmpty_规划路线为空";
             return false;
         }
 
@@ -72,7 +71,7 @@ public partial class LevelGenerator : MonoBehaviour
             bool routeSuccess = true;
             foreach (var step in route)
             {
-                if (!SimulateGuidedPath(step.endPoint, step.associatedZone, out finalReason, out failPos))
+                if (!SimulateGuidedPath(step.endPoint, step.associatedZone, out finalReason, out failPos, temperature))
                 {
                     routeSuccess = false;
                     break;
@@ -127,7 +126,7 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool SimulateGuidedPath(Vector2 finalDest, SurvivalSpaceAnalyzer.SurvivalZone currentZone, out string reason, out Vector2 failPos)
+    bool SimulateGuidedPath(Vector2 finalDest, SurvivalSpaceAnalyzer.SurvivalZone currentZone, out string reason, out Vector2 failPos, float temperature)
     {
         int framesLimit = 2500;
         int currentFrames = 0;
@@ -141,21 +140,19 @@ public partial class LevelGenerator : MonoBehaviour
                 reason = "Success"; failPos = ghostAgent.mPosition; return true;
             }
 
-            // [ºËÐÄ»úÖÆ] ¼ÇÂ¼¶¯×÷Ç°µÄÎïÀí×´Ì¬Óë¹ì¼£Ë÷Òý¿ìÕÕ
             GhostCheckpoint cp = new GhostCheckpoint(ghostAgent, currentVirtualFloorY, ghostReplay.Count, ghostTrajectory.Count, ghostPath.Count);
 
-            int maxRetries = 12; // ÔÊÐíÔÚÍ¬Ò»µã½øÐÐ¶à´ï12´ÎµÄ²»Í¬¶¯×÷ÊÔ´í
+            int maxRetries = 12;
             bool stepSuccess = false;
             int framesTaken = 0;
 
             for (int r = 0; r < maxRetries; r++)
             {
-                ActionType nextAction = PickAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone);
+                ActionType nextAction = PickAnnealedAction(ghostAgent.mPosition, finalDest, stagnationCount, currentZone, temperature);
 
                 bool actionFailed = false;
                 framesTaken = ExecuteGhostAction(nextAction, out actionFailed);
 
-                // ÑÏ¿ÁµÄËÀÏß¼ì²â
                 if (ghostAgent.mPosition.y < map.position.y - 100f) actionFailed = true;
 
                 if (!actionFailed)
@@ -165,14 +162,12 @@ public partial class LevelGenerator : MonoBehaviour
                 }
                 else
                 {
-                    // [»ØËÝ´¥·¢] µ±Ç°¶¯×÷µ¼ÖÂÔ½½ç»ò×¹Âä£¬Ö´ÐÐ O(1) ×´Ì¬»Ø¹ö²¢»»¸ö¶¯×÷ÔÙÊÔ
                     ghostAgent.mPosition = cp.position;
                     ghostAgent.mSpeed = cp.speed;
                     ghostAgent.mCurrentState = cp.currentState;
                     ghostAgent.mOnGround = cp.onGround;
                     currentVirtualFloorY = cp.virtualFloorY;
 
-                    // ½Ø¶ÏÊ§°ÜµÄÂ¼ÏñÓë¹ì¼££¬±£Ö¤¼ÇÂ¼µÄ¾ø¶Ô´¿½àÐÔ
                     if (ghostReplay.Count > cp.replayCount) ghostReplay.RemoveRange(cp.replayCount, ghostReplay.Count - cp.replayCount);
                     if (ghostTrajectory.Count > cp.trajectoryCount) ghostTrajectory.RemoveRange(cp.trajectoryCount, ghostTrajectory.Count - cp.trajectoryCount);
                     if (ghostPath.Count > cp.pathCount) ghostPath.RemoveRange(cp.pathCount, ghostPath.Count - cp.pathCount);
@@ -183,6 +178,12 @@ public partial class LevelGenerator : MonoBehaviour
             {
                 reason = "All_Retries_Failed_At_Step";
                 failPos = ghostAgent.mPosition;
+
+                // 陷入死胡同时，利用温度注入位置微扰以脱困
+                if (temperature > 0.2f)
+                {
+                    ghostAgent.mPosition += new Vector2(Random.Range(-2f, 2f), 0);
+                }
                 return false;
             }
 
@@ -192,7 +193,7 @@ public partial class LevelGenerator : MonoBehaviour
             else { stagnationCount = 0; lastProgressPos = ghostAgent.mPosition; }
         }
 
-        reason = "Timeout_ºÄ¾¡2500Ö¡ÏÝÈëËÀÑ­»·";
+        reason = "Timeout_耗尽2500帧陷入死循环";
         failPos = ghostAgent.mPosition;
         return false;
     }
@@ -207,31 +208,27 @@ public partial class LevelGenerator : MonoBehaviour
         ghostSafePlatforms.Clear();
     }
 
-    ActionType PickAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone)
+    ActionType PickAnnealedAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
     {
         float weightRight = 0f, weightLeft = 0f, weightUp = 0f, weightDown = 0f;
 
-        // --- 1. 基础方向权重 ---
         if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
         if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
 
-        // --- [意图注入 1] 结构探索性 (Structural Exploration) ---
-        // 探索性越高，幽灵越喜欢“绕远路”和“向上飞”；探索性越低，幽灵越喜欢无脑直线冲锋。
         if (designerIntent.structuralExploration > 0.6f)
         {
-            weightUp += 15f * designerIntent.structuralExploration; // 强拉垂直权重
-            if (Random.value < 0.3f) // 30%概率反向走，制造回字形结构
+            weightUp += 15f * designerIntent.structuralExploration;
+            if (Random.value < 0.3f)
             {
-                float temp = weightRight; weightRight = weightLeft; weightLeft = temp;
+                float tmp = weightRight; weightRight = weightLeft; weightLeft = tmp;
             }
         }
         else if (designerIntent.structuralExploration < 0.4f)
         {
             if (endPos.x > currentPos.x) weightRight += 20f; else weightLeft += 20f;
-            if (Mathf.Abs(endPos.y - currentPos.y) < Map.cTileSize * 2) { weightUp = 0; weightDown = 0; } // 压平轨迹
+            if (Mathf.Abs(endPos.y - currentPos.y) < Map.cTileSize * 2) { weightUp = 0; weightDown = 0; }
         }
 
-        // --- [意图注入 2] 风险紧张感 (Risk Tension) ---
         if (riskFieldSolver != null)
         {
             float delta = Map.cTileSize;
@@ -241,25 +238,29 @@ public partial class LevelGenerator : MonoBehaviour
             float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
             float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
 
+            float riskSensitivity = Mathf.Lerp(50f, 5f, temp);
+
             if (designerIntent.riskTension > 0.7f)
             {
-                // [刀尖起舞] 紧张感极高时，幽灵会产生“向死而生”的倾向，主动靠近(但不跨入)致死区
                 if (riskRight > 0.4f && riskRight < 0.9f) weightRight += 15f;
                 if (riskUp > 0.4f && riskUp < 0.9f) weightUp += 15f;
             }
             else
             {
-                // 正常的风险逃逸逻辑...
                 Vector2 escapeVector = -new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
-                if (escapeVector.x > 0) weightRight += escapeVector.x * 50f * currentRisk;
-                // ... (保留你原有的逃逸逻辑)
+                if (escapeVector.x > 0) weightRight += escapeVector.x * riskSensitivity * currentRisk;
+                if (escapeVector.x < 0) weightLeft += -escapeVector.x * riskSensitivity * currentRisk;
+                if (escapeVector.y > 0) weightUp += escapeVector.y * riskSensitivity * currentRisk;
             }
 
-            // 绝对死亡墙依然不可跨越
             if (riskRight > 0.9f) weightRight = 0f;
             if (riskLeft > 0.9f) weightLeft = 0f;
             if (riskUp > 0.9f) weightUp = 0f;
         }
+
+        weightRight += Random.Range(0, 30f * temp);
+        weightLeft += Random.Range(0, 30f * temp);
+        weightUp += Random.Range(0, 30f * temp);
 
         if (weightRight <= 0 && weightLeft <= 0 && weightUp <= 0 && weightDown <= 0) return ActionType.Drop;
 
@@ -267,7 +268,6 @@ public partial class LevelGenerator : MonoBehaviour
         float totalWeight = weightRight + weightLeft + weightUp + weightDown;
         float r = Random.Range(0, totalWeight);
 
-        // 标准概率抽取
         if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
         else
         {
@@ -281,11 +281,8 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
-        // --- [意图注入 3] 机械复杂度 (Mechanical Complexity) ---
-        // 强制升格或降格幽灵的动作操作量
         if (designerIntent.mechanicalComplexity > 0.7f)
         {
-            // 强制炫技：把走变成跳，跳变成大跳
             if (pickedAction == ActionType.MoveRight) pickedAction = ActionType.JumpRight;
             if (pickedAction == ActionType.MoveLeft) pickedAction = ActionType.JumpLeft;
             if (pickedAction == ActionType.JumpRight && Random.value < 0.8f) pickedAction = ActionType.LongJumpRight;
@@ -293,7 +290,6 @@ public partial class LevelGenerator : MonoBehaviour
         }
         else if (designerIntent.mechanicalComplexity < 0.3f)
         {
-            // 降低操作：尽量只保留基本移动
             if (pickedAction == ActionType.JumpRight && Random.value < 0.6f) pickedAction = ActionType.MoveRight;
             if (pickedAction == ActionType.JumpLeft && Random.value < 0.6f) pickedAction = ActionType.MoveLeft;
             if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.JumpRight;
@@ -333,7 +329,6 @@ public partial class LevelGenerator : MonoBehaviour
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
-            // [ÐÞ¸Ä] ³¹µ×·ÏÆú¿ÕÆøÇ½ºÍÊ±¹âµ¹Á÷£¬Ô½½çÖ±½ÓÅÐ¶¨¶¯×÷Ê§°Ü
             if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
             {
                 Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
@@ -352,22 +347,16 @@ public partial class LevelGenerator : MonoBehaviour
                     if (isInside) break;
                 }
 
-                if (!isInside)
-                {
-                    actionFailed = true;
-                }
+                if (!isInside) actionFailed = true;
             }
 
-            if (ghostAgent.mCurrentState == Character.CharacterState.Die)
-            {
-                actionFailed = true;
-            }
+            if (ghostAgent.mCurrentState == Character.CharacterState.Die) actionFailed = true;
 
             RecordGhostTrajectory();
             ghostReplay.Add(new ReplayFrame(inputs));
             ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
 
-            if (actionFailed) break; // ÈôÖÐÍ¾Ê§°Ü£¬Á¢¿Ì´ò¶Ï¶¯×÷£¬½»»¹¸øÍâ²ã½øÐÐ»ØËÝ
+            if (actionFailed) break;
         }
         return frames;
     }

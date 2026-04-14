@@ -2,24 +2,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System;
 using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
-    [Header("Evolutionary MAP-Elites Settings (演化型网格设定)")]
+    [Header("Evolutionary MAP-Elites Settings")]
     public int gaPopulationSize = 20;
     public int gaMaxGenerations = 10;
-    public float gaMutationRate = 0.3f;
+    public float gaMutationRate = 0.4f;
 
-    [Header("Designer Intent Mapping (设计师意图映射)")]
+    [Header("Advanced Mutation Settings")]
+    public int maxRiskEmitters = 3;
+    public float blockadeProbability = 0.3f;
+
+    [Header("Designer Intent Mapping")]
     public TopologyEvaluator.DesignerIntent designerIntent = new TopologyEvaluator.DesignerIntent
     {
         riskTension = 0.5f,
         mechanicalComplexity = 0.5f,
         structuralExploration = 0.5f
     };
+
+    private List<Vector2i> activeRiskEmitters = new List<Vector2i>();
 
     public void GenerateEvolutionaryMapElitesLibrary(Vector2i startTile, Vector2i endTile)
     {
@@ -32,13 +37,12 @@ public partial class LevelGenerator : MonoBehaviour
         if (director != null) director.SetRunning(false);
         if (director != null) director.SyncIntent(designerIntent);
         ClearVisuals();
-        InitLog("多空间独立分段生成 MAP-Elites (运动学约束版)", gaPopulationSize, gaMaxGenerations);
+        InitLog("多样性增强版演化管线 (张量场扭曲)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
         if (zones.Count == 0)
         {
-            Debug.LogError("未能识别到任何生存空间，生成终止。");
             LogDeepDiagnostic("System", "致命错误：未能识别到任何生存空间。");
             yield break;
         }
@@ -54,79 +58,21 @@ public partial class LevelGenerator : MonoBehaviour
             Vector2i localStart = DetermineZoneEntry(currentZone, zIndex == 0 ? null : zones[zIndex - 1], globalStart);
             Vector2i localEnd = DetermineZoneExit(currentZone, zIndex == zones.Count - 1 ? null : zones[zIndex + 1], globalEnd);
 
-            HashSet<Vector2i> localSafeTiles = new HashSet<Vector2i>(currentZone.tiles);
-            for (int dx = -2; dx <= 2; dx++)
-            {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    localSafeTiles.Add(new Vector2i(localStart.x + dx, localStart.y + dy));
-                    localSafeTiles.Add(new Vector2i(localEnd.x + dx, localEnd.y + dy));
-                }
-            }
-            map.survivalSpaceTiles = localSafeTiles;
-
-            InitializeRiskFieldForSegment(localStart, localEnd, zIndex);
-
-            BuildSurvivalGradient(localEnd);
-            ShowSurvivalSpaceInGame();
-
+            activeRiskEmitters.Clear();
             System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
-
-            List<LevelGenerationPlanner.GenerationStep> localRoute = new List<LevelGenerationPlanner.GenerationStep>();
-            localRoute.Add(new LevelGenerationPlanner.GenerationStep
-            {
-                description = $"Local Zone {zIndex} Internal Navigation",
-                startPoint = map.GetMapTilePosition(localStart.x, localStart.y),
-                endPoint = map.GetMapTilePosition(localEnd.x, localEnd.y),
-                associatedZone = currentZone
-            });
 
             int initialCount = 0;
             int initialAttempts = 0;
-            bool baselineInjected = false;
-
             while (initialCount < gaPopulationSize && initialAttempts < maxTotalAttempts)
             {
                 initialAttempts++;
-                string failReason;
-                Vector2 failPos;
-
-                bool triggerGreedyRepair = (initialAttempts > 50 && initialCount == 0 && !baselineInjected);
-                if (triggerGreedyRepair)
-                {
-                    Debug.LogWarning($"区域 {zIndex} 常规盲搜陷入拓扑死锁，触发运动学贪心修复机制铺设基准桥梁...");
-                    LogDeepDiagnostic("GreedyRepair", $"区域 {zIndex} 连续失败超过 50 次，开始铺设基准桥梁。");
-                    baselineInjected = true;
-                }
-
-                if (RunGuidedSimulation(localStart, localEnd, localRoute, out failReason, out failPos, triggerGreedyRepair, localSafeTiles))
-                {
-                    BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, localStart, localEnd);
-                    if (VerifyLevelWithRealPhysics(localStart, localEnd, out failReason, out failPos))
-                    {
-                        LevelIndividual newInd = CreateIndividualFromGhost(localStart, localEnd);
-                        CalculateFitness(newInd, currentZone);
-                        TryPlaceIndividualInGrid(newInd);
-                        initialCount++;
-                        LogAttemptResult(initialAttempts, "验证成功", $"区域 {zIndex} 找到合法样本 ({initialCount}/{gaPopulationSize})");
-                    }
-                    else
-                    {
-                        RecordFailure("Init_Verify_" + failReason);
-                        LogAttemptResult(initialAttempts, "物理验证失败", failReason);
-                    }
-                }
-                else
-                {
-                    RecordFailure("Init_Sim_" + failReason);
-                    LogAttemptResult(initialAttempts, "特工寻路卡死", failReason);
-                }
+                if (GenerateAndEvaluate(localStart, localEnd, currentZone, 0f)) initialCount++;
                 yield return null;
             }
 
             for (int generation = 1; generation <= gaMaxGenerations; generation++)
             {
-                LogDeepDiagnostic("GA_Phase", $"区域 {zIndex} 进入第 {generation} 代遗传演化。");
+                float temperature = 1.0f - ((float)generation / gaMaxGenerations);
                 List<LevelIndividual> currentElites = GetAllElitesFromGrid();
                 if (currentElites.Count < 2) break;
 
@@ -137,15 +83,16 @@ public partial class LevelGenerator : MonoBehaviour
                     maxOffspringAttempts--;
                     LevelIndividual parentA = TournamentSelection(currentElites);
                     LevelIndividual parentB = TournamentSelection(currentElites);
-                    LevelIndividual offspring = CrossoverAndMutate(parentA, parentB, localStart, localEnd, localSafeTiles);
+
+                    LevelIndividual offspring = CrossoverAndMutateWithDiversity(parentA, parentB, localStart, localEnd, currentZone, temperature);
 
                     if (offspring != null)
                     {
                         CalculateFitness(offspring, currentZone);
                         if (TryPlaceIndividualInGrid(offspring)) offspringProduced++;
                     }
-                    yield return null;
                 }
+                yield return null;
             }
 
             LevelIndividual bestInZone = GetAllElitesFromGrid().OrderByDescending(p => p.fitness).FirstOrDefault();
@@ -153,12 +100,6 @@ public partial class LevelGenerator : MonoBehaviour
             {
                 globalBestIndividuals.Add(bestInZone);
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
-                LogDeepDiagnostic("Zone_Complete", $"区域 {zIndex} 演化完成，已选出最优个体。");
-            }
-            else
-            {
-                Debug.LogError($"区域 {zIndex} 生成失败，未能收敛出合法地形拓扑。");
-                LogDeepDiagnostic("Zone_Failed", $"区域 {zIndex} 在穷尽尝试后依然未能收敛，生成管线断裂。");
             }
         }
 
@@ -166,38 +107,56 @@ public partial class LevelGenerator : MonoBehaviour
         ClearSurvivalVisuals();
         ShowSurvivalSpaceInGame();
 
-        if (globalBestIndividuals.Count == zones.Count)
-        {
-            StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
-        }
-
+        if (globalBestIndividuals.Count == zones.Count) StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
         LogFinish(maxTotalAttempts, globalBestIndividuals.Count);
     }
 
-    private void InitializeRiskFieldForSegment(Vector2i localStart, Vector2i localEnd, int zIndex)
+    private bool GenerateAndEvaluate(Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temperature)
+    {
+        InitializeRiskFieldWithEmitters(start, end, activeRiskEmitters);
+        BuildSurvivalGradient(end);
+
+        List<LevelGenerationPlanner.GenerationStep> route = new List<LevelGenerationPlanner.GenerationStep> {
+            new LevelGenerationPlanner.GenerationStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
+        };
+
+        string failReason; Vector2 failPos;
+        if (RunGuidedSimulation(start, end, route, out failReason, out failPos, false, new HashSet<Vector2i>(zone.tiles), temperature))
+        {
+            BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
+            {
+                LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                CalculateFitness(ind, zone);
+                return TryPlaceIndividualInGrid(ind);
+            }
+            else
+            {
+                RecordFailure("GA_Verify_" + failReason);
+            }
+        }
+        else
+        {
+            RecordFailure("GA_Sim_" + failReason);
+        }
+        return false;
+    }
+
+    private void InitializeRiskFieldWithEmitters(Vector2i start, Vector2i end, List<Vector2i> emitters)
     {
         if (riskFieldSolver == null) return;
-
         riskFieldSolver.ResetToInitialState();
-        Vector2 direction = new Vector2(localEnd.x - localStart.x, localEnd.y - localStart.y).normalized;
-        float anisotropyStrength = 0.5f;
-        float baseDiffusion = 0.2f;
-        Vector2 dynamicTensor = new Vector2(
-            baseDiffusion + anisotropyStrength * Mathf.Abs(direction.x),
-            baseDiffusion + anisotropyStrength * Mathf.Abs(direction.y)
-        );
-
-        riskFieldSolver.SetGlobalDiffusionTensor(dynamicTensor);
+        riskFieldSolver.SetGlobalDiffusionTensor(new Vector2(0.5f, 0.5f));
 
         for (int x = 0; x < map.mWidth; x++)
         {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1.0f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1f);
         }
         for (int y = 0; y < map.mHeight; y++)
         {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1.0f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1.0f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1f);
+            riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1f);
         }
 
         if (map.survivalSpaceTiles != null)
@@ -208,15 +167,54 @@ public partial class LevelGenerator : MonoBehaviour
             }
         }
 
-        riskFieldSolver.SetDirichletBoundary(localEnd, 0.0f);
-        riskFieldSolver.SolveImmediate(1000);
-
-        RiskFieldExporter exporter = riskFieldSolver.GetComponent<RiskFieldExporter>();
-        if (exporter != null)
+        foreach (var emitter in emitters)
         {
-            string fileName = $"Zone_{zIndex}_Start[{localStart.x}_{localStart.y}]_RiskField";
-            exporter.ExportRiskMap(riskFieldSolver.GetLocalRiskData(), map.mWidth, map.mHeight, fileName);
+            riskFieldSolver.SetDirichletBoundary(emitter, 1.0f);
         }
+
+        riskFieldSolver.SetDirichletBoundary(end, 0.0f);
+        riskFieldSolver.SolveImmediate(500);
+    }
+
+    private LevelIndividual CrossoverAndMutateWithDiversity(LevelIndividual pA, LevelIndividual pB, Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
+    {
+        if (Random.value < gaMutationRate && zone.tiles.Count > 0)
+        {
+            Vector2i randomEmitter = zone.tiles[Random.Range(0, zone.tiles.Count)];
+            activeRiskEmitters.Add(randomEmitter);
+            if (activeRiskEmitters.Count > maxRiskEmitters) activeRiskEmitters.RemoveAt(0);
+        }
+
+        if (Random.value < blockadeProbability && pA.path != null && pA.path.Count > 4)
+        {
+            Vector2i blockadeTile = pA.path[Random.Range(pA.path.Count / 4, pA.path.Count * 3 / 4)];
+            map.SetTile(blockadeTile.x, blockadeTile.y, TileType.Block);
+        }
+
+        InitializeRiskFieldWithEmitters(start, end, activeRiskEmitters);
+
+        List<LevelGenerationPlanner.GenerationStep> route = new List<LevelGenerationPlanner.GenerationStep> {
+            new LevelGenerationPlanner.GenerationStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
+        };
+
+        string reason; Vector2 fPos;
+        if (RunGuidedSimulation(start, end, route, out reason, out fPos, false, new HashSet<Vector2i>(zone.tiles), temp))
+        {
+            BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
+            {
+                return CreateIndividualFromGhost(start, end);
+            }
+            else
+            {
+                RecordFailure("Mutate_Verify_" + reason);
+            }
+        }
+        else
+        {
+            RecordFailure("Mutate_Sim_" + reason);
+        }
+        return null;
     }
 
     private Vector2i DetermineZoneEntry(SurvivalSpaceAnalyzer.SurvivalZone current, SurvivalSpaceAnalyzer.SurvivalZone previous, Vector2i globalStart)
@@ -233,6 +231,7 @@ public partial class LevelGenerator : MonoBehaviour
 
     private Vector2i FindClosestTile(List<Vector2i> zoneTiles, Vector2i target)
     {
+        if (zoneTiles == null || zoneTiles.Count == 0) return target;
         Vector2i best = zoneTiles[0];
         float minDist = float.MaxValue;
         foreach (var t in zoneTiles)
@@ -245,6 +244,8 @@ public partial class LevelGenerator : MonoBehaviour
 
     private Vector2i FindClosestTileToZone(List<Vector2i> sourceTiles, List<Vector2i> targetTiles)
     {
+        if (sourceTiles == null || sourceTiles.Count == 0) return new Vector2i(0, 0);
+        if (targetTiles == null || targetTiles.Count == 0) return sourceTiles[0];
         Vector2i bestSource = sourceTiles[0];
         float minDist = float.MaxValue;
         foreach (var s in sourceTiles)
@@ -342,98 +343,5 @@ public partial class LevelGenerator : MonoBehaviour
             if (best == null || candidate.fitness > best.fitness) best = candidate;
         }
         return best;
-    }
-
-    private LevelIndividual CrossoverAndMutate(LevelIndividual parentA, LevelIndividual parentB, Vector2i startTile, Vector2i endTile, HashSet<Vector2i> localSafeTiles)
-    {
-        int midX = (startTile.x + endTile.x) / 2;
-        HashSet<Vector2i> childSafePlatforms = new HashSet<Vector2i>();
-
-        foreach (var p in parentA.safePlatforms) if (p.x <= midX) childSafePlatforms.Add(p);
-        foreach (var p in parentB.safePlatforms) if (p.x > midX) childSafePlatforms.Add(p);
-
-        int maxKinematicJumpX = 5;
-        int maxKinematicJumpY = 3;
-
-        if (Random.value < gaMutationRate)
-        {
-            List<Vector2i> platformsList = childSafePlatforms.ToList();
-            if (platformsList.Count > 0)
-            {
-                Vector2i target = platformsList[Random.Range(0, platformsList.Count)];
-                childSafePlatforms.Remove(target);
-
-                int mutX = target.x + Random.Range(-2, 3);
-                int mutY = target.y + Random.Range(-2, 3);
-
-                bool isKinematicallyReachable = false;
-                foreach (var p in childSafePlatforms)
-                {
-                    if (Mathf.Abs(p.x - mutX) <= maxKinematicJumpX && Mathf.Abs(p.y - mutY) <= maxKinematicJumpY)
-                    {
-                        isKinematicallyReachable = true;
-                        break;
-                    }
-                }
-
-                Vector2i mutatedPos = new Vector2i(mutX, mutY);
-                if (isKinematicallyReachable && localSafeTiles.Contains(new Vector2i(mutX, mutY + 1)))
-                {
-                    childSafePlatforms.Add(mutatedPos);
-                }
-                else
-                {
-                    childSafePlatforms.Add(target);
-                }
-            }
-        }
-
-        BakeLevelToMapDataOnly(new List<Vector3>(), childSafePlatforms, startTile, endTile);
-
-        List<LevelGenerationPlanner.GenerationStep> evalRoute = new List<LevelGenerationPlanner.GenerationStep>();
-        evalRoute.Add(new LevelGenerationPlanner.GenerationStep
-        {
-            description = "GA Mutated Topology Evaluation",
-            startPoint = map.GetMapTilePosition(startTile.x, startTile.y),
-            endPoint = map.GetMapTilePosition(endTile.x, endTile.y),
-            associatedZone = null
-        });
-
-        string failReason;
-        Vector2 failPos;
-
-        if (RunGuidedSimulation(startTile, endTile, evalRoute, out failReason, out failPos, false, localSafeTiles))
-        {
-            BakeLevelToMapDataOnly(ghostTrajectory, childSafePlatforms, startTile, endTile);
-            if (VerifyLevelWithRealPhysics(startTile, endTile, out failReason, out failPos))
-            {
-                LevelIndividual child = CreateIndividualFromGhost(startTile, endTile);
-                child.safePlatforms = childSafePlatforms;
-                return child;
-            }
-            else
-            {
-                RecordFailure("GA_Verify_" + failReason);
-                LogDeepDiagnostic("Mutation_Failed", $"子代交叉突变后验证失败: {failReason}");
-            }
-        }
-        else
-        {
-            RecordFailure("GA_Sim_" + failReason);
-        }
-
-        return null;
-    }
-
-    private void LoadBestGAIndividual(LevelIndividual bestInd, Vector2i startTile, Vector2i endTile)
-    {
-        BakeLevelToMapDataOnly(bestInd.trajectory, bestInd.safePlatforms, startTile, endTile);
-        if (finishLinePrefab != null)
-        {
-            Vector2 endWorldPos = map.GetMapTilePosition(endTile);
-            Instantiate(finishLinePrefab, new Vector3(endWorldPos.x, endWorldPos.y, -5f), Quaternion.identity);
-        }
-        map.ApplyGeneratedPath(bestInd.path, bestInd.replay, bestInd.trajectory, bestInd.safeColumns);
-        if (enableIWBTGBaking) BakeIWBTGLevel(bestInd);
     }
 }
