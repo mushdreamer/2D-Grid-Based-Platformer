@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\2D Platformer\Scripts\GameManager.cs" />
-    <Compile Include="Assets\Scripts\Level\ThreatDistributor.cs" />
+    <Compile Include="Assets\Scripts\Legacy\ThreatDistribution\ThreatDistributor.cs" />
     <Compile Include="Assets\Scripts\Setting\GameCamera.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_GA.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceVisualizer.cs" />
@@ -74,36 +74,36 @@
     <Compile Include="Assets\Scripts\Level\LevelMetrics.cs" />
     <Compile Include="Assets\Scripts\Character\Character.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceAnalyzer.cs" />
-    <Compile Include="Assets\Scripts\Level\LevelGenerator_PathWeaver.cs" />
+    <Compile Include="Assets\Scripts\Experimental\WorldBlueprint\LevelGenerator_PathWeaver.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PathFinderFast.cs" />
-    <Compile Include="Assets\Scripts\Map\Map_Heatmap.cs" />
+    <Compile Include="Assets\Scripts\Experimental\Visualization\Map_Heatmap.cs" />
     <Compile Include="Assets\Scripts\Map\Map_Drawing.cs" />
     <Compile Include="Assets\Scripts\Setting\HUDFPS.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator.cs" />
     <Compile Include="Assets\Scripts\Character\AABB.cs" />
-    <Compile Include="Assets\Scripts\Level\TopologyEvaluator.cs" />
-    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldDebugger.cs" />
+    <Compile Include="Assets\Scripts\Legacy\OldFitness\TopologyEvaluator.cs" />
+    <Compile Include="Assets\Scripts\Experimental\RiskField\RiskFieldDebugger.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PriorityQueueB.cs" />
     <Compile Include="Assets\Scripts\Map\MapRoomData.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\Item\KillerObject.cs" />
-    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldSolver.cs" />
-    <Compile Include="Assets\Scripts\Map\Map_IO.cs" />
+    <Compile Include="Assets\Scripts\Experimental\RiskField\RiskFieldSolver.cs" />
+    <Compile Include="Assets\Scripts\Legacy\PythonPipeline\Map_IO.cs" />
     <Compile Include="Assets\Scripts\Item\Collectible.cs" />
     <Compile Include="Assets\Scripts\Map\Map.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Log.cs" />
     <Compile Include="Assets\Scripts\Item\SmartTrap.cs" />
-    <Compile Include="Assets\Scripts\highlevelgeneration\RiskFieldExporter.cs" />
+    <Compile Include="Assets\Scripts\Experimental\RiskField\RiskFieldExporter.cs" />
     <Compile Include="Assets\Scripts\Character\KeyInput.cs" />
-    <Compile Include="Assets\Scripts\survival space\LevelGenerationPlanner.cs" />
+    <Compile Include="Assets\Scripts\Legacy\OldPlanning\LevelGenerationPlanner.cs" />
     <Compile Include="Assets\Scripts\Setting\Constants.cs" />
-    <Compile Include="Assets\Scripts\DDA\AdversarialDirector.cs" />
+    <Compile Include="Assets\Scripts\Experimental\DDA\AdversarialDirector.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerDeathState.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Visuals.cs" />
-    <Compile Include="Assets\Scripts\Level\LevelGenerator_RegionalBaker.cs" />
-    <Compile Include="Assets\Scripts\DDA\DynamicTerrain.cs" />
+    <Compile Include="Assets\Scripts\Experimental\WorldBlueprint\LevelGenerator_RegionalBaker.cs" />
+    <Compile Include="Assets\Scripts\Experimental\DDA\DynamicTerrain.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerController.cs" />
-    <Compile Include="Assets\Scripts\worldplan\WorldBlueprintPlanner.cs" />
+    <Compile Include="Assets\Scripts\Experimental\WorldBlueprint\WorldBlueprintPlanner.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\RiskDiffusion.compute" />
