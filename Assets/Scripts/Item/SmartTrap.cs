@@ -6,7 +6,6 @@ public enum TrapBehaviorType
     Static,
     Falling,
     Rising,
-    public static event Action<SmartTrap> KillerTrapTriggered;
 
     FakeBlock,      // 坑爹砖：踩上去消失
     FakeSpike,      // [新增] 伪装刺：踩上去变刺
@@ -17,6 +16,7 @@ public enum TrapBehaviorType
 
 public class SmartTrap : MonoBehaviour
 {
+    public static event Action<SmartTrap> KillerTrapTriggered;
     [Header("Behavior Settings")]
     public TrapBehaviorType behaviorType = TrapBehaviorType.Static;
     public float activeDelay = 0.2f;
@@ -164,7 +164,7 @@ public class SmartTrap : MonoBehaviour
             timer += Time.deltaTime;
             // 启动前稍微抖动一下提示危险（可选）
             if (behaviorType != TrapBehaviorType.Static)
-                transform.position += (Vector3)(Random.insideUnitCircle * 2f);
+                transform.position += (Vector3)(UnityEngine.Random.insideUnitCircle * 2f);
             return;
         }
 
@@ -263,9 +263,6 @@ public class SmartTrap : MonoBehaviour
         if (other.GetComponent<Bot>() != null)
         {
             KillerTrapTriggered?.Invoke(this);
-            {
-                director.RecordKillerTrap(this);
-            }
         }
     }
 }
