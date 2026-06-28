@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +23,13 @@ public class LevelIndividual
     public List<Vector3> trajectory;
     public HashSet<int> safeColumns;
     public HashSet<Vector2i> safePlatforms;
+    public List<Character.CharacterState> stateSequence;
+    public Dictionary<Character.CharacterState, int> stateCounts;
+    public Dictionary<string, int> stateTransitionCounts;
+    public int deathCount;
+    public int outsidePlayAreaFrames;
+    public int trapContactCount;
+    public bool goalReached;
     public float linearity;
     public float inputDensity;
     public float fitness;
@@ -55,10 +62,6 @@ public partial class LevelGenerator : MonoBehaviour
 {
     public Map map;
     public Bot characterPrefab;
-    public AdversarialDirector director;
-
-    [Header("Tensor Field Solver")]
-    public RiskFieldSolver riskFieldSolver;
 
     [Header("Generation Limits (生成规模限制)")]
     public int targetValidLevels = 5;
@@ -89,6 +92,12 @@ public partial class LevelGenerator : MonoBehaviour
     private List<Vector3> ghostTrajectory = new List<Vector3>();
     private HashSet<int> ghostSafeColumns = new HashSet<int>();
     private HashSet<Vector2i> ghostSafePlatforms = new HashSet<Vector2i>();
+    private List<Character.CharacterState> ghostStateSequence = new List<Character.CharacterState>();
+    private Dictionary<Character.CharacterState, int> ghostStateCounts = new Dictionary<Character.CharacterState, int>();
+    private Dictionary<string, int> ghostStateTransitionCounts = new Dictionary<string, int>();
+    private int ghostDeathCount = 0;
+    private int ghostOutsidePlayAreaFrames = 0;
+    private int ghostTrapContactCount = 0;
 
     private List<Vector3> verifiedTrajectory = new List<Vector3>();
     private Dictionary<Vector2i, int> survivalGradient = new Dictionary<Vector2i, int>();
@@ -264,7 +273,6 @@ public partial class LevelGenerator : MonoBehaviour
     private IEnumerator GenerateMapElitesRoutine(Vector2i startTile, Vector2i endTile)
     {
         Initialize();
-        if (director != null) director.SetRunning(false);
         System.Array.Clear(eliteGrid, 0, eliteGrid.Length);
         int validLevelsFound = 0;
         int attempts = 0;
@@ -281,8 +289,7 @@ public partial class LevelGenerator : MonoBehaviour
         failureStatistics.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
-        LevelGenerationPlanner planner = new LevelGenerationPlanner();
-        planner.PlanGlobalRoute(map, zones);
+        List<GenerationRouteStep> plannedRoute = BuildSimpleRouteFromZones(zones, startTile, endTile);
 
         Debug.Log($">>> 开始生成全向引力关卡，完全读取面板参数控制规模...");
 
@@ -292,7 +299,7 @@ public partial class LevelGenerator : MonoBehaviour
             string failReason = "";
             Vector2 failPos = Vector2.zero;
 
-            if (RunGuidedSimulation(startTile, endTile, planner.plannedRoute, out failReason, out failPos))
+            if (RunGuidedSimulation(startTile, endTile, plannedRoute, out failReason, out failPos))
             {
                 BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, startTile, endTile);
 
@@ -303,8 +310,9 @@ public partial class LevelGenerator : MonoBehaviour
                     float lin = LevelMetrics.CalculateLinearity(verifiedTrajectory, startPos, endPos);
                     float den = LevelMetrics.CalculateInputDensity(ghostReplay);
                     float fit = verifiedTrajectory.Count;
-                    int x = Mathf.Clamp(Mathf.FloorToInt(lin * GRID_SIZE), 0, GRID_SIZE - 1);
-                    int y = Mathf.Clamp(Mathf.FloorToInt(den * GRID_SIZE), 0, GRID_SIZE - 1);
+                    int uniqueStates = ghostStateCounts != null ? ghostStateCounts.Count : 0;
+                    int x = Mathf.Clamp(uniqueStates, 0, GRID_SIZE - 1);
+                    int y = Mathf.Clamp(Mathf.FloorToInt(verifiedTrajectory.Count / 100f), 0, GRID_SIZE - 1);
 
                     if (eliteGrid[x, y] == null || fit > eliteGrid[x, y].fitness)
                     {
@@ -314,6 +322,13 @@ public partial class LevelGenerator : MonoBehaviour
                         newInd.trajectory = new List<Vector3>(verifiedTrajectory);
                         newInd.safeColumns = new HashSet<int>(ghostSafeColumns);
                         newInd.safePlatforms = new HashSet<Vector2i>(ghostSafePlatforms);
+                        newInd.stateSequence = new List<Character.CharacterState>(ghostStateSequence);
+                        newInd.stateCounts = new Dictionary<Character.CharacterState, int>(ghostStateCounts);
+                        newInd.stateTransitionCounts = new Dictionary<string, int>(ghostStateTransitionCounts);
+                        newInd.deathCount = ghostDeathCount;
+                        newInd.outsidePlayAreaFrames = ghostOutsidePlayAreaFrames;
+                        newInd.trapContactCount = ghostTrapContactCount;
+                        newInd.goalReached = true;
                         newInd.linearity = lin;
                         newInd.inputDensity = den;
                         newInd.fitness = fit;
@@ -394,8 +409,10 @@ public partial class LevelGenerator : MonoBehaviour
                 }
             }
             map.ApplyGeneratedPath(target.path, target.replay, target.trajectory, target.safeColumns);
+            LogStateEnumerationDiagnostics(target, "Selected");
 
-            if (enableIWBTGBaking) BakeIWBTGLevel(target);
+            // Phase 2 scope cleanup: IWBTG risk-field baking is experimental and no longer part of the core G-key path.
+            // if (enableIWBTGBaking) BakeIWBTGLevel(target);
         }
     }
 
@@ -549,134 +566,45 @@ public partial class LevelGenerator : MonoBehaviour
         if (end.x != -1) for (int dx = -2; dx <= 2; dx++) FillColumn(end.x + dx, 0, end.y - 1, TileType.Block);
     }
 
+
+    private List<GenerationRouteStep> BuildSimpleRouteFromZones(List<SurvivalSpaceAnalyzer.SurvivalZone> zones, Vector2i startTile, Vector2i endTile)
+    {
+        List<GenerationRouteStep> route = new List<GenerationRouteStep>();
+        if (zones != null && zones.Count > 0)
+        {
+            foreach (var zone in zones.OrderBy(z => z.center.x))
+            {
+                var sortedTiles = zone.tiles.OrderBy(t => t.x).ToList();
+                if (sortedTiles.Count == 0) continue;
+                Vector2 zoneExit = map.GetMapTilePosition(sortedTiles[sortedTiles.Count - 1]);
+                route.Add(new GenerationRouteStep { endPoint = zoneExit, associatedZone = zone });
+            }
+        }
+        route.Add(new GenerationRouteStep { endPoint = map.GetMapTilePosition(endTile), associatedZone = zones != null && zones.Count > 0 ? zones[zones.Count - 1] : null });
+        return route;
+    }
+
+    private void LogStateEnumerationDiagnostics(LevelIndividual ind, string label)
+    {
+        if (ind == null) return;
+        Debug.Log($"[StateEnumeration:{label}] goalReached={ind.goalReached}, deaths={ind.deathCount}, outsidePlayAreaFrames={ind.outsidePlayAreaFrames}, trapContacts={ind.trapContactCount}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
+    }
+
+    private string FormatStateCounts(Dictionary<Character.CharacterState, int> counts)
+    {
+        if (counts == null || counts.Count == 0) return "none";
+        return string.Join(", ", counts.Select(kvp => $"{kvp.Key}:{kvp.Value}"));
+    }
+
+    private string FormatTransitionCounts(Dictionary<string, int> counts)
+    {
+        if (counts == null || counts.Count == 0) return "none";
+        return string.Join(", ", counts.Select(kvp => $"{kvp.Key}:{kvp.Value}"));
+    }
     public void BakeIWBTGLevel(LevelIndividual goldenLevel)
     {
-        float safeDistance = Mathf.Max(hardcoreDeviationTolerance, 3.5f) * Map.cTileSize;
-        List<Vector2i> baitEndpoints = new List<Vector2i>();
-
-        int numberOfBaitPaths = 12;
-        for (int i = 0; i < numberOfBaitPaths; i++)
-        {
-            int rx = Random.Range(2, map.mWidth - 2);
-            int ry = Random.Range(2, map.mHeight - 2);
-            Vector2i randomPos = new Vector2i(rx, ry);
-
-            if (map.survivalSpaceTiles != null && !map.survivalSpaceTiles.Contains(randomPos))
-            {
-                float minDist = float.MaxValue;
-                foreach (var pos in goldenLevel.trajectory)
-                {
-                    float dist = Vector2.Distance(map.GetMapTilePosition(randomPos), (Vector2)pos);
-                    if (dist < minDist) minDist = dist;
-                }
-
-                if (minDist > safeDistance)
-                {
-                    baitEndpoints.Add(randomPos);
-                }
-            }
-        }
-
-        if (riskFieldSolver != null)
-        {
-            riskFieldSolver.ResetToInitialState();
-            riskFieldSolver.SetGlobalDiffusionTensor(new Vector2(0.85f, 0.85f));
-
-            for (int x = 0; x < map.mWidth; x++)
-            {
-                riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1.0f);
-                riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1.0f);
-            }
-            for (int y = 0; y < map.mHeight; y++)
-            {
-                riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1.0f);
-                riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1.0f);
-            }
-
-            foreach (var bait in baitEndpoints)
-            {
-                riskFieldSolver.SetDirichletBoundary(bait, 1.0f);
-            }
-
-            if (map.survivalSpaceTiles != null)
-            {
-                foreach (var safeTile in map.survivalSpaceTiles)
-                {
-                    riskFieldSolver.SetDirichletBoundary(safeTile, 0.0f);
-                }
-            }
-            foreach (var pos in goldenLevel.trajectory)
-            {
-                Vector2i tile = map.GetMapTileAtPoint(pos);
-                riskFieldSolver.SetDirichletBoundary(tile, 0.0f);
-            }
-
-            riskFieldSolver.SolveImmediate(1000);
-
-            float limitJumpDistanceX = 4.5f * Map.cTileSize;
-            float limitJumpDistanceY = 2.5f * Map.cTileSize;
-
-            foreach (var bait in baitEndpoints)
-            {
-                List<Vector2> flowLine = new List<Vector2>();
-                Vector2 currentPos = map.GetMapTilePosition(bait);
-                flowLine.Add(currentPos);
-
-                int safeguard = 0;
-                while (safeguard++ < 300)
-                {
-                    float currentRisk = riskFieldSolver.GetRiskAtContinuousPosition(currentPos);
-                    if (currentRisk <= 0.05f) break;
-
-                    float delta = Map.cTileSize;
-                    float riskRight = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.right * delta);
-                    float riskLeft = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.left * delta);
-                    float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
-                    float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
-
-                    Vector2 gradient = new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
-                    if (gradient.sqrMagnitude < 0.001f) break;
-
-                    currentPos -= gradient * (Map.cTileSize * 0.4f);
-                    flowLine.Add(currentPos);
-                }
-
-                flowLine.Reverse();
-                if (flowLine.Count < 2) continue;
-
-                Vector2 lastPlatformPos = flowLine[0];
-                for (int i = 1; i < flowLine.Count; i++)
-                {
-                    Vector2 pos = flowLine[i];
-                    float localRisk = riskFieldSolver.GetRiskAtContinuousPosition(pos);
-
-                    float dynamicGap = Mathf.Lerp(1.5f * Map.cTileSize, limitJumpDistanceX, localRisk);
-
-                    if (Vector2.Distance(lastPlatformPos, pos) >= dynamicGap)
-                    {
-                        if (localRisk > 0.85f)
-                        {
-                            pos = lastPlatformPos + (pos - lastPlatformPos).normalized * (limitJumpDistanceX + 1.2f * Map.cTileSize);
-                        }
-
-                        Vector2i targetTile = map.GetMapTileAtPoint(pos);
-                        if (map.survivalSpaceTiles != null && !map.survivalSpaceTiles.Contains(targetTile))
-                        {
-                            map.SetTile(targetTile.x, targetTile.y, TileType.Block);
-                            if (map.GetTile(targetTile.x, targetTile.y - 1) == TileType.Empty)
-                            {
-                                map.SetTile(targetTile.x, targetTile.y - 1, TileType.Block);
-                            }
-                        }
-                        lastPlatformPos = pos;
-                    }
-                }
-            }
-            Debug.Log($">>> 梯度矢量流与运动学边缘侵蚀完成！已沿张量场非线性重构了极具欺骗性的连贯诱导平台架构。");
-        }
-        else
-        {
-            Debug.LogWarning("未挂载 RiskFieldSolver，环境威胁生成已跳过。");
-        }
+        // Experimental IWBTG/risk-field baking has been moved out of the active core path for Phase 2.
+        // TODO Phase 3+: replace this with trap/play-area constraints driven by StateEnumerationEvaluator if needed.
+        Debug.Log("IWBTG risk-field baking is disabled in the state-enumeration core path.");
     }
 }

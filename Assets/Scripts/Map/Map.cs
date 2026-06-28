@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Algorithms;
@@ -84,7 +84,6 @@ public partial class Map : MonoBehaviour
     [Header("Visualization")]
     public LineRenderer guideLineRenderer;
 
-    public AdversarialDirector director;
 
     private volatile bool pythonScriptsRunning = false;
     private volatile bool pythonScriptsFinished = false;
@@ -256,12 +255,6 @@ public partial class Map : MonoBehaviour
             player.mCurrentState = Character.CharacterState.Stand;
         }
 
-        if (director != null)
-        {
-            director.SetRunning(false);
-            director.enabled = false;
-        }
-
         Time.timeScale = 0f;
     }
 
@@ -381,9 +374,6 @@ public partial class Map : MonoBehaviour
     {
         if (initialTilesBackup == null) return;
 
-        var dynamics = FindObjectsOfType<DynamicTerrain>();
-        foreach (var d in dynamics) Destroy(d.gameObject);
-
         var renderers = FindObjectsOfType<SpriteRenderer>();
         foreach (var sr in renderers)
         {
@@ -427,13 +417,6 @@ public partial class Map : MonoBehaviour
     {
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
-
-        if (director != null)
-        {
-            director.ClearTraps();
-            director.SetRunning(true);
-            director.enabled = false;
-        }
 
         this.safeLandingColumns = new HashSet<int>(safeColumns);
 
@@ -501,61 +484,13 @@ public partial class Map : MonoBehaviour
 
         ShowSurvivalSpaceVisuals();
 
-        if (director != null)
-        {
-            director.SetRunning(true);
-            director.enabled = false;
-        }
-
-        Debug.Log(">>> 已进入生成关卡的试玩模式 (IWBTG Style)");
+        Debug.Log(">>> 已进入生成关卡的试玩模式 (State Enumeration Core)");
     }
 
-    public void ConvertRegionToDynamic(Vector2i center, int width, int height, TerrainMotion motion, float speed)
+    public void ConvertRegionToDynamic(Vector2i center, int width, int height, object motion, float speed)
     {
-        int startX = center.x - width / 2;
-        int startY = center.y - height / 2;
-
-        List<GameObject> extractedBlocks = new List<GameObject>();
-        Vector3 centerPos = Vector3.zero;
-
-        for (int x = startX; x < startX + width; x++)
-        {
-            for (int y = startY; y < startY + height; y++)
-            {
-                if (x >= 0 && x < mWidth && y >= 0 && y < mHeight)
-                {
-                    if (GetTile(x, y) == TileType.Block)
-                    {
-                        SpriteRenderer sr = tilesSprites[x, y];
-
-                        GameObject blockObj = new GameObject("DynamicBlock");
-                        blockObj.transform.position = sr.transform.position;
-                        blockObj.transform.localScale = sr.transform.localScale;
-
-                        SpriteRenderer newSr = blockObj.AddComponent<SpriteRenderer>();
-                        newSr.sprite = sr.sprite;
-                        newSr.color = sr.color;
-                        newSr.sortingOrder = 20;
-
-                        extractedBlocks.Add(blockObj);
-                        centerPos += blockObj.transform.position;
-
-                        SetTile(x, y, TileType.Empty);
-                    }
-                }
-            }
-        }
-
-        if (extractedBlocks.Count == 0) return;
-
-        centerPos /= extractedBlocks.Count;
-        GameObject terrainRoot = new GameObject("DynamicTerrain_Root");
-        terrainRoot.transform.position = centerPos;
-
-        DynamicTerrain dt = terrainRoot.AddComponent<DynamicTerrain>();
-        dt.Initialize(extractedBlocks, motion, speed);
-
-        Debug.Log($"Map: 区域 {center} 已切片并动态化！");
+        // Experimental DDA terrain conversion is intentionally disabled in the core state-enumeration path.
+        Debug.Log("Dynamic terrain conversion is disabled in the state-enumeration core path.");
     }
 
     private void SpawnSpikeAt(int x, int y, bool flipped = false)
@@ -698,14 +633,7 @@ public partial class Map : MonoBehaviour
         {
             Debug.Log(">>> 玩家死亡！开始重置...");
 
-            if (director != null) director.OnPlayerDeath();
             ResetMapToInitial();
-            if (director != null)
-            {
-                director.RespawnPermanentThreats();
-                director.enabled = true;
-                director.SetRunning(true);
-            }
 
             if (player != null)
             {
@@ -734,11 +662,6 @@ public partial class Map : MonoBehaviour
         {
             player.BotUpdate();
 
-            if (director != null && !director.enabled && player.mCurrentAction == Bot.BotAction.None)
-            {
-                director.enabled = true;
-                director.SetRunning(true);
-            }
         }
     }
 }

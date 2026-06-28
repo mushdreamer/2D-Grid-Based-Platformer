@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public enum TrapBehaviorType
@@ -5,8 +6,10 @@ public enum TrapBehaviorType
     Static,
     Falling,
     Rising,
-    FakeBlock,      // ¿Óµù×©£º²ÈÉÏÈ¥ÏûÊ§
-    FakeSpike,      // [ĞÂÔö] Î±×°´Ì£º²ÈÉÏÈ¥±ä´Ì
+    public static event Action<SmartTrap> KillerTrapTriggered;
+
+    FakeBlock,      // å‘çˆ¹ç –ï¼šè¸©ä¸Šå»æ¶ˆå¤±
+    FakeSpike,      // [æ–°å¢] ä¼ªè£…åˆºï¼šè¸©ä¸Šå»å˜åˆº
     Ballistic,
     Sniper,
     Homing
@@ -22,13 +25,13 @@ public class SmartTrap : MonoBehaviour
     public float speed = 0f;
     public float homingTurnRate = 5f;
 
-    // ÖØÉúÏµÍ³ĞèÒªµÄÊı¾İ
+    // é‡ç”Ÿç³»ç»Ÿéœ€è¦çš„æ•°æ®
     [HideInInspector] public Vector2 initialSpawnPosition;
     [HideInInspector] public string configName;
 
-    // Î±×°ÏµÍ³ĞèÒªµÄÊı¾İ
-    private Sprite spikeSprite; // Ô­Ê¼´ÌÍ¼Æ¬
-    private Sprite blockSprite; // Î±×°×©Í¼Æ¬
+    // ä¼ªè£…ç³»ç»Ÿéœ€è¦çš„æ•°æ®
+    private Sprite spikeSprite; // åŸå§‹åˆºå›¾ç‰‡
+    private Sprite blockSprite; // ä¼ªè£…ç –å›¾ç‰‡
 
     private bool isActive = false;
     private float timer = 0f;
@@ -44,11 +47,11 @@ public class SmartTrap : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
         initialSpawnPosition = transform.position;
 
-        // ×Ô¶¯Ìí¼ÓÉ±ÈË×é¼ş£¨Èç¹ûÊÇÎ±×°¿é£¬ÉÔºó»á½ûÓÃ£©
+        // è‡ªåŠ¨æ·»åŠ æ€äººç»„ä»¶ï¼ˆå¦‚æœæ˜¯ä¼ªè£…å—ï¼Œç¨åä¼šç¦ç”¨ï¼‰
         if (GetComponent<KillerObject>() == null)
             gameObject.AddComponent<KillerObject>();
 
-        // ±£´æÔ­Ê¼³¤Ïà£¨´ÌµÄÍ¼Æ¬£©
+        // ä¿å­˜åŸå§‹é•¿ç›¸ï¼ˆåˆºçš„å›¾ç‰‡ï¼‰
         if (sr != null) spikeSprite = sr.sprite;
     }
 
@@ -63,7 +66,7 @@ public class SmartTrap : MonoBehaviour
             case TrapBehaviorType.FakeBlock:
                 InitializeFakeBlock();
                 break;
-            case TrapBehaviorType.FakeSpike: // [ĞÂÔö]
+            case TrapBehaviorType.FakeSpike: // [æ–°å¢]
                 InitializeFakeSpike();
                 break;
             case TrapBehaviorType.Falling:
@@ -94,59 +97,59 @@ public class SmartTrap : MonoBehaviour
         }
     }
 
-    // ³õÊ¼»¯£ºÎ±×°³ÉÂ·
+    // åˆå§‹åŒ–ï¼šä¼ªè£…æˆè·¯
     void InitializeFakeBlock()
     {
         if (map == null) return;
         myTilePos = map.GetMapTileAtPoint(transform.position);
 
-        // ÎïÀíÉÏÉèÎªÊµĞÄ Block£¬Íæ¼ÒÄÜÕ¾×¡
+        // ç‰©ç†ä¸Šè®¾ä¸ºå®å¿ƒ Blockï¼Œç©å®¶èƒ½ç«™ä½
         map.SetTile(myTilePos.x, myTilePos.y, TileType.Block);
 
-        // ÊÓ¾õÉÏÒş²Ø×Ô¼º£¨ÏÔÊ¾µØÍ¼Ô­±¾µÄ×©¿é£©
+        // è§†è§‰ä¸Šéšè—è‡ªå·±ï¼ˆæ˜¾ç¤ºåœ°å›¾åŸæœ¬çš„ç –å—ï¼‰
         if (sr != null) sr.enabled = false;
 
-        // ¶ÔÆëÍø¸ñ
+        // å¯¹é½ç½‘æ ¼
         transform.position = map.GetMapTilePosition(myTilePos);
 
-        // ÔİÊ±½ûÓÃÉ±ÈËÄÜÁ¦
+        // æš‚æ—¶ç¦ç”¨æ€äººèƒ½åŠ›
         var killer = GetComponent<KillerObject>();
         if (killer) killer.enabled = false;
     }
 
-    // ³õÊ¼»¯£ºÎ±×°³ÉÂ·£¬µ«ÊÇÊÇ¼ÙµÄ
+    // åˆå§‹åŒ–ï¼šä¼ªè£…æˆè·¯ï¼Œä½†æ˜¯æ˜¯å‡çš„
     void InitializeFakeSpike()
     {
         if (map == null) return;
         myTilePos = map.GetMapTileAtPoint(transform.position);
 
-        // »ñÈ¡µ±Ç°¹Ø¿¨µÄ×©¿éÌùÍ¼
+        // è·å–å½“å‰å…³å¡çš„ç –å—è´´å›¾
         if (map.terrainSprites != null && map.terrainSprites.Count > 0)
             blockSprite = map.terrainSprites[0];
         else if (map.mDirtSprites != null && map.mDirtSprites.Count > 0)
             blockSprite = map.mDirtSprites[0];
 
-        // »»Æ¤£º±ä³É×©¿éµÄÑù×Ó
+        // æ¢çš®ï¼šå˜æˆç –å—çš„æ ·å­
         if (sr != null && blockSprite != null) sr.sprite = blockSprite;
 
-        // ¶ÔÆëÍø¸ñ
+        // å¯¹é½ç½‘æ ¼
         transform.position = map.GetMapTilePosition(myTilePos);
 
-        // ×¢Òâ£ºÎÒÃÇ²»µ÷ÓÃ map.SetTile(Block)¡£
-        // ÕâÑùËüÔÚ Map Êı¾İ²ãÃæÉÏÒÀÈ»ÊÇ Empty »ò Danger£¬Íæ¼ÒÕ¾ÉÏÈ¥Ã»ÓĞÎïÀíÖ§³Å¡£
-        // Õâ·ûºÏ¡°ÏİÚå¡±µÄ¶¨Î»£¬ÇÒÈç¹û²»Ğ¡ĞÄÕ¾ÉÏÈ¥»á´©¹ıËü´¥·¢ÄÚ²¿ÅĞ¶¨¡£
+        // æ³¨æ„ï¼šæˆ‘ä»¬ä¸è°ƒç”¨ map.SetTile(Block)ã€‚
+        // è¿™æ ·å®ƒåœ¨ Map æ•°æ®å±‚é¢ä¸Šä¾ç„¶æ˜¯ Empty æˆ– Dangerï¼Œç©å®¶ç«™ä¸Šå»æ²¡æœ‰ç‰©ç†æ”¯æ’‘ã€‚
+        // è¿™ç¬¦åˆâ€œé™·é˜±â€çš„å®šä½ï¼Œä¸”å¦‚æœä¸å°å¿ƒç«™ä¸Šå»ä¼šç©¿è¿‡å®ƒè§¦å‘å†…éƒ¨åˆ¤å®šã€‚
     }
 
     void Update()
     {
         if (!isActive) return;
 
-        // Î±×°ÏµÂß¼­¼ì²é
+        // ä¼ªè£…ç³»é€»è¾‘æ£€æŸ¥
         if (behaviorType == TrapBehaviorType.FakeBlock || behaviorType == TrapBehaviorType.FakeSpike)
         {
-            CheckTrigger(); // ¼ì²âÍæ¼Ò¾àÀë
+            CheckTrigger(); // æ£€æµ‹ç©å®¶è·ç¦»
 
-            // Î±×°¿éµ¹¼ÆÊ±ËúÏİ
+            // ä¼ªè£…å—å€’è®¡æ—¶å¡Œé™·
             if (behaviorType == TrapBehaviorType.FakeBlock && timer > 0)
             {
                 timer += Time.deltaTime;
@@ -155,11 +158,11 @@ public class SmartTrap : MonoBehaviour
             return;
         }
 
-        // ÑÓ³ÙÆô¶¯Âß¼­£¨Õë¶ÔÒÆ¶¯ÏİÚå£©
+        // å»¶è¿Ÿå¯åŠ¨é€»è¾‘ï¼ˆé’ˆå¯¹ç§»åŠ¨é™·é˜±ï¼‰
         if (timer < activeDelay)
         {
             timer += Time.deltaTime;
-            // Æô¶¯Ç°ÉÔÎ¢¶¶¶¯Ò»ÏÂÌáÊ¾Î£ÏÕ£¨¿ÉÑ¡£©
+            // å¯åŠ¨å‰ç¨å¾®æŠ–åŠ¨ä¸€ä¸‹æç¤ºå±é™©ï¼ˆå¯é€‰ï¼‰
             if (behaviorType != TrapBehaviorType.Static)
                 transform.position += (Vector3)(Random.insideUnitCircle * 2f);
             return;
@@ -171,35 +174,35 @@ public class SmartTrap : MonoBehaviour
     void CheckTrigger()
     {
         if (targetPlayer == null || map == null) return;
-        if (timer > 0) return; // ÒÑ¾­´¥·¢¹ıÁË
+        if (timer > 0) return; // å·²ç»è§¦å‘è¿‡äº†
 
-        // ¼òµ¥µÄ¾àÀë´¥·¢£ºµ±Íæ¼Ò¿¿½üÖĞĞÄµãÊ±
+        // ç®€å•çš„è·ç¦»è§¦å‘ï¼šå½“ç©å®¶é è¿‘ä¸­å¿ƒç‚¹æ—¶
         if (Vector2.Distance(targetPlayer.mPosition, transform.position) < Map.cTileSize * 1.2f)
         {
-            // Î±×°´Ì£º¿¿½ü¼´ËÀ£¬ÏÖÔ­ĞÎ
+            // ä¼ªè£…åˆºï¼šé è¿‘å³æ­»ï¼Œç°åŸå½¢
             if (behaviorType == TrapBehaviorType.FakeSpike)
             {
                 RevealSpike();
             }
-            // Î±×°¿é£º²ÈÔÚÍ·ÉÏ²Å´¥·¢
+            // ä¼ªè£…å—ï¼šè¸©åœ¨å¤´ä¸Šæ‰è§¦å‘
             else if (behaviorType == TrapBehaviorType.FakeBlock && targetPlayer.mOnGround)
             {
                 Vector2 playerFootPos = targetPlayer.mPosition - new Vector2(0, targetPlayer.mAABB.HalfSizeY + 2.0f);
                 Vector2i playerStandingTile = map.GetMapTileAtPoint(playerFootPos);
-                if (playerStandingTile == myTilePos) timer = 0.001f; // ¿ªÊ¼µ¹¼ÆÊ±
+                if (playerStandingTile == myTilePos) timer = 0.001f; // å¼€å§‹å€’è®¡æ—¶
             }
         }
     }
 
-    // [ĞÂÔö] Î±×°´ÌÏÖÔ­ĞÎ
+    // [æ–°å¢] ä¼ªè£…åˆºç°åŸå½¢
     void RevealSpike()
     {
-        timer = 1.0f; // ±ê¼ÇÎªÒÑ´¥·¢
+        timer = 1.0f; // æ ‡è®°ä¸ºå·²è§¦å‘
 
-        // ±ä»Ø´ÌµÄÑù×Ó
+        // å˜å›åˆºçš„æ ·å­
         if (sr != null && spikeSprite != null) sr.sprite = spikeSprite;
 
-        // È·±£É±ÈËÅĞ¶¨¿ªÆô
+        // ç¡®ä¿æ€äººåˆ¤å®šå¼€å¯
         var killer = GetComponent<KillerObject>();
         if (killer) killer.enabled = true;
     }
@@ -236,7 +239,7 @@ public class SmartTrap : MonoBehaviour
                 break;
         }
 
-        // ±ß½çÏú»Ù
+        // è¾¹ç•Œé”€æ¯
         if (map != null)
         {
             if (transform.position.y < map.position.y - 500f || transform.position.y > map.position.y + map.mHeight * Map.cTileSize + 500f)
@@ -259,11 +262,7 @@ public class SmartTrap : MonoBehaviour
 
         if (other.GetComponent<Bot>() != null)
         {
-            // Èç¹ûÊÇÎ±×°´Ì£¬»¹Ã»ÏÔĞÎ¾Í×²ÉÏÁË£¨±ÈÈçËÙ¶ÈºÜ¿ì£©£¬Ç¿ÖÆÏÔĞÎ
-            if (behaviorType == TrapBehaviorType.FakeSpike) RevealSpike();
-
-            var director = FindObjectOfType<AdversarialDirector>();
-            if (director != null)
+            KillerTrapTriggered?.Invoke(this);
             {
                 director.RecordKillerTrap(this);
             }

@@ -1,10 +1,16 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
 
 public partial class LevelGenerator : MonoBehaviour
 {
+    public struct GenerationRouteStep
+    {
+        public Vector2 endPoint;
+        public SurvivalSpaceAnalyzer.SurvivalZone associatedZone;
+    }
+
     public struct GhostCheckpoint
     {
         public Vector2 position;
@@ -29,7 +35,7 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<LevelGenerationPlanner.GenerationStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null, float temperature = 0f)
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<GenerationRouteStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null, float temperature = 0f)
     {
         int microAttempts = 5;
         finalReason = "";
@@ -206,6 +212,12 @@ public partial class LevelGenerator : MonoBehaviour
         ghostTrajectory.Clear();
         ghostSafeColumns.Clear();
         ghostSafePlatforms.Clear();
+        ghostStateSequence.Clear();
+        ghostStateCounts.Clear();
+        ghostStateTransitionCounts.Clear();
+        ghostDeathCount = 0;
+        ghostOutsidePlayAreaFrames = 0;
+        ghostTrapContactCount = 0;
     }
 
     ActionType PickAnnealedAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
@@ -229,34 +241,8 @@ public partial class LevelGenerator : MonoBehaviour
             if (Mathf.Abs(endPos.y - currentPos.y) < Map.cTileSize * 2) { weightUp = 0; weightDown = 0; }
         }
 
-        if (riskFieldSolver != null)
-        {
-            float delta = Map.cTileSize;
-            float currentRisk = riskFieldSolver.GetRiskAtContinuousPosition(currentPos);
-            float riskRight = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.right * delta);
-            float riskLeft = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.left * delta);
-            float riskUp = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.up * delta);
-            float riskDown = riskFieldSolver.GetRiskAtContinuousPosition(currentPos + Vector2.down * delta);
+        // Risk-field steering was removed from the core state-enumeration path in Phase 2.
 
-            float riskSensitivity = Mathf.Lerp(50f, 5f, temp);
-
-            if (designerIntent.riskTension > 0.7f)
-            {
-                if (riskRight > 0.4f && riskRight < 0.9f) weightRight += 15f;
-                if (riskUp > 0.4f && riskUp < 0.9f) weightUp += 15f;
-            }
-            else
-            {
-                Vector2 escapeVector = -new Vector2(riskRight - riskLeft, riskUp - riskDown).normalized;
-                if (escapeVector.x > 0) weightRight += escapeVector.x * riskSensitivity * currentRisk;
-                if (escapeVector.x < 0) weightLeft += -escapeVector.x * riskSensitivity * currentRisk;
-                if (escapeVector.y > 0) weightUp += escapeVector.y * riskSensitivity * currentRisk;
-            }
-
-            if (riskRight > 0.9f) weightRight = 0f;
-            if (riskLeft > 0.9f) weightLeft = 0f;
-            if (riskUp > 0.9f) weightUp = 0f;
-        }
 
         weightRight += Random.Range(0, 30f * temp);
         weightLeft += Random.Range(0, 30f * temp);
@@ -329,9 +315,10 @@ public partial class LevelGenerator : MonoBehaviour
 
             ghostAgent.SimulationUpdate(SIM_STEP, inputs);
 
+            bool outsidePlayArea = false;
+            Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
             if (map.survivalSpaceTiles != null && map.survivalSpaceTiles.Count > 0)
             {
-                Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
                 bool isInside = false;
 
                 for (int dx = -1; dx <= 1; dx++)
@@ -347,11 +334,24 @@ public partial class LevelGenerator : MonoBehaviour
                     if (isInside) break;
                 }
 
-                if (!isInside) actionFailed = true;
+                outsidePlayArea = !isInside;
+                if (outsidePlayArea)
+                {
+                    ghostOutsidePlayAreaFrames++;
+                    actionFailed = true;
+                }
             }
 
-            if (ghostAgent.mCurrentState == Character.CharacterState.Die) actionFailed = true;
+            bool touchedTrap = map.GetTile(currentTile.x, currentTile.y) == TileType.Danger;
+            if (touchedTrap) ghostTrapContactCount++;
 
+            if (ghostAgent.mCurrentState == Character.CharacterState.Die)
+            {
+                ghostDeathCount++;
+                actionFailed = true;
+            }
+
+            RecordGhostState(ghostAgent.mCurrentState);
             RecordGhostTrajectory();
             ghostReplay.Add(new ReplayFrame(inputs));
             ghostTrajectory.Add(new Vector3(ghostAgent.mPosition.x, ghostAgent.mPosition.y, -8f));
@@ -403,6 +403,21 @@ public partial class LevelGenerator : MonoBehaviour
 
             if (map.survivalSpaceTiles != null) currentVirtualFloorY = targetFeetY - Map.cTileSize * 5f;
         }
+    }
+
+    void RecordGhostState(Character.CharacterState state)
+    {
+        if (ghostStateSequence.Count > 0)
+        {
+            Character.CharacterState previous = ghostStateSequence[ghostStateSequence.Count - 1];
+            string transition = previous + "->" + state;
+            if (ghostStateTransitionCounts.ContainsKey(transition)) ghostStateTransitionCounts[transition]++;
+            else ghostStateTransitionCounts[transition] = 1;
+        }
+
+        ghostStateSequence.Add(state);
+        if (ghostStateCounts.ContainsKey(state)) ghostStateCounts[state]++;
+        else ghostStateCounts[state] = 1;
     }
 
     void RecordGhostTrajectory()

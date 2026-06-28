@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +16,16 @@ public partial class LevelGenerator : MonoBehaviour
     public int maxRiskEmitters = 3;
     public float blockadeProbability = 0.3f;
 
-    [Header("Designer Intent Mapping")]
-    public TopologyEvaluator.DesignerIntent designerIntent = new TopologyEvaluator.DesignerIntent
+    [System.Serializable]
+    public struct GenerationTuning
+    {
+        [Range(0f, 1f)] public float riskTension;
+        [Range(0f, 1f)] public float mechanicalComplexity;
+        [Range(0f, 1f)] public float structuralExploration;
+    }
+
+    [Header("Generation Tuning (placeholder until StateEnumerationEvaluator)")]
+    public GenerationTuning designerIntent = new GenerationTuning
     {
         riskTension = 0.5f,
         mechanicalComplexity = 0.5f,
@@ -34,8 +42,6 @@ public partial class LevelGenerator : MonoBehaviour
     private IEnumerator GenerateSegmentedEvolutionaryRoutine(Vector2i globalStart, Vector2i globalEnd)
     {
         Initialize();
-        if (director != null) director.SetRunning(false);
-        if (director != null) director.SyncIntent(designerIntent);
         ClearVisuals();
         InitLog("多样性增强版演化管线 (张量场扭曲)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
@@ -99,6 +105,7 @@ public partial class LevelGenerator : MonoBehaviour
             if (bestInZone != null)
             {
                 globalBestIndividuals.Add(bestInZone);
+                LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
             }
         }
@@ -113,11 +120,9 @@ public partial class LevelGenerator : MonoBehaviour
 
     private bool GenerateAndEvaluate(Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temperature)
     {
-        InitializeRiskFieldWithEmitters(start, end, activeRiskEmitters);
-        BuildSurvivalGradient(end);
-
-        List<LevelGenerationPlanner.GenerationStep> route = new List<LevelGenerationPlanner.GenerationStep> {
-            new LevelGenerationPlanner.GenerationStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
+        // TODO Phase 3: route generation should be driven by StateEnumerationEvaluator constraints.
+        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
+            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
         };
 
         string failReason; Vector2 failPos;
@@ -142,39 +147,7 @@ public partial class LevelGenerator : MonoBehaviour
         return false;
     }
 
-    private void InitializeRiskFieldWithEmitters(Vector2i start, Vector2i end, List<Vector2i> emitters)
-    {
-        if (riskFieldSolver == null) return;
-        riskFieldSolver.ResetToInitialState();
-        riskFieldSolver.SetGlobalDiffusionTensor(new Vector2(0.5f, 0.5f));
-
-        for (int x = 0; x < map.mWidth; x++)
-        {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, 0), 1f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(x, map.mHeight - 1), 1f);
-        }
-        for (int y = 0; y < map.mHeight; y++)
-        {
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(0, y), 1f);
-            riskFieldSolver.SetDirichletBoundary(new Vector2i(map.mWidth - 1, y), 1f);
-        }
-
-        if (map.survivalSpaceTiles != null)
-        {
-            foreach (var safeTile in map.survivalSpaceTiles)
-            {
-                riskFieldSolver.SetDirichletBoundary(safeTile, 0.0f);
-            }
-        }
-
-        foreach (var emitter in emitters)
-        {
-            riskFieldSolver.SetDirichletBoundary(emitter, 1.0f);
-        }
-
-        riskFieldSolver.SetDirichletBoundary(end, 0.0f);
-        riskFieldSolver.SolveImmediate(500);
-    }
+    // Risk-field initialization moved out of the active core path in Phase 2.
 
     private LevelIndividual CrossoverAndMutateWithDiversity(LevelIndividual pA, LevelIndividual pB, Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
     {
@@ -191,10 +164,9 @@ public partial class LevelGenerator : MonoBehaviour
             map.SetTile(blockadeTile.x, blockadeTile.y, TileType.Block);
         }
 
-        InitializeRiskFieldWithEmitters(start, end, activeRiskEmitters);
-
-        List<LevelGenerationPlanner.GenerationStep> route = new List<LevelGenerationPlanner.GenerationStep> {
-            new LevelGenerationPlanner.GenerationStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
+        // TODO Phase 3: mutation should be evaluated by StateEnumerationEvaluator.
+        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
+            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
         };
 
         string reason; Vector2 fPos;
@@ -282,7 +254,8 @@ public partial class LevelGenerator : MonoBehaviour
         foreach (var ind in zoneIndividuals)
         {
             map.ApplyGeneratedPath(ind.path, ind.replay, ind.trajectory, ind.safeColumns);
-            if (enableIWBTGBaking) BakeIWBTGLevel(ind);
+            // Experimental IWBTG/risk-field baking is disabled for the state-enumeration core path.
+            // if (enableIWBTGBaking) BakeIWBTGLevel(ind);
         }
     }
 
@@ -301,8 +274,9 @@ public partial class LevelGenerator : MonoBehaviour
 
     private bool TryPlaceIndividualInGrid(LevelIndividual ind)
     {
-        int x = Mathf.Clamp(Mathf.FloorToInt(ind.linearity * GRID_SIZE), 0, GRID_SIZE - 1);
-        int y = Mathf.Clamp(Mathf.FloorToInt(ind.inputDensity * GRID_SIZE), 0, GRID_SIZE - 1);
+        int uniqueStates = ind.stateCounts != null ? ind.stateCounts.Count : 0;
+        int x = Mathf.Clamp(uniqueStates, 0, GRID_SIZE - 1);
+        int y = Mathf.Clamp(Mathf.FloorToInt((ind.trajectory != null ? ind.trajectory.Count : 0) / 100f), 0, GRID_SIZE - 1);
 
         if (eliteGrid[x, y] == null || ind.fitness > eliteGrid[x, y].fitness)
         {
@@ -320,6 +294,13 @@ public partial class LevelGenerator : MonoBehaviour
         ind.trajectory = new List<Vector3>(verifiedTrajectory);
         ind.safeColumns = new HashSet<int>(ghostSafeColumns);
         ind.safePlatforms = new HashSet<Vector2i>(ghostSafePlatforms);
+        ind.stateSequence = new List<Character.CharacterState>(ghostStateSequence);
+        ind.stateCounts = new Dictionary<Character.CharacterState, int>(ghostStateCounts);
+        ind.stateTransitionCounts = new Dictionary<string, int>(ghostStateTransitionCounts);
+        ind.deathCount = ghostDeathCount;
+        ind.outsidePlayAreaFrames = ghostOutsidePlayAreaFrames;
+        ind.trapContactCount = ghostTrapContactCount;
+        ind.goalReached = true;
 
         Vector2 startPos = map.GetMapTilePosition(startTile);
         Vector2 endPos = map.GetMapTilePosition(endTile);
@@ -330,7 +311,13 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        TopologyEvaluator.EvaluateIndividual(ind, zone, riskFieldSolver, designerIntent);
+        // TODO Phase 3: replace this placeholder with StateEnumerationEvaluator.EvaluateIndividual(...).
+        float successScore = ind.goalReached ? 1000f : 0f;
+        float playAreaScore = ind.outsidePlayAreaFrames == 0 ? 250f : -ind.outsidePlayAreaFrames;
+        float survivalScore = ind.deathCount == 0 ? 250f : -500f * ind.deathCount;
+        float trapScore = ind.trapContactCount == 0 ? 100f : -100f * ind.trapContactCount;
+        float tieBreaker = (ind.trajectory != null ? ind.trajectory.Count : 0) * 0.01f + (ind.replay != null ? ind.replay.Count : 0) * 0.005f;
+        ind.fitness = successScore + playAreaScore + survivalScore + trapScore + tieBreaker;
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)
