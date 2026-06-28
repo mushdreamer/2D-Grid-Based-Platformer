@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
@@ -156,7 +156,6 @@ public partial class Map
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        if (director != null) director.ClearTraps();
 
         ClearMapToEmpty();
         for (int y = 0; y < mHeight; y++)
@@ -180,7 +179,6 @@ public partial class Map
         foreach (var obj in spawnedObjects) if (obj != null) Destroy(obj);
         spawnedObjects.Clear();
 
-        if (director != null) director.ClearTraps();
 
         for (int y = 0; y < mHeight; y++)
         {
@@ -223,11 +221,6 @@ public partial class Map
 
         ShowSurvivalSpaceVisuals();
 
-        if (director != null)
-        {
-            director.enabled = true;
-            director.SetRunning(true);
-        }
     }
 
     private void UpdateBrushPreview(int mouseTileX, int mouseTileY)
