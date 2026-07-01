@@ -21,8 +21,25 @@ public partial class LevelGenerator : MonoBehaviour
         public int replayCount;
         public int trajectoryCount;
         public int pathCount;
+        public int stateSequenceCount;
+        public Dictionary<Character.CharacterState, int> stateCounts;
+        public Dictionary<string, int> stateTransitionCounts;
+        public int deathCount;
+        public int outsidePlayAreaFrames;
+        public int trapContactCount;
 
-        public GhostCheckpoint(Bot agent, float vFloor, int rCount, int tCount, int pCount)
+        public GhostCheckpoint(
+            Bot agent,
+            float vFloor,
+            int rCount,
+            int tCount,
+            int pCount,
+            int sCount,
+            Dictionary<Character.CharacterState, int> stateCountsSnapshot,
+            Dictionary<string, int> stateTransitionCountsSnapshot,
+            int deathCountSnapshot,
+            int outsidePlayAreaFramesSnapshot,
+            int trapContactCountSnapshot)
         {
             position = agent.mPosition;
             speed = agent.mSpeed;
@@ -32,6 +49,12 @@ public partial class LevelGenerator : MonoBehaviour
             replayCount = rCount;
             trajectoryCount = tCount;
             pathCount = pCount;
+            stateSequenceCount = sCount;
+            stateCounts = new Dictionary<Character.CharacterState, int>(stateCountsSnapshot);
+            stateTransitionCounts = new Dictionary<string, int>(stateTransitionCountsSnapshot);
+            deathCount = deathCountSnapshot;
+            outsidePlayAreaFrames = outsidePlayAreaFramesSnapshot;
+            trapContactCount = trapContactCountSnapshot;
         }
     }
 
@@ -146,7 +169,18 @@ public partial class LevelGenerator : MonoBehaviour
                 reason = "Success"; failPos = ghostAgent.mPosition; return true;
             }
 
-            GhostCheckpoint cp = new GhostCheckpoint(ghostAgent, currentVirtualFloorY, ghostReplay.Count, ghostTrajectory.Count, ghostPath.Count);
+            GhostCheckpoint cp = new GhostCheckpoint(
+                ghostAgent,
+                currentVirtualFloorY,
+                ghostReplay.Count,
+                ghostTrajectory.Count,
+                ghostPath.Count,
+                ghostStateSequence.Count,
+                ghostStateCounts,
+                ghostStateTransitionCounts,
+                ghostDeathCount,
+                ghostOutsidePlayAreaFrames,
+                ghostTrapContactCount);
 
             int maxRetries = 12;
             bool stepSuccess = false;
@@ -177,6 +211,12 @@ public partial class LevelGenerator : MonoBehaviour
                     if (ghostReplay.Count > cp.replayCount) ghostReplay.RemoveRange(cp.replayCount, ghostReplay.Count - cp.replayCount);
                     if (ghostTrajectory.Count > cp.trajectoryCount) ghostTrajectory.RemoveRange(cp.trajectoryCount, ghostTrajectory.Count - cp.trajectoryCount);
                     if (ghostPath.Count > cp.pathCount) ghostPath.RemoveRange(cp.pathCount, ghostPath.Count - cp.pathCount);
+                    if (ghostStateSequence.Count > cp.stateSequenceCount) ghostStateSequence.RemoveRange(cp.stateSequenceCount, ghostStateSequence.Count - cp.stateSequenceCount);
+                    ghostStateCounts = new Dictionary<Character.CharacterState, int>(cp.stateCounts);
+                    ghostStateTransitionCounts = new Dictionary<string, int>(cp.stateTransitionCounts);
+                    ghostDeathCount = cp.deathCount;
+                    ghostOutsidePlayAreaFrames = cp.outsidePlayAreaFrames;
+                    ghostTrapContactCount = cp.trapContactCount;
                 }
             }
 
