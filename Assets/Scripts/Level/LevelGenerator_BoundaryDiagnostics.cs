@@ -33,7 +33,10 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void LogBoundaryLethalityDiagnostics(LevelIndividual individual, Vector2i startTile, string label)
     {
-        BoundaryProbeDiagnostics diagnostics = EvaluateBoundaryLethality(individual, startTile);
+        BoundaryProbeDiagnostics diagnostics = HasStoredBoundaryDiagnostics(individual)
+            ? CreateDiagnosticsFromIndividual(individual)
+            : EvaluateAndStoreBoundaryLethalityDiagnostics(individual, startTile);
+
         Debug.Log($"[BoundaryLethality:{label}] boundaryProbeCount={diagnostics.boundaryProbeCount}, " +
             $"outsideReachedCount={diagnostics.outsideReachedCount}, " +
             $"outsideTerminalCount={diagnostics.outsideTerminalCount}, " +
@@ -41,6 +44,13 @@ public partial class LevelGenerator : MonoBehaviour
             $"outsideAliveAfterKCount={diagnostics.outsideAliveAfterKCount}, " +
             $"unsafeOutsideCount={diagnostics.unsafeOutsideCount}, " +
             $"sampleUnsafePositions={FormatUnsafePositions(diagnostics.sampleUnsafePositions)}");
+    }
+
+    private BoundaryProbeDiagnostics EvaluateAndStoreBoundaryLethalityDiagnostics(LevelIndividual individual, Vector2i startTile)
+    {
+        BoundaryProbeDiagnostics diagnostics = EvaluateBoundaryLethality(individual, startTile);
+        StoreBoundaryDiagnostics(individual, diagnostics);
+        return diagnostics;
     }
 
     private BoundaryProbeDiagnostics EvaluateBoundaryLethality(LevelIndividual individual, Vector2i startTile)
@@ -70,6 +80,41 @@ public partial class LevelGenerator : MonoBehaviour
 
         return diagnostics;
     }
+
+    private bool HasStoredBoundaryDiagnostics(LevelIndividual individual)
+    {
+        return individual != null && individual.sampleUnsafePositions != null;
+    }
+
+    private BoundaryProbeDiagnostics CreateDiagnosticsFromIndividual(LevelIndividual individual)
+    {
+        return new BoundaryProbeDiagnostics
+        {
+            boundaryProbeCount = individual.boundaryProbeCount,
+            outsideReachedCount = individual.outsideReachedCount,
+            outsideTerminalCount = individual.outsideTerminalCount,
+            outsideReturnedAliveCount = individual.outsideReturnedAliveCount,
+            outsideAliveAfterKCount = individual.outsideAliveAfterKCount,
+            unsafeOutsideCount = individual.unsafeOutsideCount,
+            sampleUnsafePositions = individual.sampleUnsafePositions ?? new List<Vector2>()
+        };
+    }
+
+    private void StoreBoundaryDiagnostics(LevelIndividual individual, BoundaryProbeDiagnostics diagnostics)
+    {
+        if (individual == null) return;
+
+        individual.boundaryProbeCount = diagnostics.boundaryProbeCount;
+        individual.outsideReachedCount = diagnostics.outsideReachedCount;
+        individual.outsideTerminalCount = diagnostics.outsideTerminalCount;
+        individual.outsideReturnedAliveCount = diagnostics.outsideReturnedAliveCount;
+        individual.outsideAliveAfterKCount = diagnostics.outsideAliveAfterKCount;
+        individual.unsafeOutsideCount = diagnostics.unsafeOutsideCount;
+        individual.sampleUnsafePositions = diagnostics.sampleUnsafePositions != null
+            ? new List<Vector2>(diagnostics.sampleUnsafePositions)
+            : new List<Vector2>();
+    }
+
 
     private void EnsureBoundaryProbeAgent()
     {

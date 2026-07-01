@@ -12,6 +12,7 @@ public static class StateEnumerationEvaluator
         public float trapScore;
         public float stateCoverageScore;
         public float transitionDiversityScore;
+        public float boundarySafetyScore;
         public float auxiliaryTieBreakerScore;
         public string diagnostic;
     }
@@ -58,6 +59,8 @@ public static class StateEnumerationEvaluator
         public const float StandToRunTransition = 100f;
         public const float RunToStandTransition = 100f;
 
+        public const float UnsafeOutsidePenalty = -500f;
+
         public const float TrajectoryFrameTieBreaker = 0.01f;
         public const float ReplayFrameTieBreaker = 0.005f;
     }
@@ -80,6 +83,7 @@ public static class StateEnumerationEvaluator
             trapScore = ScoreTraps(individual),
             stateCoverageScore = ScoreStateCoverage(individual),
             transitionDiversityScore = ScoreTransitionDiversity(individual),
+            boundarySafetyScore = ScoreBoundarySafety(individual),
             auxiliaryTieBreakerScore = ScoreAuxiliaryTieBreaker(individual)
         };
 
@@ -89,6 +93,7 @@ public static class StateEnumerationEvaluator
             + result.trapScore
             + result.stateCoverageScore
             + result.transitionDiversityScore
+            + result.boundarySafetyScore
             + result.auxiliaryTieBreakerScore;
 
         result.diagnostic = BuildDiagnostic(individual, result);
@@ -159,6 +164,11 @@ public static class StateEnumerationEvaluator
         return score;
     }
 
+    private static float ScoreBoundarySafety(LevelIndividual individual)
+    {
+        return individual.unsafeOutsideCount * EvaluationWeights.UnsafeOutsidePenalty;
+    }
+
     private static float ScoreAuxiliaryTieBreaker(LevelIndividual individual)
     {
         int trajectoryCount = individual.trajectory != null ? individual.trajectory.Count : 0;
@@ -181,6 +191,8 @@ public static class StateEnumerationEvaluator
         builder.Append($" detectedUsefulStates={FormatDetectedUsefulStates(individual)}");
         builder.Append($" transitionDiversity={result.transitionDiversityScore:F2}");
         builder.Append($" detectedUsefulTransitions={FormatDetectedUsefulTransitions(individual)}");
+        builder.Append($" boundarySafety={result.boundarySafetyScore:F2}");
+        builder.Append($" unsafeOutsideCount={individual.unsafeOutsideCount}");
         builder.Append($" tieBreaker={result.auxiliaryTieBreakerScore:F2}");
         builder.Append($" goalReached={individual.goalReached}");
         builder.Append($" deaths={individual.deathCount}");

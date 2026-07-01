@@ -30,6 +30,13 @@ public class LevelIndividual
     public int outsidePlayAreaFrames;
     public int trapContactCount;
     public bool goalReached;
+    public int boundaryProbeCount;
+    public int outsideReachedCount;
+    public int outsideTerminalCount;
+    public int outsideReturnedAliveCount;
+    public int outsideAliveAfterKCount;
+    public int unsafeOutsideCount;
+    public List<Vector2> sampleUnsafePositions;
     public float linearity;
     public float inputDensity;
     public float fitness;

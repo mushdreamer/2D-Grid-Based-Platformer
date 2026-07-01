@@ -133,6 +133,7 @@ public partial class LevelGenerator : MonoBehaviour
             if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
                 CalculateFitness(ind, zone);
                 return TryPlaceIndividualInGrid(ind);
             }
@@ -176,7 +177,9 @@ public partial class LevelGenerator : MonoBehaviour
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
             {
-                return CreateIndividualFromGhost(start, end);
+                LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
+                return ind;
             }
             else
             {
