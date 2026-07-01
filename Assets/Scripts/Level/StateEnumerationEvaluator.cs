@@ -24,6 +24,15 @@ public static class StateEnumerationEvaluator
         { Character.CharacterState.GrabLedge, EvaluationWeights.GrabLedgeStateCoverage }
     };
 
+    private static readonly Dictionary<string, float> TransitionDiversityRewards = new Dictionary<string, float>
+    {
+        { TransitionKey(Character.CharacterState.Run, Character.CharacterState.Jump), EvaluationWeights.RunToJumpTransition },
+        { TransitionKey(Character.CharacterState.Jump, Character.CharacterState.Run), EvaluationWeights.JumpToRunTransition },
+        { TransitionKey(Character.CharacterState.Jump, Character.CharacterState.Stand), EvaluationWeights.JumpToStandTransition },
+        { TransitionKey(Character.CharacterState.Stand, Character.CharacterState.Run), EvaluationWeights.StandToRunTransition },
+        { TransitionKey(Character.CharacterState.Run, Character.CharacterState.Stand), EvaluationWeights.RunToStandTransition }
+    };
+
     private static class EvaluationWeights
     {
         public const float GoalReached = 1000f;
@@ -42,6 +51,12 @@ public static class StateEnumerationEvaluator
         public const float RunStateCoverage = 100f;
         public const float JumpStateCoverage = 150f;
         public const float GrabLedgeStateCoverage = 150f;
+
+        public const float RunToJumpTransition = 200f;
+        public const float JumpToRunTransition = 150f;
+        public const float JumpToStandTransition = 150f;
+        public const float StandToRunTransition = 100f;
+        public const float RunToStandTransition = 100f;
 
         public const float TrajectoryFrameTieBreaker = 0.01f;
         public const float ReplayFrameTieBreaker = 0.005f;
@@ -64,7 +79,7 @@ public static class StateEnumerationEvaluator
             survivalScore = ScoreSurvival(individual),
             trapScore = ScoreTraps(individual),
             stateCoverageScore = ScoreStateCoverage(individual),
-            transitionDiversityScore = 0f,
+            transitionDiversityScore = ScoreTransitionDiversity(individual),
             auxiliaryTieBreakerScore = ScoreAuxiliaryTieBreaker(individual)
         };
 
@@ -126,6 +141,24 @@ public static class StateEnumerationEvaluator
         return score;
     }
 
+    private static float ScoreTransitionDiversity(LevelIndividual individual)
+    {
+        if (individual.stateTransitionCounts == null || individual.stateTransitionCounts.Count == 0)
+            return 0f;
+
+        float score = 0f;
+        foreach (KeyValuePair<string, float> reward in TransitionDiversityRewards)
+        {
+            int observedCount;
+            if (individual.stateTransitionCounts.TryGetValue(reward.Key, out observedCount) && observedCount > 0)
+            {
+                score += reward.Value;
+            }
+        }
+
+        return score;
+    }
+
     private static float ScoreAuxiliaryTieBreaker(LevelIndividual individual)
     {
         int trajectoryCount = individual.trajectory != null ? individual.trajectory.Count : 0;
@@ -138,7 +171,7 @@ public static class StateEnumerationEvaluator
     private static string BuildDiagnostic(LevelIndividual individual, EvaluationResult result)
     {
         StringBuilder builder = new StringBuilder();
-        builder.Append("StateEnumerationEvaluator StepB");
+        builder.Append("StateEnumerationEvaluator StepC");
         builder.Append($" total={result.totalFitness:F2}");
         builder.Append($" goal={result.goalReachScore:F2}");
         builder.Append($" playArea={result.playAreaScore:F2}");
@@ -147,12 +180,18 @@ public static class StateEnumerationEvaluator
         builder.Append($" stateCoverage={result.stateCoverageScore:F2}");
         builder.Append($" detectedUsefulStates={FormatDetectedUsefulStates(individual)}");
         builder.Append($" transitionDiversity={result.transitionDiversityScore:F2}");
+        builder.Append($" detectedUsefulTransitions={FormatDetectedUsefulTransitions(individual)}");
         builder.Append($" tieBreaker={result.auxiliaryTieBreakerScore:F2}");
         builder.Append($" goalReached={individual.goalReached}");
         builder.Append($" deaths={individual.deathCount}");
         builder.Append($" outsidePlayAreaFrames={individual.outsidePlayAreaFrames}");
         builder.Append($" trapContacts={individual.trapContactCount}");
         return builder.ToString();
+    }
+
+    private static string TransitionKey(Character.CharacterState from, Character.CharacterState to)
+    {
+        return from + "->" + to;
     }
 
     private static string FormatDetectedUsefulStates(LevelIndividual individual)
@@ -165,6 +204,25 @@ public static class StateEnumerationEvaluator
         {
             int observedCount;
             if (individual.stateCounts.TryGetValue(reward.Key, out observedCount) && observedCount > 0)
+            {
+                if (builder.Length > 0) builder.Append(",");
+                builder.Append(reward.Key);
+            }
+        }
+
+        return builder.Length > 0 ? builder.ToString() : "none";
+    }
+
+    private static string FormatDetectedUsefulTransitions(LevelIndividual individual)
+    {
+        if (individual.stateTransitionCounts == null || individual.stateTransitionCounts.Count == 0)
+            return "none";
+
+        StringBuilder builder = new StringBuilder();
+        foreach (KeyValuePair<string, float> reward in TransitionDiversityRewards)
+        {
+            int observedCount;
+            if (individual.stateTransitionCounts.TryGetValue(reward.Key, out observedCount) && observedCount > 0)
             {
                 if (builder.Length > 0) builder.Append(",");
                 builder.Append(reward.Key);
