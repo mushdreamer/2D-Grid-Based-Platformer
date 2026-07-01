@@ -107,6 +107,7 @@ public partial class LevelGenerator : MonoBehaviour
                 globalBestIndividuals.Add(bestInZone);
                 LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
             }
         }
 
