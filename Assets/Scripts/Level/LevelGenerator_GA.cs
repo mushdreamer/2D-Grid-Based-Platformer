@@ -107,6 +107,7 @@ public partial class LevelGenerator : MonoBehaviour
                 globalBestIndividuals.Add(bestInZone);
                 LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
             }
         }
 
@@ -132,6 +133,7 @@ public partial class LevelGenerator : MonoBehaviour
             if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
                 CalculateFitness(ind, zone);
                 return TryPlaceIndividualInGrid(ind);
             }
@@ -175,7 +177,9 @@ public partial class LevelGenerator : MonoBehaviour
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
             {
-                return CreateIndividualFromGhost(start, end);
+                LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
+                return ind;
             }
             else
             {
@@ -311,13 +315,8 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        // TODO Phase 3: replace this placeholder with StateEnumerationEvaluator.EvaluateIndividual(...).
-        float successScore = ind.goalReached ? 1000f : 0f;
-        float playAreaScore = ind.outsidePlayAreaFrames == 0 ? 250f : -ind.outsidePlayAreaFrames;
-        float survivalScore = ind.deathCount == 0 ? 250f : -500f * ind.deathCount;
-        float trapScore = ind.trapContactCount == 0 ? 100f : -100f * ind.trapContactCount;
-        float tieBreaker = (ind.trajectory != null ? ind.trajectory.Count : 0) * 0.01f + (ind.replay != null ? ind.replay.Count : 0) * 0.005f;
-        ind.fitness = successScore + playAreaScore + survivalScore + trapScore + tieBreaker;
+        StateEnumerationEvaluator.EvaluationResult result = StateEnumerationEvaluator.EvaluateIndividual(ind);
+        ind.fitness = result.totalFitness;
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)
