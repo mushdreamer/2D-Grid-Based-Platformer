@@ -311,13 +311,8 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        // TODO Phase 3: replace this placeholder with StateEnumerationEvaluator.EvaluateIndividual(...).
-        float successScore = ind.goalReached ? 1000f : 0f;
-        float playAreaScore = ind.outsidePlayAreaFrames == 0 ? 250f : -ind.outsidePlayAreaFrames;
-        float survivalScore = ind.deathCount == 0 ? 250f : -500f * ind.deathCount;
-        float trapScore = ind.trapContactCount == 0 ? 100f : -100f * ind.trapContactCount;
-        float tieBreaker = (ind.trajectory != null ? ind.trajectory.Count : 0) * 0.01f + (ind.replay != null ? ind.replay.Count : 0) * 0.005f;
-        ind.fitness = successScore + playAreaScore + survivalScore + trapScore + tieBreaker;
+        StateEnumerationEvaluator.EvaluationResult result = StateEnumerationEvaluator.EvaluateIndividual(ind);
+        ind.fitness = result.totalFitness;
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)
