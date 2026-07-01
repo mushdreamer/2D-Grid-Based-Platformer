@@ -410,9 +410,12 @@ public partial class LevelGenerator : MonoBehaviour
         if (ghostStateSequence.Count > 0)
         {
             Character.CharacterState previous = ghostStateSequence[ghostStateSequence.Count - 1];
-            string transition = previous + "->" + state;
-            if (ghostStateTransitionCounts.ContainsKey(transition)) ghostStateTransitionCounts[transition]++;
-            else ghostStateTransitionCounts[transition] = 1;
+            if (previous != state)
+            {
+                string transition = previous + "->" + state;
+                if (ghostStateTransitionCounts.ContainsKey(transition)) ghostStateTransitionCounts[transition]++;
+                else ghostStateTransitionCounts[transition] = 1;
+            }
         }
 
         ghostStateSequence.Add(state);
