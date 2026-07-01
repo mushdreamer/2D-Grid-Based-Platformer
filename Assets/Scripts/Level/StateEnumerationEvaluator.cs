@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 
 public static class StateEnumerationEvaluator
@@ -15,6 +16,14 @@ public static class StateEnumerationEvaluator
         public string diagnostic;
     }
 
+    private static readonly Dictionary<Character.CharacterState, float> StateCoverageRewards = new Dictionary<Character.CharacterState, float>
+    {
+        { Character.CharacterState.Stand, EvaluationWeights.StandStateCoverage },
+        { Character.CharacterState.Run, EvaluationWeights.RunStateCoverage },
+        { Character.CharacterState.Jump, EvaluationWeights.JumpStateCoverage },
+        { Character.CharacterState.GrabLedge, EvaluationWeights.GrabLedgeStateCoverage }
+    };
+
     private static class EvaluationWeights
     {
         public const float GoalReached = 1000f;
@@ -28,6 +37,11 @@ public static class StateEnumerationEvaluator
 
         public const float NoTrapContacts = 100f;
         public const float TrapContactPenalty = -100f;
+
+        public const float StandStateCoverage = 50f;
+        public const float RunStateCoverage = 100f;
+        public const float JumpStateCoverage = 150f;
+        public const float GrabLedgeStateCoverage = 150f;
 
         public const float TrajectoryFrameTieBreaker = 0.01f;
         public const float ReplayFrameTieBreaker = 0.005f;
@@ -49,7 +63,7 @@ public static class StateEnumerationEvaluator
             playAreaScore = ScorePlayArea(individual),
             survivalScore = ScoreSurvival(individual),
             trapScore = ScoreTraps(individual),
-            stateCoverageScore = 0f,
+            stateCoverageScore = ScoreStateCoverage(individual),
             transitionDiversityScore = 0f,
             auxiliaryTieBreakerScore = ScoreAuxiliaryTieBreaker(individual)
         };
@@ -94,6 +108,24 @@ public static class StateEnumerationEvaluator
             : individual.trapContactCount * EvaluationWeights.TrapContactPenalty;
     }
 
+    private static float ScoreStateCoverage(LevelIndividual individual)
+    {
+        if (individual.stateCounts == null || individual.stateCounts.Count == 0)
+            return 0f;
+
+        float score = 0f;
+        foreach (KeyValuePair<Character.CharacterState, float> reward in StateCoverageRewards)
+        {
+            int observedCount;
+            if (individual.stateCounts.TryGetValue(reward.Key, out observedCount) && observedCount > 0)
+            {
+                score += reward.Value;
+            }
+        }
+
+        return score;
+    }
+
     private static float ScoreAuxiliaryTieBreaker(LevelIndividual individual)
     {
         int trajectoryCount = individual.trajectory != null ? individual.trajectory.Count : 0;
@@ -106,13 +138,14 @@ public static class StateEnumerationEvaluator
     private static string BuildDiagnostic(LevelIndividual individual, EvaluationResult result)
     {
         StringBuilder builder = new StringBuilder();
-        builder.Append("StateEnumerationEvaluator StepA");
+        builder.Append("StateEnumerationEvaluator StepB");
         builder.Append($" total={result.totalFitness:F2}");
         builder.Append($" goal={result.goalReachScore:F2}");
         builder.Append($" playArea={result.playAreaScore:F2}");
         builder.Append($" survival={result.survivalScore:F2}");
         builder.Append($" trap={result.trapScore:F2}");
         builder.Append($" stateCoverage={result.stateCoverageScore:F2}");
+        builder.Append($" detectedUsefulStates={FormatDetectedUsefulStates(individual)}");
         builder.Append($" transitionDiversity={result.transitionDiversityScore:F2}");
         builder.Append($" tieBreaker={result.auxiliaryTieBreakerScore:F2}");
         builder.Append($" goalReached={individual.goalReached}");
@@ -120,5 +153,24 @@ public static class StateEnumerationEvaluator
         builder.Append($" outsidePlayAreaFrames={individual.outsidePlayAreaFrames}");
         builder.Append($" trapContacts={individual.trapContactCount}");
         return builder.ToString();
+    }
+
+    private static string FormatDetectedUsefulStates(LevelIndividual individual)
+    {
+        if (individual.stateCounts == null || individual.stateCounts.Count == 0)
+            return "none";
+
+        StringBuilder builder = new StringBuilder();
+        foreach (KeyValuePair<Character.CharacterState, float> reward in StateCoverageRewards)
+        {
+            int observedCount;
+            if (individual.stateCounts.TryGetValue(reward.Key, out observedCount) && observedCount > 0)
+            {
+                if (builder.Length > 0) builder.Append(",");
+                builder.Append(reward.Key);
+            }
+        }
+
+        return builder.Length > 0 ? builder.ToString() : "none";
     }
 }
