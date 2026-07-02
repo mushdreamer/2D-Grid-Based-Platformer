@@ -316,11 +316,11 @@ public partial class LevelGenerator : MonoBehaviour
         {
             int count = group.Count();
             float successRate = count > 0 ? group.Count(r => r.success) / (float)count : 0f;
-            float avgFitness = count > 0 ? group.Average(r => r.totalFitness) : 0f;
-            float avgStateCoverage = count > 0 ? group.Average(r => r.stateCoverageScore) : 0f;
-            float avgTransitionDiversity = count > 0 ? group.Average(r => r.transitionDiversityScore) : 0f;
-            float avgUnsafeOutside = count > 0 ? group.Average(r => r.unsafeOutsideCount) : 0f;
-            float avgGenerationTime = count > 0 ? group.Average(r => r.generationTimeSeconds) : 0f;
+            double avgFitness = count > 0 ? group.Average(r => r.totalFitness) : 0f;
+            double avgStateCoverage = count > 0 ? group.Average(r => r.stateCoverageScore) : 0f;
+            double avgTransitionDiversity = count > 0 ? group.Average(r => r.transitionDiversityScore) : 0f;
+            double avgUnsafeOutside = count > 0 ? group.Average(r => r.unsafeOutsideCount) : 0f;
+            double avgGenerationTime = count > 0 ? group.Average(r => r.generationTimeSeconds) : 0f;
 
             Debug.Log($"[AblationExperiment:{group.Key}] " +
                 $"successRate={successRate:P1}, " +
