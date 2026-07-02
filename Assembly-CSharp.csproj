@@ -75,7 +75,9 @@
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Ghost.cs" />
     <Compile Include="Assets\Scripts\Character\Bot.cs" />
     <Compile Include="Assets\Scripts\Setting\Vector2i.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_BoundaryDiagnostics.cs" />
     <Compile Include="Assets\Scripts\Level\LevelMetrics.cs" />
+    <Compile Include="Assets\Scripts\Level\StateEnumerationEvaluator.cs" />
     <Compile Include="Assets\Scripts\Character\Character.cs" />
     <Compile Include="Assets\Scripts\survival space\SurvivalSpaceAnalyzer.cs" />
     <Compile Include="Assets\Scripts\Pathfinding\PathFinderFast.cs" />
@@ -89,6 +91,7 @@
     <Compile Include="Assets\2D Platformer\Scripts\CameraController.cs" />
     <Compile Include="Assets\Scripts\Experimental\RiskField\RiskFieldExporter.cs" />
     <Compile Include="Assets\Scripts\Item\KillerObject.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_Experiment.cs" />
     <Compile Include="Assets\Scripts\Experimental\WorldBlueprint\LevelGenerator_PathWeaver.cs" />
     <Compile Include="Assets\Scripts\Item\Collectible.cs" />
     <Compile Include="Assets\Scripts\Map\Map.cs" />
@@ -102,6 +105,7 @@
     <Compile Include="Assets\Scripts\Legacy\ThreatDistribution\ThreatDistributor.cs" />
     <Compile Include="Assets\Scripts\Experimental\RiskField\RiskFieldDebugger.cs" />
     <Compile Include="Assets\Scripts\Legacy\OldFitness\TopologyEvaluator.cs" />
+    <Compile Include="Assets\Scripts\Level\LevelGenerator_BoundaryTerminalization.cs" />
     <Compile Include="Assets\Scripts\Level\LevelGenerator_Visuals.cs" />
     <Compile Include="Assets\2D Platformer\Scripts\PlayerController.cs" />
   </ItemGroup>
