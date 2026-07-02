@@ -27,8 +27,28 @@ public partial class Map : MonoBehaviour
 
     [HideInInspector] private TileType[,] tiles;
     private SpriteRenderer[,] tilesSprites;
+    private bool tileEditingInitializationWarningLogged;
     public Transform mSpritesContainer;
     static public int cTileSize = 16;
+
+    public bool IsInitializedForTileEditing
+    {
+        get
+        {
+            return tiles != null
+                && tilesSprites != null
+                && mGrid != null
+                && mItemGrid != null
+                && tiles.GetLength(0) == mWidth
+                && tiles.GetLength(1) == mHeight
+                && tilesSprites.GetLength(0) == mWidth
+                && tilesSprites.GetLength(1) == mHeight
+                && mGrid.GetLength(0) >= mWidth
+                && mGrid.GetLength(1) >= mHeight
+                && mItemGrid.GetLength(0) == mWidth
+                && mItemGrid.GetLength(1) == mHeight;
+        }
+    }
 
     [Header("Drawing Settings")]
     public Color gridColor = new Color(0.5f, 0.5f, 0.5f, 0.2f);
@@ -587,6 +607,7 @@ public partial class Map : MonoBehaviour
     public void SetTile(int x, int y, TileType type)
     {
         if (x < 0 || x >= mWidth || y < 0 || y >= mHeight) return;
+        if (!IsTileStorageReadyForSetTile(x, y)) return;
 
         if (type == TileType.Block && mItemGrid != null && mItemGrid[x, y])
         {
@@ -599,6 +620,7 @@ public partial class Map : MonoBehaviour
         if (type == TileType.Block)
         {
             mGrid[x, y] = 0;
+            if (sr == null) return;
             sr.enabled = true;
             sr.transform.localScale = Vector3.one;
             sr.transform.eulerAngles = Vector3.zero;
@@ -618,13 +640,42 @@ public partial class Map : MonoBehaviour
         else if (type == TileType.Danger)
         {
             mGrid[x, y] = 1;
+            if (sr == null) return;
             sr.enabled = false;
         }
         else if (type == TileType.Empty)
         {
             mGrid[x, y] = 1;
+            if (sr == null) return;
             sr.enabled = false;
         }
+    }
+
+    private bool IsTileStorageReadyForSetTile(int x, int y)
+    {
+        if (tiles == null || mGrid == null || tilesSprites == null || mItemGrid == null)
+        {
+            LogTileEditingInitializationWarningOnce("tile arrays are not initialized");
+            return false;
+        }
+
+        if (tiles.GetLength(0) <= x || tiles.GetLength(1) <= y ||
+            tilesSprites.GetLength(0) <= x || tilesSprites.GetLength(1) <= y ||
+            mGrid.GetLength(0) <= x || mGrid.GetLength(1) <= y ||
+            mItemGrid.GetLength(0) <= x || mItemGrid.GetLength(1) <= y)
+        {
+            LogTileEditingInitializationWarningOnce("tile arrays do not match the requested map dimensions");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void LogTileEditingInitializationWarningOnce(string reason)
+    {
+        if (tileEditingInitializationWarningLogged) return;
+        tileEditingInitializationWarningLogged = true;
+        Debug.LogError($"Map.SetTile skipped because {reason}. Wait until Map.Start has initialized tile storage before editing tiles.");
     }
 
     public void GameOver()

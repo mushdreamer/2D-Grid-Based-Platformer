@@ -97,6 +97,19 @@ public partial class LevelGenerator : MonoBehaviour
                 Vector2i startTile = map.startTile.x == -1 ? new Vector2i(2, 5) : map.startTile;
                 Vector2i endTile = map.endTile.x == -1 ? new Vector2i(map.mWidth - 5, 5) : map.endTile;
 
+                if (!map.IsInitializedForTileEditing)
+                {
+                    Debug.LogError("[AblationExperiment] Map is not initialized for tile editing. Start the experiment after Map.Start has created tile storage and sprites.");
+                    RestoreExperimentFlags(
+                        originalStateEnumerationFitness,
+                        originalBoundaryDiagnostics,
+                        originalBoundarySafetyPenalty,
+                        originalBoundaryTerminalization,
+                        originalExperimentLogging);
+                    ablationExperimentRunning = false;
+                    yield break;
+                }
+
                 map.ClearMapToEmpty();
                 yield return StartCoroutine(GenerateSegmentedEvolutionaryRoutine(startTile, endTile));
 
