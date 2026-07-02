@@ -30,6 +30,13 @@ public class LevelIndividual
     public int outsidePlayAreaFrames;
     public int trapContactCount;
     public bool goalReached;
+    public int boundaryProbeCount;
+    public int outsideReachedCount;
+    public int outsideTerminalCount;
+    public int outsideReturnedAliveCount;
+    public int outsideAliveAfterKCount;
+    public int unsafeOutsideCount;
+    public List<Vector2> sampleUnsafePositions;
     public float linearity;
     public float inputDensity;
     public float fitness;
@@ -587,7 +594,8 @@ public partial class LevelGenerator : MonoBehaviour
     private void LogStateEnumerationDiagnostics(LevelIndividual ind, string label)
     {
         if (ind == null) return;
-        Debug.Log($"[StateEnumeration:{label}] goalReached={ind.goalReached}, deaths={ind.deathCount}, outsidePlayAreaFrames={ind.outsidePlayAreaFrames}, trapContacts={ind.trapContactCount}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
+        StateEnumerationEvaluator.EvaluationResult result = StateEnumerationEvaluator.EvaluateIndividual(ind);
+        Debug.Log($"[StateEnumeration:{label}] {result.diagnostic}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
     }
 
     private string FormatStateCounts(Dictionary<Character.CharacterState, int> counts)
