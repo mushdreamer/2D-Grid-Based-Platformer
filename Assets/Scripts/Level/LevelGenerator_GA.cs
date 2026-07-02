@@ -107,6 +107,7 @@ public partial class LevelGenerator : MonoBehaviour
                 globalBestIndividuals.Add(bestInZone);
                 LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                ApplyOutsideBoundaryBandTerminalization(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
                 LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
             }
         }
@@ -130,6 +131,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (RunGuidedSimulation(start, end, route, out failReason, out failPos, false, new HashSet<Vector2i>(zone.tiles), temperature))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
@@ -175,6 +177,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (RunGuidedSimulation(start, end, route, out reason, out fPos, false, new HashSet<Vector2i>(zone.tiles), temp))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
@@ -248,6 +251,7 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         BakeLevelToMapDataOnly(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
+        ApplyOutsideBoundaryBandTerminalization(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
 
         if (finishLinePrefab != null)
         {
