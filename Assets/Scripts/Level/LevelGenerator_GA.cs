@@ -41,6 +41,10 @@ public partial class LevelGenerator : MonoBehaviour
 
     private IEnumerator GenerateSegmentedEvolutionaryRoutine(Vector2i globalStart, Vector2i globalEnd)
     {
+        lastGenerationBestIndividual = null;
+        lastGenerationSucceeded = false;
+        lastGenerationFailureReason = "";
+
         Initialize();
         ClearVisuals();
         InitLog("多样性增强版演化管线 (张量场扭曲)", gaPopulationSize, gaMaxGenerations);
@@ -50,6 +54,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (zones.Count == 0)
         {
             LogDeepDiagnostic("System", "致命错误：未能识别到任何生存空间。");
+            lastGenerationFailureReason = "NoSurvivalZones";
             yield break;
         }
 
@@ -107,8 +112,10 @@ public partial class LevelGenerator : MonoBehaviour
                 globalBestIndividuals.Add(bestInZone);
                 LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
-                ApplyOutsideBoundaryBandTerminalization(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
-                LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
+                if (enableBoundaryTerminalization)
+                    ApplyOutsideBoundaryBandTerminalization(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                if (enableBoundaryDiagnostics)
+                    LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
             }
         }
 
@@ -116,7 +123,12 @@ public partial class LevelGenerator : MonoBehaviour
         ClearSurvivalVisuals();
         ShowSurvivalSpaceInGame();
 
-        if (globalBestIndividuals.Count == zones.Count) StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
+        lastGenerationBestIndividual = globalBestIndividuals.OrderByDescending(p => p.fitness).FirstOrDefault();
+        lastGenerationSucceeded = globalBestIndividuals.Count == zones.Count;
+        if (!lastGenerationSucceeded)
+            lastGenerationFailureReason = $"IncompleteZones_{globalBestIndividuals.Count}_of_{zones.Count}_{GetMostCommonFailureReason()}";
+
+        if (lastGenerationSucceeded) StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
         LogFinish(maxTotalAttempts, globalBestIndividuals.Count);
     }
 
@@ -131,11 +143,13 @@ public partial class LevelGenerator : MonoBehaviour
         if (RunGuidedSimulation(start, end, route, out failReason, out failPos, false, new HashSet<Vector2i>(zone.tiles), temperature))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
-            ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (enableBoundaryTerminalization)
+                ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
-                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
+                if (enableBoundaryDiagnostics || enableBoundarySafetyPenalty)
+                    EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
                 CalculateFitness(ind, zone);
                 return TryPlaceIndividualInGrid(ind);
             }
@@ -177,11 +191,13 @@ public partial class LevelGenerator : MonoBehaviour
         if (RunGuidedSimulation(start, end, route, out reason, out fPos, false, new HashSet<Vector2i>(zone.tiles), temp))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
-            ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (enableBoundaryTerminalization)
+                ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
-                EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
+                if (enableBoundaryDiagnostics || enableBoundarySafetyPenalty)
+                    EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
                 return ind;
             }
             else
@@ -251,7 +267,8 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         BakeLevelToMapDataOnly(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
-        ApplyOutsideBoundaryBandTerminalization(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
+        if (enableBoundaryTerminalization)
+            ApplyOutsideBoundaryBandTerminalization(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
 
         if (finishLinePrefab != null)
         {
@@ -319,7 +336,7 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        StateEnumerationEvaluator.EvaluationResult result = StateEnumerationEvaluator.EvaluateIndividual(ind);
+        StateEnumerationEvaluator.EvaluationResult result = EvaluateIndividualWithExperimentFlags(ind);
         ind.fitness = result.totalFitness;
     }
 

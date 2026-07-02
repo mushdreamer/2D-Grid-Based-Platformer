@@ -84,6 +84,14 @@ public partial class LevelGenerator : MonoBehaviour
     public bool enableIWBTGBaking = true;
     public float hardcoreDeviationTolerance = 1.5f;
 
+    [Header("Experiment Feature Flags")]
+    public bool enableStateEnumerationFitness = true;
+    public bool enableBoundaryDiagnostics = true;
+    public bool enableBoundarySafetyPenalty = true;
+    public bool enableBoundaryTerminalization = true;
+    public bool enableExperimentLogging = false;
+    public int ablationRunsPerCondition = 3;
+
     private Bot ghostAgent;
     private Bot validatorAgent;
 
@@ -594,7 +602,7 @@ public partial class LevelGenerator : MonoBehaviour
     private void LogStateEnumerationDiagnostics(LevelIndividual ind, string label)
     {
         if (ind == null) return;
-        StateEnumerationEvaluator.EvaluationResult result = StateEnumerationEvaluator.EvaluateIndividual(ind);
+        StateEnumerationEvaluator.EvaluationResult result = EvaluateIndividualWithExperimentFlags(ind);
         Debug.Log($"[StateEnumeration:{label}] {result.diagnostic}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
     }
 

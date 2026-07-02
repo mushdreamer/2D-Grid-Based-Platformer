@@ -206,6 +206,16 @@ public static class StateEnumerationEvaluator
         return from + "->" + to;
     }
 
+    public static string GetDetectedUsefulStates(LevelIndividual individual)
+    {
+        return FormatDetectedUsefulStates(individual);
+    }
+
+    public static string GetDetectedUsefulTransitions(LevelIndividual individual)
+    {
+        return FormatDetectedUsefulTransitions(individual);
+    }
+
     private static string FormatDetectedUsefulStates(LevelIndividual individual)
     {
         if (individual.stateCounts == null || individual.stateCounts.Count == 0)
