@@ -37,6 +37,10 @@ public class LevelIndividual
     public int outsideAliveAfterKCount;
     public int unsafeOutsideCount;
     public List<Vector2> sampleUnsafePositions;
+    public int guidedTargetCount;
+    public float survivalCoverageRatio;
+    public int visitedSurvivalTileCount;
+    public int survivalSpaceTileCount;
     public float linearity;
     public float inputDensity;
     public float fitness;
@@ -89,6 +93,7 @@ public partial class LevelGenerator : MonoBehaviour
     public bool enableBoundaryDiagnostics = true;
     public bool enableBoundarySafetyPenalty = true;
     public bool enableBoundaryTerminalization = true;
+    public bool enableEnumerationGuidedRouteTargets = false;
     public bool enableExperimentLogging = false;
     public int ablationRunsPerCondition = 3;
 

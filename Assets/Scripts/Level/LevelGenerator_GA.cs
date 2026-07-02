@@ -135,9 +135,7 @@ public partial class LevelGenerator : MonoBehaviour
     private bool GenerateAndEvaluate(Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temperature)
     {
         // TODO Phase 3: route generation should be driven by StateEnumerationEvaluator constraints.
-        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
-            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
-        };
+        List<GenerationRouteStep> route = BuildRouteWithOptionalEnumerationGuidance(start, end, zone);
 
         string failReason; Vector2 failPos;
         if (RunGuidedSimulation(start, end, route, out failReason, out failPos, false, new HashSet<Vector2i>(zone.tiles), temperature))
@@ -183,9 +181,7 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         // TODO Phase 3: mutation should be evaluated by StateEnumerationEvaluator.
-        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
-            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
-        };
+        List<GenerationRouteStep> route = BuildRouteWithOptionalEnumerationGuidance(start, end, zone);
 
         string reason; Vector2 fPos;
         if (RunGuidedSimulation(start, end, route, out reason, out fPos, false, new HashSet<Vector2i>(zone.tiles), temp))
@@ -326,6 +322,8 @@ public partial class LevelGenerator : MonoBehaviour
         ind.outsidePlayAreaFrames = ghostOutsidePlayAreaFrames;
         ind.trapContactCount = ghostTrapContactCount;
         ind.goalReached = true;
+        ind.guidedTargetCount = currentGuidedRouteTargetCount;
+        PopulateSurvivalCoverageMetrics(ind);
 
         Vector2 startPos = map.GetMapTilePosition(startTile);
         Vector2 endPos = map.GetMapTilePosition(endTile);

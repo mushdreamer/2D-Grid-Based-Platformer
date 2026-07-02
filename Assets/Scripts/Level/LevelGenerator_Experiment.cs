@@ -16,6 +16,7 @@ public partial class LevelGenerator : MonoBehaviour
         public bool boundaryDiagnostics;
         public bool boundarySafetyPenalty;
         public bool boundaryTerminalization;
+        public bool enumerationGuidedRouteTargets;
     }
 
     private class ExperimentRecord
@@ -44,6 +45,10 @@ public partial class LevelGenerator : MonoBehaviour
         public int trajectoryLength;
         public int uniqueStateCount;
         public int replayLength;
+        public int guidedTargetCount;
+        public float survivalCoverageRatio;
+        public int visitedSurvivalTileCount;
+        public int survivalSpaceTileCount;
     }
 
     private LevelIndividual lastGenerationBestIndividual;
@@ -76,6 +81,7 @@ public partial class LevelGenerator : MonoBehaviour
         bool originalBoundaryDiagnostics = enableBoundaryDiagnostics;
         bool originalBoundarySafetyPenalty = enableBoundarySafetyPenalty;
         bool originalBoundaryTerminalization = enableBoundaryTerminalization;
+        bool originalEnumerationGuidedRouteTargets = enableEnumerationGuidedRouteTargets;
         bool originalExperimentLogging = enableExperimentLogging;
 
         List<ExperimentRecord> records = new List<ExperimentRecord>();
@@ -105,6 +111,7 @@ public partial class LevelGenerator : MonoBehaviour
                         originalBoundaryDiagnostics,
                         originalBoundarySafetyPenalty,
                         originalBoundaryTerminalization,
+                        originalEnumerationGuidedRouteTargets,
                         originalExperimentLogging);
                     ablationExperimentRunning = false;
                     yield break;
@@ -124,6 +131,7 @@ public partial class LevelGenerator : MonoBehaviour
             originalBoundaryDiagnostics,
             originalBoundarySafetyPenalty,
             originalBoundaryTerminalization,
+            originalEnumerationGuidedRouteTargets,
             originalExperimentLogging);
 
         string csvPath = ExportExperimentCsv(records);
@@ -142,7 +150,8 @@ public partial class LevelGenerator : MonoBehaviour
                 stateEnumerationFitness = false,
                 boundaryDiagnostics = false,
                 boundarySafetyPenalty = false,
-                boundaryTerminalization = false
+                boundaryTerminalization = false,
+                enumerationGuidedRouteTargets = false
             },
             new ExperimentCondition
             {
@@ -150,7 +159,8 @@ public partial class LevelGenerator : MonoBehaviour
                 stateEnumerationFitness = true,
                 boundaryDiagnostics = false,
                 boundarySafetyPenalty = false,
-                boundaryTerminalization = false
+                boundaryTerminalization = false,
+                enumerationGuidedRouteTargets = false
             },
             new ExperimentCondition
             {
@@ -158,7 +168,8 @@ public partial class LevelGenerator : MonoBehaviour
                 stateEnumerationFitness = false,
                 boundaryDiagnostics = true,
                 boundarySafetyPenalty = true,
-                boundaryTerminalization = false
+                boundaryTerminalization = false,
+                enumerationGuidedRouteTargets = false
             },
             new ExperimentCondition
             {
@@ -166,7 +177,8 @@ public partial class LevelGenerator : MonoBehaviour
                 stateEnumerationFitness = false,
                 boundaryDiagnostics = true,
                 boundarySafetyPenalty = false,
-                boundaryTerminalization = true
+                boundaryTerminalization = true,
+                enumerationGuidedRouteTargets = false
             },
             new ExperimentCondition
             {
@@ -174,7 +186,8 @@ public partial class LevelGenerator : MonoBehaviour
                 stateEnumerationFitness = true,
                 boundaryDiagnostics = true,
                 boundarySafetyPenalty = true,
-                boundaryTerminalization = true
+                boundaryTerminalization = true,
+                enumerationGuidedRouteTargets = false
             }
         };
     }
@@ -185,6 +198,7 @@ public partial class LevelGenerator : MonoBehaviour
         enableBoundaryDiagnostics = condition.boundaryDiagnostics;
         enableBoundarySafetyPenalty = condition.boundarySafetyPenalty;
         enableBoundaryTerminalization = condition.boundaryTerminalization;
+        enableEnumerationGuidedRouteTargets = condition.enumerationGuidedRouteTargets;
         enableExperimentLogging = true;
     }
 
@@ -193,12 +207,14 @@ public partial class LevelGenerator : MonoBehaviour
         bool boundaryDiagnostics,
         bool boundarySafetyPenalty,
         bool boundaryTerminalization,
+        bool enumerationGuidedRouteTargets,
         bool experimentLogging)
     {
         enableStateEnumerationFitness = stateEnumerationFitness;
         enableBoundaryDiagnostics = boundaryDiagnostics;
         enableBoundarySafetyPenalty = boundarySafetyPenalty;
         enableBoundaryTerminalization = boundaryTerminalization;
+        enableEnumerationGuidedRouteTargets = enumerationGuidedRouteTargets;
         enableExperimentLogging = experimentLogging;
     }
 
@@ -234,7 +250,11 @@ public partial class LevelGenerator : MonoBehaviour
             boundarySafetyScore = individual != null ? evaluation.boundarySafetyScore : 0f,
             trajectoryLength = individual != null && individual.trajectory != null ? individual.trajectory.Count : 0,
             uniqueStateCount = individual != null && individual.stateCounts != null ? individual.stateCounts.Count : 0,
-            replayLength = individual != null && individual.replay != null ? individual.replay.Count : 0
+            replayLength = individual != null && individual.replay != null ? individual.replay.Count : 0,
+            guidedTargetCount = individual != null ? individual.guidedTargetCount : 0,
+            survivalCoverageRatio = individual != null ? individual.survivalCoverageRatio : 0f,
+            visitedSurvivalTileCount = individual != null ? individual.visitedSurvivalTileCount : 0,
+            survivalSpaceTileCount = individual != null ? individual.survivalSpaceTileCount : 0
         };
     }
 
@@ -265,7 +285,7 @@ public partial class LevelGenerator : MonoBehaviour
         string path = Path.Combine(Application.persistentDataPath, fileName);
 
         StringBuilder builder = new StringBuilder();
-        builder.AppendLine("timestamp,conditionName,seed,success,failureReason,generationTimeSeconds,totalFitness,goalReached,deaths,trapContacts,outsidePlayAreaFrames,stateCoverageScore,transitionDiversityScore,detectedUsefulStates,detectedUsefulTransitions,boundaryProbeCount,outsideReachedCount,outsideTerminalCount,outsideAliveAfterKCount,unsafeOutsideCount,boundarySafetyScore,trajectoryLength,uniqueStateCount,replayLength");
+        builder.AppendLine("timestamp,conditionName,seed,success,failureReason,generationTimeSeconds,totalFitness,goalReached,deaths,trapContacts,outsidePlayAreaFrames,stateCoverageScore,transitionDiversityScore,detectedUsefulStates,detectedUsefulTransitions,boundaryProbeCount,outsideReachedCount,outsideTerminalCount,outsideAliveAfterKCount,unsafeOutsideCount,boundarySafetyScore,trajectoryLength,uniqueStateCount,replayLength,guidedTargetCount,survivalCoverageRatio,visitedSurvivalTileCount,survivalSpaceTileCount");
 
         foreach (ExperimentRecord record in records)
         {
@@ -294,7 +314,11 @@ public partial class LevelGenerator : MonoBehaviour
                 record.boundarySafetyScore.ToString("F3", CultureInfo.InvariantCulture),
                 record.trajectoryLength.ToString(CultureInfo.InvariantCulture),
                 record.uniqueStateCount.ToString(CultureInfo.InvariantCulture),
-                record.replayLength.ToString(CultureInfo.InvariantCulture)
+                record.replayLength.ToString(CultureInfo.InvariantCulture),
+                record.guidedTargetCount.ToString(CultureInfo.InvariantCulture),
+                record.survivalCoverageRatio.ToString("F3", CultureInfo.InvariantCulture),
+                record.visitedSurvivalTileCount.ToString(CultureInfo.InvariantCulture),
+                record.survivalSpaceTileCount.ToString(CultureInfo.InvariantCulture)
             }));
         }
 
@@ -316,11 +340,11 @@ public partial class LevelGenerator : MonoBehaviour
         {
             int count = group.Count();
             float successRate = count > 0 ? group.Count(r => r.success) / (float)count : 0f;
-            double avgFitness = count > 0 ? group.Average(r => r.totalFitness) : 0f;
-            double avgStateCoverage = count > 0 ? group.Average(r => r.stateCoverageScore) : 0f;
-            double avgTransitionDiversity = count > 0 ? group.Average(r => r.transitionDiversityScore) : 0f;
-            double avgUnsafeOutside = count > 0 ? group.Average(r => r.unsafeOutsideCount) : 0f;
-            double avgGenerationTime = count > 0 ? group.Average(r => r.generationTimeSeconds) : 0f;
+            float avgFitness = count > 0 ? group.Average(r => r.totalFitness) : 0f;
+            float avgStateCoverage = count > 0 ? group.Average(r => r.stateCoverageScore) : 0f;
+            float avgTransitionDiversity = count > 0 ? group.Average(r => r.transitionDiversityScore) : 0f;
+            float avgUnsafeOutside = count > 0 ? group.Average(r => r.unsafeOutsideCount) : 0f;
+            float avgGenerationTime = count > 0 ? group.Average(r => r.generationTimeSeconds) : 0f;
 
             Debug.Log($"[AblationExperiment:{group.Key}] " +
                 $"successRate={successRate:P1}, " +
