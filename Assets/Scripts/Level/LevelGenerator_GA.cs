@@ -41,6 +41,10 @@ public partial class LevelGenerator : MonoBehaviour
 
     private IEnumerator GenerateSegmentedEvolutionaryRoutine(Vector2i globalStart, Vector2i globalEnd)
     {
+        lastGenerationBestIndividual = null;
+        lastGenerationSucceeded = false;
+        lastGenerationFailureReason = "";
+
         Initialize();
         ClearVisuals();
         InitLog("多样性增强版演化管线 (张量场扭曲)", gaPopulationSize, gaMaxGenerations);
@@ -50,6 +54,7 @@ public partial class LevelGenerator : MonoBehaviour
         if (zones.Count == 0)
         {
             LogDeepDiagnostic("System", "致命错误：未能识别到任何生存空间。");
+            lastGenerationFailureReason = "NoSurvivalZones";
             yield break;
         }
 
@@ -107,6 +112,10 @@ public partial class LevelGenerator : MonoBehaviour
                 globalBestIndividuals.Add(bestInZone);
                 LogStateEnumerationDiagnostics(bestInZone, $"Zone {zIndex} best");
                 BakeLevelToMapDataOnly(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                if (enableBoundaryTerminalization)
+                    ApplyOutsideBoundaryBandTerminalization(bestInZone.trajectory, bestInZone.safePlatforms, localStart, localEnd);
+                if (enableBoundaryDiagnostics)
+                    LogBoundaryLethalityDiagnostics(bestInZone, localStart, $"Zone {zIndex} best");
             }
         }
 
@@ -114,24 +123,31 @@ public partial class LevelGenerator : MonoBehaviour
         ClearSurvivalVisuals();
         ShowSurvivalSpaceInGame();
 
-        if (globalBestIndividuals.Count == zones.Count) StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
+        lastGenerationBestIndividual = globalBestIndividuals.OrderByDescending(p => p.fitness).FirstOrDefault();
+        lastGenerationSucceeded = globalBestIndividuals.Count == zones.Count;
+        if (!lastGenerationSucceeded)
+            lastGenerationFailureReason = $"IncompleteZones_{globalBestIndividuals.Count}_of_{zones.Count}_{GetMostCommonFailureReason()}";
+
+        if (lastGenerationSucceeded) StitchAndLoadGlobalLevel(globalBestIndividuals, globalStart, globalEnd);
         LogFinish(maxTotalAttempts, globalBestIndividuals.Count);
     }
 
     private bool GenerateAndEvaluate(Vector2i start, Vector2i end, SurvivalSpaceAnalyzer.SurvivalZone zone, float temperature)
     {
         // TODO Phase 3: route generation should be driven by StateEnumerationEvaluator constraints.
-        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
-            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
-        };
+        List<GenerationRouteStep> route = BuildRouteWithOptionalEnumerationGuidance(start, end, zone);
 
         string failReason; Vector2 failPos;
         if (RunGuidedSimulation(start, end, route, out failReason, out failPos, false, new HashSet<Vector2i>(zone.tiles), temperature))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (enableBoundaryTerminalization)
+                ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out failReason, out failPos))
             {
                 LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                if (enableBoundaryDiagnostics || enableBoundarySafetyPenalty)
+                    EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
                 CalculateFitness(ind, zone);
                 return TryPlaceIndividualInGrid(ind);
             }
@@ -165,17 +181,20 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         // TODO Phase 3: mutation should be evaluated by StateEnumerationEvaluator.
-        List<GenerationRouteStep> route = new List<GenerationRouteStep> {
-            new GenerationRouteStep { endPoint = map.GetMapTilePosition(end.x, end.y), associatedZone = zone }
-        };
+        List<GenerationRouteStep> route = BuildRouteWithOptionalEnumerationGuidance(start, end, zone);
 
         string reason; Vector2 fPos;
         if (RunGuidedSimulation(start, end, route, out reason, out fPos, false, new HashSet<Vector2i>(zone.tiles), temp))
         {
             BakeLevelToMapDataOnly(ghostTrajectory, ghostSafePlatforms, start, end);
+            if (enableBoundaryTerminalization)
+                ApplyOutsideBoundaryBandTerminalization(ghostTrajectory, ghostSafePlatforms, start, end);
             if (VerifyLevelWithRealPhysics(start, end, out reason, out fPos))
             {
-                return CreateIndividualFromGhost(start, end);
+                LevelIndividual ind = CreateIndividualFromGhost(start, end);
+                if (enableBoundaryDiagnostics || enableBoundarySafetyPenalty)
+                    EvaluateAndStoreBoundaryLethalityDiagnostics(ind, start);
+                return ind;
             }
             else
             {
@@ -244,6 +263,8 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         BakeLevelToMapDataOnly(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
+        if (enableBoundaryTerminalization)
+            ApplyOutsideBoundaryBandTerminalization(globalTrajectory, globalSafePlatforms, globalStart, globalEnd);
 
         if (finishLinePrefab != null)
         {
@@ -301,6 +322,8 @@ public partial class LevelGenerator : MonoBehaviour
         ind.outsidePlayAreaFrames = ghostOutsidePlayAreaFrames;
         ind.trapContactCount = ghostTrapContactCount;
         ind.goalReached = true;
+        ind.guidedTargetCount = currentGuidedRouteTargetCount;
+        PopulateSurvivalCoverageMetrics(ind);
 
         Vector2 startPos = map.GetMapTilePosition(startTile);
         Vector2 endPos = map.GetMapTilePosition(endTile);
@@ -311,13 +334,8 @@ public partial class LevelGenerator : MonoBehaviour
 
     private void CalculateFitness(LevelIndividual ind, SurvivalSpaceAnalyzer.SurvivalZone zone)
     {
-        // TODO Phase 3: replace this placeholder with StateEnumerationEvaluator.EvaluateIndividual(...).
-        float successScore = ind.goalReached ? 1000f : 0f;
-        float playAreaScore = ind.outsidePlayAreaFrames == 0 ? 250f : -ind.outsidePlayAreaFrames;
-        float survivalScore = ind.deathCount == 0 ? 250f : -500f * ind.deathCount;
-        float trapScore = ind.trapContactCount == 0 ? 100f : -100f * ind.trapContactCount;
-        float tieBreaker = (ind.trajectory != null ? ind.trajectory.Count : 0) * 0.01f + (ind.replay != null ? ind.replay.Count : 0) * 0.005f;
-        ind.fitness = successScore + playAreaScore + survivalScore + trapScore + tieBreaker;
+        StateEnumerationEvaluator.EvaluationResult result = EvaluateIndividualWithExperimentFlags(ind);
+        ind.fitness = result.totalFitness;
     }
 
     private LevelIndividual TournamentSelection(List<LevelIndividual> population)

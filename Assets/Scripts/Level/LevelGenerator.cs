@@ -30,6 +30,17 @@ public class LevelIndividual
     public int outsidePlayAreaFrames;
     public int trapContactCount;
     public bool goalReached;
+    public int boundaryProbeCount;
+    public int outsideReachedCount;
+    public int outsideTerminalCount;
+    public int outsideReturnedAliveCount;
+    public int outsideAliveAfterKCount;
+    public int unsafeOutsideCount;
+    public List<Vector2> sampleUnsafePositions;
+    public int guidedTargetCount;
+    public float survivalCoverageRatio;
+    public int visitedSurvivalTileCount;
+    public int survivalSpaceTileCount;
     public float linearity;
     public float inputDensity;
     public float fitness;
@@ -76,6 +87,15 @@ public partial class LevelGenerator : MonoBehaviour
     [Header("IWBTG Hardcore Baking")]
     public bool enableIWBTGBaking = true;
     public float hardcoreDeviationTolerance = 1.5f;
+
+    [Header("Experiment Feature Flags")]
+    public bool enableStateEnumerationFitness = true;
+    public bool enableBoundaryDiagnostics = true;
+    public bool enableBoundarySafetyPenalty = true;
+    public bool enableBoundaryTerminalization = true;
+    public bool enableEnumerationGuidedRouteTargets = false;
+    public bool enableExperimentLogging = false;
+    public int ablationRunsPerCondition = 3;
 
     private Bot ghostAgent;
     private Bot validatorAgent;
@@ -587,7 +607,8 @@ public partial class LevelGenerator : MonoBehaviour
     private void LogStateEnumerationDiagnostics(LevelIndividual ind, string label)
     {
         if (ind == null) return;
-        Debug.Log($"[StateEnumeration:{label}] goalReached={ind.goalReached}, deaths={ind.deathCount}, outsidePlayAreaFrames={ind.outsidePlayAreaFrames}, trapContacts={ind.trapContactCount}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
+        StateEnumerationEvaluator.EvaluationResult result = EvaluateIndividualWithExperimentFlags(ind);
+        Debug.Log($"[StateEnumeration:{label}] {result.diagnostic}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
     }
 
     private string FormatStateCounts(Dictionary<Character.CharacterState, int> counts)
