@@ -94,8 +94,14 @@ public partial class LevelGenerator : MonoBehaviour
     public bool enableBoundarySafetyPenalty = true;
     public bool enableBoundaryTerminalization = true;
     public bool enableEnumerationGuidedRouteTargets = false;
+    public bool DEBUG_REPLAY_ONLY = false;
     public bool enableExperimentLogging = false;
     public int ablationRunsPerCondition = 3;
+
+    [Header("Generation Feedback Signals")]
+    public float stateVisitPenaltyLambda = 0.05f;
+    public float zoneVisitPenaltyLambda = 0.08f;
+    public float underCoveredZoneBias = 8f;
 
     private Bot ghostAgent;
     private Bot validatorAgent;
@@ -115,6 +121,8 @@ public partial class LevelGenerator : MonoBehaviour
     private List<Character.CharacterState> ghostStateSequence = new List<Character.CharacterState>();
     private Dictionary<Character.CharacterState, int> ghostStateCounts = new Dictionary<Character.CharacterState, int>();
     private Dictionary<string, int> ghostStateTransitionCounts = new Dictionary<string, int>();
+    private Dictionary<Character.CharacterState, int> ghostStateVisitHeatmap = new Dictionary<Character.CharacterState, int>();
+    private Dictionary<Vector2i, int> mapEliteZoneVisitCounts = new Dictionary<Vector2i, int>();
     private int ghostDeathCount = 0;
     private int ghostOutsidePlayAreaFrames = 0;
     private int ghostTrapContactCount = 0;
@@ -609,6 +617,38 @@ public partial class LevelGenerator : MonoBehaviour
         if (ind == null) return;
         StateEnumerationEvaluator.EvaluationResult result = EvaluateIndividualWithExperimentFlags(ind);
         Debug.Log($"[StateEnumeration:{label}] {result.diagnostic}, states={FormatStateCounts(ind.stateCounts)}, transitions={FormatTransitionCounts(ind.stateTransitionCounts)}");
+    }
+
+    private void LogDebugReplayOnlyResult(bool success, string reason, Vector2 failPos)
+    {
+        string trajectoryCoordinates = ghostTrajectory == null || ghostTrajectory.Count == 0
+            ? "none"
+            : string.Join(" | ", ghostTrajectory.Select(p => $"({p.x:F2},{p.y:F2})"));
+
+        Debug.Log(
+            $"[DEBUG_REPLAY_ONLY] success={success}, reason={reason}, failPos=({failPos.x:F2},{failPos.y:F2}), " +
+            $"replayLength={(ghostReplay != null ? ghostReplay.Count : 0)}, trajectoryLength={(ghostTrajectory != null ? ghostTrajectory.Count : 0)}");
+        Debug.Log($"[DEBUG_REPLAY_ONLY] trajectory={trajectoryCoordinates}");
+        Debug.Log($"[DEBUG_REPLAY_ONLY] stateCoverage={FormatStateCounts(ghostStateCounts)}, heatmap={FormatStateCounts(ghostStateVisitHeatmap)}, transitions={FormatTransitionCounts(ghostStateTransitionCounts)}");
+    }
+
+    private void UpdateMapEliteZoneVisitCounts(LevelIndividual ind)
+    {
+        if (ind == null || ind.trajectory == null || map == null || map.survivalSpaceTiles == null) return;
+
+        HashSet<Vector2i> visitedByIndividual = new HashSet<Vector2i>();
+        foreach (Vector3 point in ind.trajectory)
+        {
+            Vector2i tile = map.GetMapTileAtPoint(point);
+            if (!map.survivalSpaceTiles.Contains(tile)) continue;
+            visitedByIndividual.Add(tile);
+        }
+
+        foreach (Vector2i tile in visitedByIndividual)
+        {
+            if (mapEliteZoneVisitCounts.ContainsKey(tile)) mapEliteZoneVisitCounts[tile]++;
+            else mapEliteZoneVisitCounts[tile] = 1;
+        }
     }
 
     private string FormatStateCounts(Dictionary<Character.CharacterState, int> counts)
