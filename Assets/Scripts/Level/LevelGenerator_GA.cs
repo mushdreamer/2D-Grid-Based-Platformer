@@ -36,46 +36,7 @@ public partial class LevelGenerator : MonoBehaviour
 
     public void GenerateEvolutionaryMapElitesLibrary(Vector2i startTile, Vector2i endTile)
     {
-        if (DEBUG_REPLAY_ONLY)
-        {
-            StartCoroutine(GenerateDebugReplayOnlyRoutine(startTile, endTile));
-            return;
-        }
-
         StartCoroutine(GenerateSegmentedEvolutionaryRoutine(startTile, endTile));
-    }
-
-    private IEnumerator GenerateDebugReplayOnlyRoutine(Vector2i startTile, Vector2i endTile)
-    {
-        lastGenerationBestIndividual = null;
-        lastGenerationSucceeded = false;
-        lastGenerationFailureReason = "";
-
-        Initialize();
-        ClearVisuals();
-        failureStatistics.Clear();
-        mapEliteZoneVisitCounts.Clear();
-
-        List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
-        List<GenerationRouteStep> route = BuildSimpleRouteFromZones(zones, startTile, endTile);
-
-        string failReason;
-        Vector2 failPos;
-        bool success = RunGuidedSimulation(
-            startTile,
-            endTile,
-            route,
-            out failReason,
-            out failPos,
-            false,
-            map.survivalSpaceTiles != null ? new HashSet<Vector2i>(map.survivalSpaceTiles) : null,
-            0.25f,
-            1);
-
-        LogDebugReplayOnlyResult(success, failReason, failPos);
-        lastGenerationSucceeded = success;
-        lastGenerationFailureReason = success ? "" : failReason;
-        yield return null;
     }
 
     private IEnumerator GenerateSegmentedEvolutionaryRoutine(Vector2i globalStart, Vector2i globalEnd)
@@ -88,7 +49,6 @@ public partial class LevelGenerator : MonoBehaviour
         ClearVisuals();
         InitLog("多样性增强版演化管线 (张量场扭曲)", gaPopulationSize, gaMaxGenerations);
         failureStatistics.Clear();
-        mapEliteZoneVisitCounts.Clear();
 
         List<SurvivalSpaceAnalyzer.SurvivalZone> zones = SurvivalSpaceAnalyzer.GetIdentifiedZones(map);
         if (zones.Count == 0)
@@ -342,7 +302,6 @@ public partial class LevelGenerator : MonoBehaviour
         if (eliteGrid[x, y] == null || ind.fitness > eliteGrid[x, y].fitness)
         {
             eliteGrid[x, y] = ind;
-            UpdateMapEliteZoneVisitCounts(ind);
             return true;
         }
         return false;

@@ -58,9 +58,9 @@ public partial class LevelGenerator : MonoBehaviour
         }
     }
 
-    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<GenerationRouteStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null, float temperature = 0f, int microAttemptOverride = -1)
+    bool RunGuidedSimulation(Vector2i startTile, Vector2i endTile, List<GenerationRouteStep> route, out string finalReason, out Vector2 failPos, bool injectBaseline = false, HashSet<Vector2i> localSafeTiles = null, float temperature = 0f)
     {
-        int microAttempts = microAttemptOverride > 0 ? microAttemptOverride : 5;
+        int microAttempts = 5;
         finalReason = "";
         failPos = Vector2.zero;
 
@@ -255,7 +255,6 @@ public partial class LevelGenerator : MonoBehaviour
         ghostStateSequence.Clear();
         ghostStateCounts.Clear();
         ghostStateTransitionCounts.Clear();
-        ghostStateVisitHeatmap.Clear();
         ghostDeathCount = 0;
         ghostOutsidePlayAreaFrames = 0;
         ghostTrapContactCount = 0;
@@ -284,20 +283,6 @@ public partial class LevelGenerator : MonoBehaviour
 
         // Risk-field steering was removed from the core state-enumeration path in Phase 2.
 
-        int currentStateVisits = GetGhostStateVisitCount(ghostAgent.mCurrentState);
-        float statePenalty = currentStateVisits * stateVisitPenaltyLambda;
-        weightRight = Mathf.Max(0f, weightRight - statePenalty);
-        weightLeft = Mathf.Max(0f, weightLeft - statePenalty);
-        weightUp = Mathf.Max(0f, weightUp - statePenalty);
-        weightDown = Mathf.Max(0f, weightDown - statePenalty);
-
-        Vector2i currentTile = map.GetMapTileAtPoint(currentPos);
-        int zoneVisitCount = GetMapEliteZoneVisitCount(currentTile);
-        float zonePenalty = zoneVisitCount * zoneVisitPenaltyLambda;
-        if (endPos.x > currentPos.x) weightRight = Mathf.Max(0f, weightRight - zonePenalty);
-        else weightLeft = Mathf.Max(0f, weightLeft - zonePenalty);
-
-        ApplyUnderCoveredZoneBias(currentPos, zone, ref weightRight, ref weightLeft, ref weightUp, ref weightDown);
 
         weightRight += Random.Range(0, 30f * temp);
         weightLeft += Random.Range(0, 30f * temp);
@@ -338,49 +323,6 @@ public partial class LevelGenerator : MonoBehaviour
         }
 
         return pickedAction;
-    }
-
-    private int GetGhostStateVisitCount(Character.CharacterState state)
-    {
-        int count;
-        return ghostStateVisitHeatmap.TryGetValue(state, out count) ? count : 0;
-    }
-
-    private int GetMapEliteZoneVisitCount(Vector2i tile)
-    {
-        int count;
-        return mapEliteZoneVisitCounts.TryGetValue(tile, out count) ? count : 0;
-    }
-
-    private void ApplyUnderCoveredZoneBias(Vector2 currentPos, SurvivalSpaceAnalyzer.SurvivalZone zone, ref float weightRight, ref float weightLeft, ref float weightUp, ref float weightDown)
-    {
-        if (zone == null || zone.tiles == null || zone.tiles.Count == 0 || mapEliteZoneVisitCounts == null) return;
-
-        Vector2i currentTile = map.GetMapTileAtPoint(currentPos);
-        Vector2i bestTile = currentTile;
-        float bestScore = float.MinValue;
-
-        foreach (Vector2i tile in zone.tiles)
-        {
-            int visits = GetMapEliteZoneVisitCount(tile);
-            float distance = Mathf.Abs(tile.x - currentTile.x) + Mathf.Abs(tile.y - currentTile.y);
-            if (distance < 1f || distance > 18f) continue;
-
-            float score = (1f / (1f + visits)) + distance * 0.02f;
-            if (score > bestScore)
-            {
-                bestScore = score;
-                bestTile = tile;
-            }
-        }
-
-        if (bestScore == float.MinValue) return;
-
-        if (bestTile.x > currentTile.x) weightRight += underCoveredZoneBias;
-        else if (bestTile.x < currentTile.x) weightLeft += underCoveredZoneBias;
-
-        if (bestTile.y > currentTile.y) weightUp += underCoveredZoneBias;
-        else if (bestTile.y < currentTile.y) weightDown += underCoveredZoneBias * 0.5f;
     }
 
     int ExecuteGhostAction(ActionType action, out bool actionFailed)
@@ -519,9 +461,6 @@ public partial class LevelGenerator : MonoBehaviour
         ghostStateSequence.Add(state);
         if (ghostStateCounts.ContainsKey(state)) ghostStateCounts[state]++;
         else ghostStateCounts[state] = 1;
-
-        if (ghostStateVisitHeatmap.ContainsKey(state)) ghostStateVisitHeatmap[state]++;
-        else ghostStateVisitHeatmap[state] = 1;
     }
 
     void RecordGhostTrajectory()
