@@ -197,6 +197,7 @@ public partial class LevelGenerator : MonoBehaviour
 
                 if (!actionFailed)
                 {
+                    CommitGhostActionVisit(nextAction);
                     stepSuccess = true;
                     break;
                 }
@@ -258,55 +259,206 @@ public partial class LevelGenerator : MonoBehaviour
         ghostDeathCount = 0;
         ghostOutsidePlayAreaFrames = 0;
         ghostTrapContactCount = 0;
+        ghostActionHistory.Clear();
+        ghostVisitCounts.Clear();
     }
 
     ActionType PickAnnealedAction(Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone, float temp)
     {
-        float weightRight = 0f, weightLeft = 0f, weightUp = 0f, weightDown = 0f;
-
-        if (endPos.x > currentPos.x) weightRight += 5f; else weightLeft += 5f;
-        if (endPos.y > currentPos.y) weightUp += 5f; else weightDown += 5f;
-
-        if (designerIntent.structuralExploration > 0.6f)
+        ActionType[] candidates = new ActionType[]
         {
-            weightUp += 15f * designerIntent.structuralExploration;
-            if (Random.value < 0.3f)
+            ActionType.MoveRight,
+            ActionType.MoveLeft,
+            ActionType.JumpRight,
+            ActionType.JumpLeft,
+            ActionType.LongJumpRight,
+            ActionType.LongJumpLeft,
+            ActionType.HighJumpRight,
+            ActionType.HighJumpLeft,
+            ActionType.Drop
+        };
+
+        float bestScore = float.NegativeInfinity;
+        List<ActionType> bestActions = new List<ActionType>();
+        List<float> scores = new List<float>();
+
+        foreach (ActionType action in candidates)
+        {
+            float score = EvaluateExplorationAction(action, currentPos, endPos, stagnationCount, zone);
+            scores.Add(score);
+
+            if (score > bestScore + 0.001f)
             {
-                float tmp = weightRight; weightRight = weightLeft; weightLeft = tmp;
+                bestScore = score;
+                bestActions.Clear();
+                bestActions.Add(action);
             }
-        }
-        else if (designerIntent.structuralExploration < 0.4f)
-        {
-            if (endPos.x > currentPos.x) weightRight += 20f; else weightLeft += 20f;
-            if (Mathf.Abs(endPos.y - currentPos.y) < Map.cTileSize * 2) { weightUp = 0; weightDown = 0; }
-        }
-
-        // Risk-field steering was removed from the core state-enumeration path in Phase 2.
-
-
-        weightRight += Random.Range(0, 30f * temp);
-        weightLeft += Random.Range(0, 30f * temp);
-        weightUp += Random.Range(0, 30f * temp);
-
-        if (weightRight <= 0 && weightLeft <= 0 && weightUp <= 0 && weightDown <= 0) return ActionType.Drop;
-
-        ActionType pickedAction = ActionType.Drop;
-        float totalWeight = weightRight + weightLeft + weightUp + weightDown;
-        float r = Random.Range(0, totalWeight);
-
-        if (r < weightRight) pickedAction = (Random.value > 0.4f) ? ActionType.MoveRight : ((Random.value > 0.5f) ? ActionType.JumpRight : ActionType.LongJumpRight);
-        else
-        {
-            r -= weightRight;
-            if (r < weightLeft) pickedAction = (Random.value > 0.4f) ? ActionType.MoveLeft : ((Random.value > 0.5f) ? ActionType.JumpLeft : ActionType.LongJumpLeft);
-            else
+            else if (Mathf.Abs(score - bestScore) <= 0.001f)
             {
-                r -= weightLeft;
-                if (r < weightUp) pickedAction = (Random.value > 0.5f) ? ActionType.HighJumpRight : ActionType.HighJumpLeft;
-                else pickedAction = ActionType.Drop;
+                bestActions.Add(action);
             }
         }
 
+        if (temp > 0.01f)
+        {
+            float softness = Mathf.Lerp(0.35f, 1.25f, Mathf.Clamp01(temp));
+            float totalWeight = 0f;
+            float[] weights = new float[scores.Count];
+            for (int i = 0; i < scores.Count; i++)
+            {
+                weights[i] = Mathf.Exp((scores[i] - bestScore) * softness) + Random.Range(0f, 0.08f * temp);
+                totalWeight += weights[i];
+            }
+
+            float roll = Random.Range(0f, totalWeight);
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (roll <= weights[i]) return ApplyMechanicalComplexity(candidates[i]);
+                roll -= weights[i];
+            }
+        }
+
+        return ApplyMechanicalComplexity(bestActions[Random.Range(0, bestActions.Count)]);
+    }
+
+    float EvaluateExplorationAction(ActionType action, Vector2 currentPos, Vector2 endPos, int stagnationCount, SurvivalSpaceAnalyzer.SurvivalZone zone)
+    {
+        Vector2i currentTile = map.GetMapTileAtPoint(currentPos);
+        Vector2i predictedTile = PredictActionTile(currentTile, action);
+
+        int directVisits = 0;
+        ghostVisitCounts.TryGetValue(predictedTile, out directVisits);
+
+        float unvisitedReward = directVisits == 0 ? 18f : -4f * directVisits;
+        float lowVisitReward = 0f;
+        int sampledNeighbors = 0;
+        for (int dx = -2; dx <= 2; dx++)
+        {
+            for (int dy = -2; dy <= 2; dy++)
+            {
+                Vector2i sample = new Vector2i(predictedTile.x + dx, predictedTile.y + dy);
+                int visits = 0;
+                ghostVisitCounts.TryGetValue(sample, out visits);
+                lowVisitReward += Mathf.Clamp(3f - visits, -2f, 3f);
+                sampledNeighbors++;
+            }
+        }
+        lowVisitReward = sampledNeighbors > 0 ? lowVisitReward / sampledNeighbors : 0f;
+
+        float coverageReward = ScoreSurvivalCoverageTarget(predictedTile, zone);
+        float directionDiversityReward = ScoreDirectionDiversity(action);
+        float oscillationPenalty = IsOppositeOfLastAction(action) ? -16f : 0f;
+        float boundaryPenalty = IsPredictedInsideSurvival(predictedTile) ? 0f : -35f;
+        float regionOverusePenalty = -2.5f * CountRecentNearbyVisits(predictedTile, 3);
+
+        float currentGoalDistance = Vector2.Distance(currentPos, endPos);
+        Vector2 predictedWorld = map.GetMapTilePosition(predictedTile.x, predictedTile.y);
+        float progressReward = Mathf.Clamp((currentGoalDistance - Vector2.Distance(predictedWorld, endPos)) / Map.cTileSize, -2f, 2f) * 2.5f;
+
+        float stagnationReward = stagnationCount > 3 ? unvisitedReward * 0.75f + directionDiversityReward : 0f;
+        float intentExplorationScale = Mathf.Lerp(0.85f, 1.35f, designerIntent.structuralExploration);
+
+        return ((unvisitedReward + lowVisitReward + coverageReward + directionDiversityReward + stagnationReward) * intentExplorationScale)
+            + oscillationPenalty
+            + boundaryPenalty
+            + regionOverusePenalty
+            + progressReward;
+    }
+
+    Vector2i PredictActionTile(Vector2i currentTile, ActionType action)
+    {
+        int dx = 0;
+        int dy = 0;
+        switch (action)
+        {
+            case ActionType.MoveRight: dx = 2; break;
+            case ActionType.MoveLeft: dx = -2; break;
+            case ActionType.JumpRight: dx = 3; dy = 2; break;
+            case ActionType.JumpLeft: dx = -3; dy = 2; break;
+            case ActionType.LongJumpRight: dx = 5; dy = 2; break;
+            case ActionType.LongJumpLeft: dx = -5; dy = 2; break;
+            case ActionType.HighJumpRight: dx = 2; dy = 4; break;
+            case ActionType.HighJumpLeft: dx = -2; dy = 4; break;
+            case ActionType.Drop: dy = -3; break;
+        }
+        return new Vector2i(currentTile.x + dx, currentTile.y + dy);
+    }
+
+    bool IsPredictedInsideSurvival(Vector2i tile)
+    {
+        if (map.survivalSpaceTiles == null || map.survivalSpaceTiles.Count == 0) return true;
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                if (map.survivalSpaceTiles.Contains(new Vector2i(tile.x + dx, tile.y + dy))) return true;
+        return false;
+    }
+
+    float ScoreSurvivalCoverageTarget(Vector2i tile, SurvivalSpaceAnalyzer.SurvivalZone zone)
+    {
+        if (zone == null || zone.tiles == null || zone.tiles.Count == 0) return 0f;
+        float nearestUnvisited = float.MaxValue;
+        foreach (Vector2i survivalTile in zone.tiles)
+        {
+            if (ghostPathSet.Contains(survivalTile)) continue;
+            float d = Mathf.Abs(survivalTile.x - tile.x) + Mathf.Abs(survivalTile.y - tile.y);
+            if (d < nearestUnvisited) nearestUnvisited = d;
+        }
+        if (nearestUnvisited == float.MaxValue) return 0f;
+        return Mathf.Clamp(10f - nearestUnvisited, -4f, 10f);
+    }
+
+    float ScoreDirectionDiversity(ActionType action)
+    {
+        int recentWindow = Mathf.Min(6, ghostActionHistory.Count);
+        if (recentWindow == 0) return 6f;
+        int sameDirectionCount = 0;
+        int actionDirection = GetActionDirection(action);
+        for (int i = ghostActionHistory.Count - recentWindow; i < ghostActionHistory.Count; i++)
+        {
+            if (GetActionDirection(ghostActionHistory[i]) == actionDirection) sameDirectionCount++;
+        }
+        return 8f - sameDirectionCount * 4f;
+    }
+
+    bool IsOppositeOfLastAction(ActionType action)
+    {
+        if (ghostActionHistory.Count == 0) return false;
+        int currentDirection = GetActionDirection(action);
+        int previousDirection = GetActionDirection(ghostActionHistory[ghostActionHistory.Count - 1]);
+        return currentDirection != 0 && previousDirection != 0 && currentDirection == -previousDirection;
+    }
+
+    int GetActionDirection(ActionType action)
+    {
+        switch (action)
+        {
+            case ActionType.MoveRight:
+            case ActionType.JumpRight:
+            case ActionType.LongJumpRight:
+            case ActionType.HighJumpRight:
+                return 1;
+            case ActionType.MoveLeft:
+            case ActionType.JumpLeft:
+            case ActionType.LongJumpLeft:
+            case ActionType.HighJumpLeft:
+                return -1;
+            default:
+                return 0;
+        }
+    }
+
+    int CountRecentNearbyVisits(Vector2i tile, int radius)
+    {
+        int count = 0;
+        foreach (Vector2i visitedTile in ghostPath)
+        {
+            if (Mathf.Abs(visitedTile.x - tile.x) <= radius && Mathf.Abs(visitedTile.y - tile.y) <= radius) count++;
+        }
+        return count;
+    }
+
+    ActionType ApplyMechanicalComplexity(ActionType pickedAction)
+    {
         if (designerIntent.mechanicalComplexity > 0.7f)
         {
             if (pickedAction == ActionType.MoveRight) pickedAction = ActionType.JumpRight;
@@ -319,10 +471,19 @@ public partial class LevelGenerator : MonoBehaviour
             if (pickedAction == ActionType.JumpRight && Random.value < 0.6f) pickedAction = ActionType.MoveRight;
             if (pickedAction == ActionType.JumpLeft && Random.value < 0.6f) pickedAction = ActionType.MoveLeft;
             if (pickedAction == ActionType.LongJumpRight) pickedAction = ActionType.JumpRight;
+            if (pickedAction == ActionType.LongJumpLeft) pickedAction = ActionType.JumpLeft;
             if (pickedAction == ActionType.HighJumpRight) pickedAction = ActionType.JumpRight;
+            if (pickedAction == ActionType.HighJumpLeft) pickedAction = ActionType.JumpLeft;
         }
-
         return pickedAction;
+    }
+
+    void CommitGhostActionVisit(ActionType action)
+    {
+        ghostActionHistory.Add(action);
+        Vector2i currentTile = map.GetMapTileAtPoint(ghostAgent.mPosition);
+        if (ghostVisitCounts.ContainsKey(currentTile)) ghostVisitCounts[currentTile]++;
+        else ghostVisitCounts[currentTile] = 1;
     }
 
     int ExecuteGhostAction(ActionType action, out bool actionFailed)
