@@ -1,12 +1,71 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\GitHub\\2D-Grid-Based-Platformer\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
       "VerticalTabListWidth": 256,
-      "DocumentGroups": []
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "LevelGenerator_RegionalBaker.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Level\\LevelGenerator_RegionalBaker.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAAGgAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T20:46:53.35Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LevelGenerator_PathWeaver.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Level\\LevelGenerator_PathWeaver.cs",
+              "ViewState": "AgIAALcAAAAAAAAAAAAAANgAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T20:44:53.653Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "WorldBlueprintPlanner.cs",
+              "DocumentMoniker": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs",
+              "ToolTip": "C:\\GitHub\\2D-Grid-Based-Platformer\\Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs",
+              "RelativeToolTip": "Assets\\Scripts\\worldplan\\WorldBlueprintPlanner.cs",
+              "ViewState": "AgIAADcAAAAAAAAAAAAAAFEAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T20:38:55.365Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }
