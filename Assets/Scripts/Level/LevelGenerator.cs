@@ -118,6 +118,8 @@ public partial class LevelGenerator : MonoBehaviour
     private int ghostDeathCount = 0;
     private int ghostOutsidePlayAreaFrames = 0;
     private int ghostTrapContactCount = 0;
+    private List<ActionType> ghostActionHistory = new List<ActionType>();
+    private Dictionary<Vector2i, int> ghostVisitCounts = new Dictionary<Vector2i, int>();
 
     private List<Vector3> verifiedTrajectory = new List<Vector3>();
     private Dictionary<Vector2i, int> survivalGradient = new Dictionary<Vector2i, int>();
