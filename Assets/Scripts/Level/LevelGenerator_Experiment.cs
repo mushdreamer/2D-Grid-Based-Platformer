@@ -188,6 +188,24 @@ public partial class LevelGenerator : MonoBehaviour
                 boundarySafetyPenalty = true,
                 boundaryTerminalization = true,
                 enumerationGuidedRouteTargets = false
+            },
+            new ExperimentCondition
+            {
+                name = "GuidedRouteTargetsOnly",
+                stateEnumerationFitness = false,
+                boundaryDiagnostics = false,
+                boundarySafetyPenalty = false,
+                boundaryTerminalization = false,
+                enumerationGuidedRouteTargets = true
+            },
+            new ExperimentCondition
+            {
+                name = "FullSystemWithGuidedTargets",
+                stateEnumerationFitness = true,
+                boundaryDiagnostics = true,
+                boundarySafetyPenalty = true,
+                boundaryTerminalization = true,
+                enumerationGuidedRouteTargets = true
             }
         };
     }

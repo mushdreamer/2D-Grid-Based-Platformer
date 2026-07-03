@@ -41,18 +41,20 @@ public partial class LevelGenerator : MonoBehaviour
     {
         List<Vector2i> selected = new List<Vector2i>();
         if (zone == null || zone.tiles == null || zone.tiles.Count == 0 || map == null)
+        {
+            Debug.LogWarning("[EnumerationGuidedRoute] No intermediate target selected: missing zone tiles or map reference.");
             return selected;
+        }
 
         Dictionary<Vector2i, int> eliteVisitCounts = CountEliteSurvivalVisits();
         List<ScoredRouteTarget> candidates = new List<ScoredRouteTarget>();
+        List<ScoredRouteTarget> relaxedCandidates = new List<ScoredRouteTarget>();
 
         foreach (Vector2i tile in zone.tiles)
         {
             if (!IsValidIntermediateRouteTarget(tile, start, end)) continue;
 
             float directDistance = DistanceFromLine(tile, start, end);
-            if (directDistance < 2.5f) continue;
-
             int visits;
             eliteVisitCounts.TryGetValue(tile, out visits);
 
@@ -67,7 +69,17 @@ public partial class LevelGenerator : MonoBehaviour
                 + verticalDelta * 0.35f
                 + horizontalDelta * 0.05f;
 
-            candidates.Add(new ScoredRouteTarget { tile = tile, score = score });
+            ScoredRouteTarget scored = new ScoredRouteTarget { tile = tile, score = score };
+            relaxedCandidates.Add(scored);
+
+            if (directDistance >= 2.5f)
+                candidates.Add(scored);
+        }
+
+        if (candidates.Count == 0 && relaxedCandidates.Count > 0)
+        {
+            Debug.LogWarning("[EnumerationGuidedRoute] No targets far enough from direct route; relaxing direct-route distance constraint for this run.");
+            candidates = relaxedCandidates;
         }
 
         foreach (ScoredRouteTarget candidate in candidates.OrderByDescending(c => c.score))
@@ -75,6 +87,11 @@ public partial class LevelGenerator : MonoBehaviour
             if (selected.Count >= 2) break;
             if (selected.Any(t => Mathf.Abs(t.x - candidate.tile.x) + Mathf.Abs(t.y - candidate.tile.y) < 5)) continue;
             selected.Add(candidate.tile);
+        }
+
+        if (selected.Count == 0)
+        {
+            Debug.LogWarning($"[EnumerationGuidedRoute] No intermediate target selected: validCandidates={relaxedCandidates.Count}, farFromDirectCandidates={candidates.Count}.");
         }
 
         selected = selected.OrderBy(t => Vector2.Distance(new Vector2(start.x, start.y), new Vector2(t.x, t.y))).ToList();
